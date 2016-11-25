@@ -75,7 +75,7 @@ class SchleswigHolsteinSpider(scrapy.Spider):
 
     def parse_partners(self, response):
         collection = response.meta['data']
-        text = response.css(".teaserBlock p ::text").extract_first()
+        text = " ".join([text.strip() for text in response.css(".teaserBlock p ::text").extract()])
         collection['partners_text'] = text
 
         yield collection

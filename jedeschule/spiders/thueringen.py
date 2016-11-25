@@ -15,7 +15,7 @@ class SachsenSpider(scrapy.Spider):
             for index, td in enumerate(tds):
                 key = headers[index]
                 collection[key] = td.css('::text').extract_first().strip()
-            print collection
+            print(collection)
             #inspect_response(response, self)
             url = tds[1].css('::attr(href)').extract_first().strip()
             request = scrapy.Request(self.base_url + url, callback=self.parse_overview)

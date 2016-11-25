@@ -7,7 +7,7 @@ def cleanjoin(listlike):
     return "".join([text.strip() for text in listlike])
 
 class NiedersachsenSpider(scrapy.Spider):
-    name = 'niedersachsenspider'
+    name = 'niedersachsen'
     start_urls = ['http://schulnetz.nibis.de/db/schulen/suche_2.php']
 
     def parse(self, response):
@@ -30,5 +30,3 @@ class NiedersachsenSpider(scrapy.Spider):
             row_value = cleanjoin(tds[1].css('::text').extract())
             collection[row_key] = row_value
         yield collection
-
-        

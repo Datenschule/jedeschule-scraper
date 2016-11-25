@@ -20,6 +20,6 @@ class BremenSpider(scrapy.Spider):
             key = li.css("span ::attr(title)").extract_first()
             value = " ".join([part.strip() for part in li.css("::text").extract()])
             # Filter out this pointless entry
-            if value != "Standortanzeige":
+            if key is not None:
                 collection[key] = value
         yield collection

@@ -68,4 +68,14 @@ class SchleswigHolsteinSpider(scrapy.Spider):
                     row[headers[index]] = tds[index].strip()
                 collection['students'].append(row)
 
+        request = scrapy.Request(response.urljoin("../5-3/"),
+                                 callback=self.parse_partners)
+        request.meta['data'] = collection
+        yield request
+
+    def parse_partners(self, response):
+        collection = response.meta['data']
+        text = response.css(".teaserBlock p ::text").extract_first()
+        collection['partners_text'] = text
+
         yield collection

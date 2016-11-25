@@ -5,7 +5,7 @@ from scrapy.shell import inspect_response
 
 class SchleswigHolsteinSpider(scrapy.Spider):
     name = "schleswig-holstein"
-    start_urls = ['http://schulportraets.schleswig-holstein.de/portal/schule_suchen//']
+    start_urls = ['http://schulportraets.schleswig-holstein.de/portal/schule_suchen/']
 
     def parse(self, response):
         yield scrapy.FormRequest.from_response(

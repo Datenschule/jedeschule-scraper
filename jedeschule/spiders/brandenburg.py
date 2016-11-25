@@ -12,7 +12,6 @@ class BrandenburgSpider(scrapy.Spider):
     def parse(self, response):
         for link in response.css("table a ::attr(href)").extract():
             yield scrapy.Request(response.urljoin(link), callback=self.parse_detail)
-        pass
 
     def parse_detail(self, response):
         trs = response.css("table tr")

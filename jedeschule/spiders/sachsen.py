@@ -20,7 +20,10 @@ class SachsenSpider(scrapy.Spider):
         forms = len(response.css('.ssdb_02 form'))
         for formnumber in range(forms):
             yield scrapy.FormRequest.from_response(
-                response, formnumber=formnumber + 3, callback=self.parse_school)
+                response,
+                formnumber=formnumber + 3,
+                meta={'cookiejar': formnumber},
+                callback=self.parse_school)
 
     def parse_school(self, response):
         collection = {}
@@ -32,7 +35,10 @@ class SachsenSpider(scrapy.Spider):
             values = entry.css("::text").extract()[1:]
             #inspect_response(response, self)
             collection[key] = ' '.join(values).replace('zur Karte', '')
-        response = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440', callback=self.parse_personal_ressources, dont_filter=True)
+        response = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440',
+                                  meta={'cookiejar': response.meta['cookiejar']},
+                                  callback=self.parse_personal_ressources,
+                                  dont_filter=True)
         response.meta['collection'] = collection
         yield response
         #yield collection

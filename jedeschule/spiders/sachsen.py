@@ -18,7 +18,7 @@ class SachsenSpider(scrapy.Spider):
 
     def parse_schoolist(self, response):
         forms = len(response.css('.ssdb_02 form'))
-        for formnumber in range(forms):
+        for formnumber in range(3):
             yield scrapy.FormRequest.from_response(
                 response,
                 formnumber=formnumber + 3,

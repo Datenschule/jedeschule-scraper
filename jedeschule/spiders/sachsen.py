@@ -5,11 +5,11 @@ class SachsenSpider(scrapy.Spider):
     name = "sachsen"
 
     start_urls = ['https://schuldatenbank.sachsen.de/index.php?id=2']
-    custom_settings = {
-        "CONCURRENT_REQUESTS": 1,
-        "DOWNLOAD_DELAY":5,
-        "DEPTH_PRIORITY" : -1
-    }
+    #custom_settings = {
+    #    "CONCURRENT_REQUESTS": 1,
+    #    "DOWNLOAD_DELAY":5,
+    #    "DEPTH_PRIORITY" : -1
+    #}
 
     def parse(self, response):
         #inspect_response(response, self)
@@ -18,7 +18,7 @@ class SachsenSpider(scrapy.Spider):
 
     def parse_schoolist(self, response):
         forms = len(response.css('.ssdb_02 form'))
-        for formnumber in range(3):
+        for formnumber in range(forms):
             yield scrapy.FormRequest.from_response(
                 response,
                 formnumber=formnumber + 3,

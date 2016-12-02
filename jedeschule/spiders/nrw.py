@@ -28,6 +28,6 @@ class SachsenSpider(scrapy.Spider):
         for tr in response.css("table tr"):
             tds = tr.css("td ::text").extract()
             # sometimes there is no value for the key
-            if len(tds[0].strip()) > 0 and len(tds) == 2:
-                collection[tds[0].strip()] = tds[1].strip()
+            if len(tds[0].strip()) > 0 and len(tds) >= 2:
+                collection[tds[0].strip()] = " ".join([td.strip() for td in tds[1:]])
         yield collection

@@ -33,13 +33,8 @@ class SaarlandSpider(scrapy.Spider):
             data['email'] = school.css(".link_email a ::attr(href)").extract_first()
             data['website'] = school.css(".link_external a ::attr(href)").extract_first()
 
-            director_match = school.re("Schulleiter(?:[ /]? in )?: (. *)")
-            data['director'] = director_match[0] if director_match else None
-
-            phone_match = school.re("Tel(?:[\.:]+)? ([\(\) 0-9]+)")
-            data['telephone'] = phone_match[0] if phone_match else None
-
-            fax_match = school.re("Fax(?:[\.:]+)? ([\(\) 0-9]+)")
-            data['fax'] = fax_match[0] if fax_match else None
+            data['director'] = school.css("::text").re_first("Schulleiter(?:[ /]?in)?:\s(.*)")
+            data['telephone'] = school.css("::text").re_first("Tel(?:[\.:]+)?\s([\(\) 0-9]+)")
+            data['fax'] = school.css("::text").re_first("Fax(?:[\.:]+)?\s([\(\) 0-9]+)")
 
             yield data

@@ -25,7 +25,9 @@ class SachsenSpider(scrapy.Spider):
 
     def parse_overview(self, response):
         collection = response.meta['collection']
-        for tr in response.css("table tr"):
+        tables = response.css("table")
+        # Table 1 is "Schuldaten"
+        for tr in tables[0].css("tr"):
             tds = tr.css("td ::text").extract()
             # sometimes there is no value for the key
             if len(tds[0].strip()) > 0 and len(tds) >= 2:

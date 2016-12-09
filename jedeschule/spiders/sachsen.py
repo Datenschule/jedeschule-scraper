@@ -39,6 +39,8 @@ class SachsenSpider(scrapy.Spider):
                 collection['phone_numbers'][key] = ' '.join(values)
             else:
                 collection[key] = ' '.join(values).replace('zur Karte', '')
+
+        collection["Leitbild"] = response.css("#quickbar > div:nth-child(3) ::text")
         response = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440',
                                   meta={'cookiejar': response.meta['cookiejar']},
                                   callback=self.parse_personal_resources,

@@ -1,5 +1,7 @@
 import scrapy
+from jedeschule.utils import cleanjoin
 from scrapy.shell import inspect_response
+
 
 class SachsenSpider(scrapy.Spider):
     name = "sachsen"
@@ -21,7 +23,7 @@ class SachsenSpider(scrapy.Spider):
                 callback=self.parse_school)
 
     def parse_school(self, response):
-        collection = {'phone_numbers':{}}
+        collection = {'phone_numbers': {}}
         collection['title'] = response.css("#content h2::text").extract_first().strip()
         entries = response.css(".kontaktliste li")
         for entry in entries:
@@ -40,13 +42,13 @@ class SachsenSpider(scrapy.Spider):
             else:
                 collection[key] = ' '.join(values).replace('zur Karte', '')
 
-        collection["Leitbild"] = response.css("#quickbar > div:nth-child(3) ::text")
-        response = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440',
-                                  meta={'cookiejar': response.meta['cookiejar']},
-                                  callback=self.parse_personal_resources,
-                                  dont_filter=True)
-        response.meta['collection'] = collection
-        yield response
+        collection["Leitbild"] = cleanjoin(response.css("#quickbar > div:nth-child(3) ::text").extract(), "\n")
+        request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440',
+                                 meta={'cookiejar': response.meta['cookiejar']},
+                                 callback=self.parse_personal_resources,
+                                 dont_filter=True)
+        request.meta['collection'] = collection
+        yield request
 
     def parse_personal_resources(self, response):
         collection = response.meta['collection']
@@ -64,4 +66,47 @@ class SachsenSpider(scrapy.Spider):
                 entries.append(row)
             resources[catname] = entries
         collection['personal_resources'] = resources
-        yield collection
+        request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
+                                 meta={'cookiejar': response.meta['cookiejar']},
+                                 callback=self.parse_students,
+                                 dont_filter=True)
+        collection['student_information'] = {}
+        request.meta['collection'] = collection
+        request.meta['year'] = 2016
+        yield request
+
+    def parse_students(self, response):
+        collection = response.meta.get('collection', {})
+        current_year = response.meta.get('year')
+        previous_year = current_year - 1 if current_year != 2013 else None
+
+        if current_year != 2016:
+            tables = response.css('table.ssdb_02')
+            collected_data = []
+            students_count_table = tables[0]
+            rows = students_count_table.css('tr')
+            headers = [h.strip() for h in rows[0].css('td::text').extract()]
+            for row in rows[1:]:
+                tds = row.css("td")
+                row = {}
+                # only get the rows that contain only raw data, no aggregates/ percentages
+                if len(tds) == len(headers):
+                    for index, td in enumerate(tds):
+                        row[headers[index]] = td.css("::text").extract_first().strip()
+                    collected_data.append(row)
+
+            collection['student_information'][current_year] = collected_data
+
+        if previous_year:
+            request = scrapy.FormRequest.from_response(
+                response,
+                formname='jahr',
+                formdata={"jahr": str(previous_year)},
+                meta={'cookiejar': response.meta['cookiejar']},
+                callback=self.parse_students)
+            request.meta['collection'] = collection
+            request.meta['year'] = previous_year
+            yield request
+
+        else:
+            yield collection

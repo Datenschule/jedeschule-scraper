@@ -112,4 +112,61 @@ class SachsenSpider(scrapy.Spider):
             yield request
 
         else:
-            yield collection
+            request = scrapy.Request("https://schuldatenbank.sachsen.de/index.php?id=510",
+                                     meta={'cookiejar': response.meta['cookiejar']},
+                                     callback=self.parse_partners_overview,
+                                     dont_filter=True)
+            request.meta['collection'] = collection
+            yield request
+
+
+    def parse_partners_overview(self, response):
+        collection = response.meta.get('collection', {})
+        forms = len(response.css('#tabform'))
+        requests = []
+        for formnumber in range(1, forms):
+            request = scrapy.FormRequest.from_response(
+                response,
+                formnumber=formnumber + 1,  # first form is search, skip that
+                meta={'cookiejar': formnumber},
+                dont_filter=True,
+                callback=self.parse_partners_detail)
+            request.meta['collection'] = collection
+            requests.append(request)
+
+        collection['partners'] = []
+        yield scrapy.FormRequest.from_response(
+            response,
+            formnumber=1,  # first form is search, skip that
+            meta={'cookiejar': response.meta['cookiejar'],
+                  'collection': collection,
+                  'stash': requests},
+            dont_filter=True,
+            callback=self.parse_partners_detail)
+
+    def parse_partners_detail(self, response):
+        meta = response.meta
+        stash = response.meta.get('stash')
+
+        if "5130" in response.url:
+            data = []
+            table = response.css("table.ssdb_02")
+            for row in table.css("tr"):
+                row_data = {}
+                tds = row.css("td")
+                row_data[tds[0].css("::text").extract_first().strip()] = cleanjoin(tds[1:].css("::text").extract())
+                data.append(row_data)
+            meta['collection']['partners'].append(data)
+        else:
+            # TODO: This is an Eltern/SV page, parse it differently
+            pass
+
+        if len(stash) > 0:
+            next_request = meta['stash'].pop()
+            next_request.meta['stash'] = meta['stash']
+            yield next_request
+        else:
+            yield meta['collection']
+
+
+

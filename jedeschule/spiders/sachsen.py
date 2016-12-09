@@ -31,12 +31,12 @@ class SachsenSpider(scrapy.Spider):
             collection[key] = ' '.join(values).replace('zur Karte', '')
         response = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440',
                                   meta={'cookiejar': response.meta['cookiejar']},
-                                  callback=self.parse_personal_ressources,
+                                  callback=self.parse_personal_resources,
                                   dont_filter=True)
         response.meta['collection'] = collection
         yield response
 
-    def parse_personal_ressources(self, response):
+    def parse_personal_resources(self, response):
         collection = response.meta['collection']
         resources = {}
         categories = response.css('#content h2')

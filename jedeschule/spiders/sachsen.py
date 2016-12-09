@@ -74,12 +74,12 @@ class SachsenSpider(scrapy.Spider):
                                  dont_filter=True)
         collection['student_information'] = {}
         request.meta['collection'] = collection
-        request.meta['year'] = "2016"
+        request.meta['year'] = 2016
         yield request
 
     def parse_students(self, response):
         collection = response.meta.get('collection', {})
-        current_year = int(response.meta.get('year'))
+        current_year = response.meta.get('year')
         previous_year = current_year - 1 if current_year != 2013 else None
 
         if current_year != 2016:
@@ -108,7 +108,7 @@ class SachsenSpider(scrapy.Spider):
                 dont_filter=True,
                 callback=self.parse_students)
             request.meta['collection'] = collection
-            request.meta['year'] = str(previous_year)
+            request.meta['year'] = previous_year
             yield request
 
         else:

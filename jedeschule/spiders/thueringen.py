@@ -36,4 +36,5 @@ class SachsenSpider(scrapy.Spider):
             if len(tds) == 2:
                 collection[tds[0][:-1]] = tds[1]
         print(collection)
+        collection['data_url'] = response.url
         yield collection

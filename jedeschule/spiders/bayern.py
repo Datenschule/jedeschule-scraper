@@ -33,5 +33,8 @@ class BayernSpider(scrapy.Spider):
             tds = tr.css("td ::text").extract()
             # sometimes there is no value for the key
             if len(tds) == 2:
-                collection[tds[0][:-1]] = tds[1]
+                key = tds[0][:-1]
+                collection[key] = tds[1]
+                if key == "Name":
+                    collection['website'] = tr.css("td:nth-child(2) a::attr(href)").extract_first()
         yield collection

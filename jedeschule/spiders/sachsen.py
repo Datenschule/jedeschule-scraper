@@ -21,14 +21,24 @@ class SachsenSpider(scrapy.Spider):
                 callback=self.parse_school)
 
     def parse_school(self, response):
-        collection = {}
+        collection = {'phone_numbers':{}}
         collection['title'] = response.css("#content h2::text").extract_first().strip()
         entries = response.css(".kontaktliste li")
         for entry in entries:
             # Remove the trailing `:` from the key (:-1)
             key = entry.css("b::text").extract_first(default="kein Eintrag:").strip()[:-1]
             values = entry.css("::text").extract()[1:]
-            collection[key] = ' '.join(values).replace('zur Karte', '')
+
+            # Some schools list additional phone numbers. The problem is
+            # that they do not have the header "Telefon" or something
+            # comparable. The header shows, whom the number belongs to
+            # So we check if there is a phone icon and if there is we
+            # Add this to our list of phone numbers
+            type = entry.css("img::attr(src)").extract_first()
+            if type == "img/telefon.gif":
+                collection['phone_numbers'][key] = ' '.join(values)
+            else:
+                collection[key] = ' '.join(values).replace('zur Karte', '')
         response = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440',
                                   meta={'cookiejar': response.meta['cookiejar']},
                                   callback=self.parse_personal_resources,

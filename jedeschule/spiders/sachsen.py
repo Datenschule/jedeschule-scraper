@@ -20,6 +20,7 @@ class SachsenSpider(scrapy.Spider):
                 response,
                 formnumber=formnumber + 3,
                 meta={'cookiejar': formnumber},
+                dont_filter=True,
                 callback=self.parse_school)
 
     def parse_school(self, response):
@@ -57,14 +58,15 @@ class SachsenSpider(scrapy.Spider):
         for cat in categories:
             catname = cat.css("::text").extract_first().strip()
             trs = cat.xpath("following-sibling::table").css('tr')
-            headers = [header.css('::text').extract_first().strip() for header in trs[0].css("td")]
-            entries = []
-            for tr in trs[1:]:
-                row = {}
-                for index, td in enumerate(tr.css('td')):
-                    row[headers[index]] = td.css("::text").extract_first().strip()
-                entries.append(row)
-            resources[catname] = entries
+            if trs:
+                headers = [header.css('::text').extract_first().strip() for header in trs[0].css("td")]
+                entries = []
+                for tr in trs[1:]:
+                    row = {}
+                    for index, td in enumerate(tr.css('td')):
+                        row[headers[index]] = td.css("::text").extract_first().strip()
+                    entries.append(row)
+                resources[catname] = entries
         collection['personal_resources'] = resources
         request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
                                  meta={'cookiejar': response.meta['cookiejar']},
@@ -103,6 +105,7 @@ class SachsenSpider(scrapy.Spider):
                 formname='jahr',
                 formdata={"jahr": str(previous_year)},
                 meta={'cookiejar': response.meta['cookiejar']},
+                dont_filter=True,
                 callback=self.parse_students)
             request.meta['collection'] = collection
             request.meta['year'] = previous_year

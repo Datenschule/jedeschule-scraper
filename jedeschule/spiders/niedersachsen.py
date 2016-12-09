@@ -1,10 +1,6 @@
-
 import scrapy
+from jedeschule.utils import cleanjoin
 
-def cleanjoin(listlike):
-    """ returns string of joined items in list,
-        removing whitespace """
-    return "".join([text.strip() for text in listlike])
 
 class NiedersachsenSpider(scrapy.Spider):
     name = 'niedersachsen'
@@ -27,6 +23,7 @@ class NiedersachsenSpider(scrapy.Spider):
 
             # last character is ":". Strip that
             row_key = cleanjoin(tds[0].css('::text').extract())[:-1]
-            row_value = cleanjoin(tds[1].css('::text').extract())
+            row_value = cleanjoin(tds[1].css('::text').extract(), "\n")
             collection[row_key] = row_value
+        collection['data_url'] = response.url
         yield collection

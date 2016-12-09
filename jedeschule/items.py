@@ -8,7 +8,16 @@
 import scrapy
 
 
-class JedeschuleItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class School(scrapy.Item):
+    name = scrapy.Field()
+    id = scrapy.Field()
+    address = scrapy.Field()
+    website = scrapy.Field()
+    email = scrapy.Field()
+    school_type = scrapy.Field()
+    legal_status = scrapy.Field()
+    provider = scrapy.Field()
+    fax = scrapy.Field()
+    phone = scrapy.Field()
+
+    director = scrapy.Field()

@@ -14,9 +14,14 @@ class SachsenSpider(scrapy.Spider):
             tds = tr.css("td")
             for index, td in enumerate(tds):
                 key = headers[index]
-                collection[key] = td.css('::text').extract_first().strip()
-            print(collection)
-            #inspect_response(response, self)
+                value = td.css('::text').extract_first()
+                # The school name is hidden in a link so we check if there
+                # is a link and if yes extract the value from that
+                link_text = td.css("a ::text").extract_first()
+                if link_text:
+                    value = link_text
+                collection[key] = value.strip()
+            # inspect_response(response, self)
             url = tds[1].css('::attr(href)').extract_first().strip()
             request = scrapy.Request(self.base_url + url, callback=self.parse_overview)
             request.meta['collection'] = collection

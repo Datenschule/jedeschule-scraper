@@ -25,7 +25,8 @@ class SachsenSpider(scrapy.Spider):
         collection['title'] = response.css("#content h2::text").extract_first().strip()
         entries = response.css(".kontaktliste li")
         for entry in entries:
-            key = entry.css("b::text").extract_first(default="kein Eintrag").strip()
+            # Remove the trailing `:` from the key (:-1)
+            key = entry.css("b::text").extract_first(default="kein Eintrag:").strip()[:-1]
             values = entry.css("::text").extract()[1:]
             collection[key] = ' '.join(values).replace('zur Karte', '')
         response = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=440',

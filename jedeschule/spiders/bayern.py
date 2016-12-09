@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from jedeschule.utils import cleanjoin
 from scrapy.shell import inspect_response
 
 
@@ -32,9 +33,9 @@ class BayernSpider(scrapy.Spider):
         for tr in response.css("table tr"):
             tds = tr.css("td ::text").extract()
             # sometimes there is no value for the key
-            if len(tds) == 2:
+            if len(tds) >= 2:
                 key = tds[0][:-1]
-                collection[key] = tds[1]
+                collection[key] = cleanjoin(tds[1:], "\n")
                 if key == "Name":
                     collection['website'] = tr.css("td:nth-child(2) a::attr(href)").extract_first()
         yield collection

@@ -33,8 +33,7 @@ class SachsenSpider(scrapy.Spider):
         for tr in response.css(".tispo_labelValueView tr"):
             tds = tr.css("td ::text").extract()
             # sometimes there is no value for the key
-            if len(tds) == 2:
-                collection[tds[0][:-1]] = tds[1]
-        print(collection)
+            if len(tds) >= 2:
+                collection[tds[0][:-1].strip()] = "".join([td.strip() for td in tds[1:]])
         collection['data_url'] = response.url
         yield collection

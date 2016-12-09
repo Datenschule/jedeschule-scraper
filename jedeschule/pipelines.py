@@ -11,7 +11,7 @@ from jedeschule.items import School
 class SchoolPipeline(object):
     def process_item(self, item, spider):
         if spider.name == 'saarland':
-            address = "{} {}".format(item.get('street', ""), item.get('zip',""))
+            address = u"{} {}".format(item.get('street', ""), item.get('zip', ""))
             if item.get('email'):
                 email = item['email'].replace('mailto:', '').replace('%40', '@')
             else:
@@ -24,7 +24,7 @@ class SchoolPipeline(object):
                             email=email,
                             address=address)
         elif spider.name == 'niedersachsen':
-            address = "{} {}".format(item.get('Straße', ""), item.get('Ort',""))
+            address = u"{} {}".format(item.get('Straße', ""), item.get('Ort', ""))
             school = School(name=item.get('Schule'),
                             phone=item.get('Tel'),
                             email=item.get('E-Mail'),

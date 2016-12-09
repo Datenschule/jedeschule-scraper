@@ -5,21 +5,21 @@ import scrapy
 from scrapy.shell import inspect_response
 
 
-
 class SachsenAnhaltSpider(scrapy.Spider):
     name = "sachsen-anhalt"
-    # allowed_domains = ["https://www.bildung-lsa.de/ajax.php?m=getSSResult&q=&lk=-1&sf=-1&so=-1&timestamp=1480082277128"]
     start_urls = ['https://www.bildung-lsa.de/ajax.php?m=getSSResult&q=&lk=-1&sf=-1&so=-1&timestamp=1480082277128/']
 
     detail_url = "https://www.bildung-lsa.de/ajax.php?m=getSSDetails&id={}&timestamp=1480082332787"
 
     def parse(self, response):
-        # inspect_response(response, self)
         js_callbacks = response.css("span ::attr(onclick)").extract()
         pattern = "getSSResultItemDetail\((\d+)\)"
         ids = [re.match(pattern, text).group(1) for text in js_callbacks]
-        for id in ids:
-            yield scrapy.Request(self.detail_url.format(id), callback=self.parse_detail)
+        names = response.css("b::text").extract()
+        for id, name in zip(ids, names):
+            request = scrapy.Request(self.detail_url.format(id), callback=self.parse_detail)
+            request.meta['name'] = name.strip()
+            yield request
 
 
     def parse_detail(self, response):
@@ -35,4 +35,8 @@ class SachsenAnhaltSpider(scrapy.Spider):
                 value = " ".join(tds[1].css("::text").extract())
 
                 content[key] = value
+        content['Name'] = response.meta['name']
+        # The name is included in the "Adresse" field so we remove that
+        # in order to get only the address
+        content['Adresse'] = content['Adresse'].replace(response.meta['name'], "").strip()
         yield content

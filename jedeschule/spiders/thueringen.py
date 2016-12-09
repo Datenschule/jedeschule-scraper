@@ -36,4 +36,5 @@ class SachsenSpider(scrapy.Spider):
             if len(tds) >= 2:
                 collection[tds[0][:-1].strip()] = "".join([td.strip() for td in tds[1:]])
         collection['data_url'] = response.url
+        collection['Leitbild'] = " ".join(response.css(".tispo_htmlUserContent ::text").extract())
         yield collection

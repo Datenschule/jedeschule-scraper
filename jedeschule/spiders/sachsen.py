@@ -97,7 +97,7 @@ class SachsenSpider(scrapy.Spider):
                         row[headers[index]] = td.css("::text").extract_first().strip()
                     collected_data.append(row)
 
-            collection['student_information'][current_year] = collected_data
+            collection['student_information'][str(current_year)] = collected_data
 
         if previous_year:
             request = scrapy.FormRequest.from_response(

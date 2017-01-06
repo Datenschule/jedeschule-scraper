@@ -1,7 +1,8 @@
 import scrapy
 from scrapy.shell import inspect_response
+from jedeschule.utils import cleanjoin
 
-class SachsenSpider(scrapy.Spider):
+class NRWSpider(scrapy.Spider):
     name = "nrw"
     base_url = "https://www.schulministerium.nrw.de/BiPo/SchuleSuchen/"
 
@@ -17,10 +18,13 @@ class SachsenSpider(scrapy.Spider):
     def parse_schoollist(self, response):
         for tr in response.css('table tr'):
             collection = {}
-            collection['Schulform'] = tr.css('td::text').extract()[1].strip()
+            collection['Schulform'] = tr.css('td:nth-child(3)::text').extract()[1].strip()
+            collection['Schulname'] = cleanjoin(tr.css('td:nth-child(2)::text').extract(), join_on = " ")
             url = tr.css('td')[3].css('a::attr(href)').extract_first().strip()
             request = scrapy.Request(self.base_url + url, callback=self.parse_overview)
             request.meta['collection'] = collection
+            response.collection = collection
+            #inspect_response(response, self)
             yield request
 
     def parse_overview(self, response):

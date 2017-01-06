@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import urlparse
 import scrapy
 from scrapy.shell import inspect_response
+
 
 
 class BrandenburgSpider(scrapy.Spider):
@@ -10,15 +12,29 @@ class BrandenburgSpider(scrapy.Spider):
                   'https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=1&submit=Suchen']
 
     def parse(self, response):
-        for link in response.css("table a ::attr(href)").extract():
-            yield scrapy.Request(response.urljoin(link), callback=self.parse_detail)
+        for link in response.css("table a"):
+            url = link.css("::attr(href)").extract_first()
+            response.link = link
+            parsed_url = urlparse.urlparse(url)
+            parsed = urlparse.parse_qs(parsed_url.query)
+            meta = {}
+            meta['nummer'] = parsed['schulnr'][0]
+            meta['name'] = link.css('::text').extract_first()
+            response.foo = meta
+            #inspect_response(response, self)
+            yield scrapy.Request(response.urljoin(url), callback=self.parse_detail, meta=meta)
 
     def parse_detail(self, response):
         trs = response.css("table tr")
         content = {}
         # The first row is an image and a map
+        #inspect_response(response, self)
         for tr in trs[1:]:
-            key = "\n".join(tr.css('th ::text').extract())
-            value = "\n".join(tr.css("td ::text").extract())
+            key = "\n".join(tr.css('th ::text').extract()).strip()[:-1].replace("**", "")
+            value = "\n".join(tr.css("td ::text").extract()).replace("*", "")
             content[key] = value
+        content['name'] = response.meta['name']
+        content['nummer'] = response.meta['nummer']
+        response.content = content
+        #inspect_response(response, self)
         yield content

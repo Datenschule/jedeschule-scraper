@@ -1,3 +1,16 @@
 *.pyc
 build/*
 project.egg-info/*
+bayern.json
+brandenburg.json
+bremen.json
+Makefile
+niedersachsen.json
+saarland.json
+sachsen.json
+schleswig-holstein.json
+test.json
+thueringen.json
+berlin/ag.json
+berlin/partner.json
+berlin/schools.json

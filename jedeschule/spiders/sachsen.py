@@ -68,13 +68,34 @@ class SachsenSpider(scrapy.Spider):
                     entries.append(row)
                 resources[catname] = entries
         collection['personal_resources'] = resources
+
+        request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=460',
+                                 meta={'cookiejar': response.meta['cookiejar']},
+                                 callback=self.parse_teach_learn,
+                                 dont_filter=True)
+        request.meta['collection'] = collection
+
+        yield request
+
+    def parse_teach_learn(self, response):
+        collection = response.meta['collection']
+        ags = []
+
+        tables = response.css('#content table')#[2].css('tr')[2:]#first 2 rows are heading
+        if (len(tables) > 2):
+            #inspect_response(response, self)
+            ag_entries = response.css('#content table')[2].css('tr')[2:]
+            for tr in ag_entries:
+               ags.append(tr.css('.ssdb_02::text').extract_first())
+            collection['ag'] = ags
+            #inspect_response(response, self)
         request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
                                  meta={'cookiejar': response.meta['cookiejar']},
                                  callback=self.parse_students,
                                  dont_filter=True)
-        collection['student_information'] = {}
         request.meta['collection'] = collection
         request.meta['year'] = 2016
+
         yield request
 
     def parse_students(self, response):
@@ -97,7 +118,9 @@ class SachsenSpider(scrapy.Spider):
                         row[headers[index]] = td.css("::text").extract_first().strip()
                     collected_data.append(row)
 
-            collection['student_information'][str(current_year)] = collected_data
+            student_information = collection.get('student_information', {})
+            student_information[str(current_year)] = collected_data
+            collection['student_information'] = student_information
 
         if previous_year:
             request = scrapy.FormRequest.from_response(

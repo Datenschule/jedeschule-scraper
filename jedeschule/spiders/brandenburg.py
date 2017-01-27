@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-import urlparse
+try:
+    # python2
+    import urlparse
+except ImportError:
+    # python3
+    from urllib.parse import urlparse
 import scrapy
 from scrapy.shell import inspect_response
 

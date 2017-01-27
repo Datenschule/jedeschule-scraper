@@ -154,14 +154,22 @@ class SachsenSpider(scrapy.Spider):
             requests.append(request)
 
         collection['partners'] = []
-        yield scrapy.FormRequest.from_response(
-            response,
-            formnumber=1,  # first form is search, skip that
-            meta={'cookiejar': response.meta['cookiejar'],
-                  'collection': collection,
-                  'stash': requests},
-            dont_filter=True,
-            callback=self.parse_partners_detail)
+        if forms > 0:
+            yield scrapy.FormRequest.from_response(
+                response,
+                formnumber=1,  # first form is search, skip that
+                meta={'cookiejar': response.meta['cookiejar'],
+                      'collection': collection,
+                      'stash': requests},
+                dont_filter=True,
+                callback=self.parse_partners_detail)
+        else:
+            yield scrapy.Request("https://schuldatenbank.sachsen.de/index.php?id=470",
+                                 meta={'cookiejar': response.meta['cookiejar'],
+                                       'collection': collection
+                                       },
+                                 callback=self.parse_competitions_overview,
+                                 dont_filter=True)
 
     def parse_partners_detail(self, response):
         meta = response.meta
@@ -198,10 +206,10 @@ class SachsenSpider(scrapy.Spider):
         forms = len(response.css('#tabform'))
 
         requests = []
-        for formnumber in range(0, forms):
+        for formnumber in range(1, forms):
             request = scrapy.FormRequest.from_response(
                 response,
-                formnumber=formnumber + 1,  # number 0 is done below
+                formnumber=formnumber + 1,  # first form is search, skip that
                 meta={'cookiejar': response.meta['cookiejar']},
                 dont_filter=True,
                 callback=self.parse_competition_detail)
@@ -212,7 +220,7 @@ class SachsenSpider(scrapy.Spider):
         if forms > 0:
             yield scrapy.FormRequest.from_response(
                 response,
-                formnumber=0,
+                formnumber=1,
                 meta={'cookiejar': response.meta['cookiejar'],
                       'collection': collection,
                       'stash': requests},

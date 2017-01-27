@@ -198,10 +198,10 @@ class SachsenSpider(scrapy.Spider):
         forms = len(response.css('#tabform'))
 
         requests = []
-        for formnumber in range(1, forms):
+        for formnumber in range(0, forms):
             request = scrapy.FormRequest.from_response(
                 response,
-                formnumber=formnumber + 1,
+                formnumber=formnumber + 1,  # number 0 is done below
                 meta={'cookiejar': response.meta['cookiejar']},
                 dont_filter=True,
                 callback=self.parse_competition_detail)
@@ -209,14 +209,19 @@ class SachsenSpider(scrapy.Spider):
             requests.append(request)
 
         collection['competitions'] = []
-        yield scrapy.FormRequest.from_response(
-            response,
-            formnumber=1,
-            meta={'cookiejar': response.meta['cookiejar'],
-                  'collection': collection,
-                  'stash': requests},
-            dont_filter=True,
-            callback=self.parse_competition_detail)
+        if forms > 0:
+            yield scrapy.FormRequest.from_response(
+                response,
+                formnumber=0,
+                meta={'cookiejar': response.meta['cookiejar'],
+                      'collection': collection,
+                      'stash': requests},
+                dont_filter=True,
+                callback=self.parse_competition_detail)
+        else:
+            # maybe there aren't any forms so we cannot scrape anything
+            # more and will just return the data
+            yield response.meta['collection']
 
     def parse_competition_detail(self, response):
         meta = response.meta

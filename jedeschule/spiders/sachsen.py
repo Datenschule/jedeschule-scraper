@@ -142,16 +142,16 @@ class SachsenSpider(scrapy.Spider):
             request.meta['collection'] = collection
             yield request
 
-
     def parse_partners_overview(self, response):
         collection = response.meta.get('collection', {})
         forms = len(response.css('#tabform'))
         requests = []
+        # inspect_response(response, self)
         for formnumber in range(1, forms):
             request = scrapy.FormRequest.from_response(
                 response,
                 formnumber=formnumber + 1,  # first form is search, skip that
-                meta={'cookiejar': formnumber},
+                meta={'cookiejar': response.meta['cookiejar']},
                 dont_filter=True,
                 callback=self.parse_partners_detail)
             request.meta['collection'] = collection
@@ -171,13 +171,20 @@ class SachsenSpider(scrapy.Spider):
         meta = response.meta
         stash = response.meta.get('stash')
 
+
+        print(meta['collection']['partners'])
+
         if "5130" in response.url:
             data = []
             table = response.css("table.ssdb_02")
+            print("GETTING THE TABLE NOW YOU")
+            # inspect_response(response, self)
             for row in table.css("tr"):
                 row_data = {}
                 tds = row.css("td")
-                row_data[tds[0].css("::text").extract_first().strip()] = cleanjoin(tds[1:].css("::text").extract())
+                row_key = tds[0].css("::text").extract_first().strip()
+                row_data[row_key] = cleanjoin(tds[1:].css("::text").extract())
+                print(row_data)
                 data.append(row_data)
             meta['collection']['partners'].append(data)
         else:
@@ -185,11 +192,69 @@ class SachsenSpider(scrapy.Spider):
             pass
 
         if len(stash) > 0:
+            print(len(stash), ' requests left')
+            next_request = meta['stash'].pop()
+            next_request.meta['stash'] = meta['stash']
+            yield next_request
+        else:
+            # inspect_response(response, self)
+            request = scrapy.Request("https://schuldatenbank.sachsen.de/index.php?id=470",
+                                     meta={'cookiejar': response.meta['cookiejar']},
+                                     callback=self.parse_competitions_overview,
+                                     dont_filter=True)
+            request.meta['collection'] = meta['collection']
+            yield request
+
+    def parse_competitions_overview(self, response):
+        collection = response.meta.get('collection', {})
+        forms = len(response.css('#tabform'))
+        inspect_response(response, self)
+
+        requests = []
+        for formnumber in range(1, forms):
+            request = scrapy.FormRequest.from_response(
+                response,
+                formnumber=formnumber + 1,
+                meta={'cookiejar': response.meta['cookiejar']},
+                dont_filter=True,
+                callback=self.parse_competition_detail)
+            request.meta['collection'] = collection
+            requests.append(request)
+
+        collection['competitions'] = []
+        yield scrapy.FormRequest.from_response(
+            response,
+            formnumber=1,
+            meta={'cookiejar': response.meta['cookiejar'],
+                  'collection': collection,
+                  'stash': requests},
+            dont_filter=True,
+            callback=self.parse_competition_detail)
+
+    def parse_competition_detail(self, response):
+        meta = response.meta
+        stash = response.meta.get('stash')
+        # inspect_response(response, self)
+
+        data = {
+            'name': response.css("#content > div:nth-child(3) > b::text").extract_first(),
+            'results': []
+        }
+        table = response.css("table.ssdb_02")
+        headers = [text.strip() for text in table.css(" tr:first-child td::text").extract()]
+        for tr_index, row in enumerate(table.css("tr")):
+            if tr_index == 0:
+                # header
+                continue
+            row_data = {}
+            for td_index, td in enumerate(row.css("td")):
+                row_data[headers[td_index]] = cleanjoin(td.css("::text").extract())
+            data['results'].append(row_data)
+        meta['collection']['competitions'].append(data)
+
+        if len(stash) > 0:
             next_request = meta['stash'].pop()
             next_request.meta['stash'] = meta['stash']
             yield next_request
         else:
             yield meta['collection']
-
-
-

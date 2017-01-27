@@ -9,7 +9,6 @@ class SachsenSpider(scrapy.Spider):
     start_urls = ['https://schuldatenbank.sachsen.de/index.php?id=2']
 
     def parse(self, response):
-        # inspect_response(response, self)
         yield scrapy.FormRequest.from_response(
             response, formcss="#content form", callback=self.parse_schoolist)
 
@@ -83,12 +82,10 @@ class SachsenSpider(scrapy.Spider):
 
         tables = response.css('#content table')#[2].css('tr')[2:]#first 2 rows are heading
         if (len(tables) > 2):
-            #inspect_response(response, self)
             ag_entries = response.css('#content table')[2].css('tr')[2:]
             for tr in ag_entries:
                ags.append(tr.css('.ssdb_02::text').extract_first())
             collection['ag'] = ags
-            #inspect_response(response, self)
         request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
                                  meta={'cookiejar': response.meta['cookiejar']},
                                  callback=self.parse_students,
@@ -146,7 +143,6 @@ class SachsenSpider(scrapy.Spider):
         collection = response.meta.get('collection', {})
         forms = len(response.css('#tabform'))
         requests = []
-        # inspect_response(response, self)
         for formnumber in range(1, forms):
             request = scrapy.FormRequest.from_response(
                 response,
@@ -171,20 +167,14 @@ class SachsenSpider(scrapy.Spider):
         meta = response.meta
         stash = response.meta.get('stash')
 
-
-        print(meta['collection']['partners'])
-
         if "5130" in response.url:
             data = []
             table = response.css("table.ssdb_02")
-            print("GETTING THE TABLE NOW YOU")
-            # inspect_response(response, self)
             for row in table.css("tr"):
                 row_data = {}
                 tds = row.css("td")
                 row_key = tds[0].css("::text").extract_first().strip()
                 row_data[row_key] = cleanjoin(tds[1:].css("::text").extract())
-                print(row_data)
                 data.append(row_data)
             meta['collection']['partners'].append(data)
         else:
@@ -192,12 +182,10 @@ class SachsenSpider(scrapy.Spider):
             pass
 
         if len(stash) > 0:
-            print(len(stash), ' requests left')
             next_request = meta['stash'].pop()
             next_request.meta['stash'] = meta['stash']
             yield next_request
         else:
-            # inspect_response(response, self)
             request = scrapy.Request("https://schuldatenbank.sachsen.de/index.php?id=470",
                                      meta={'cookiejar': response.meta['cookiejar']},
                                      callback=self.parse_competitions_overview,
@@ -208,7 +196,6 @@ class SachsenSpider(scrapy.Spider):
     def parse_competitions_overview(self, response):
         collection = response.meta.get('collection', {})
         forms = len(response.css('#tabform'))
-        inspect_response(response, self)
 
         requests = []
         for formnumber in range(1, forms):
@@ -234,7 +221,6 @@ class SachsenSpider(scrapy.Spider):
     def parse_competition_detail(self, response):
         meta = response.meta
         stash = response.meta.get('stash')
-        # inspect_response(response, self)
 
         data = {
             'name': response.css("#content > div:nth-child(3) > b::text").extract_first(),

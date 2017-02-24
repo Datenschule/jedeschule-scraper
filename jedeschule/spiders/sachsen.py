@@ -80,23 +80,107 @@ class SachsenSpider(scrapy.Spider):
     def parse_teach_learn(self, response):
         collection = response.meta['collection']
         ags = []
+        content = response.css('#content')
+        ag_section = content.xpath(".//h2[contains(.,'Angebot')]/following-sibling::table")
+        ag_entries = ag_section.css('tr')[2:]#first 2 rows are headers
 
-        tables = response.css('#content table')#[2].css('tr')[2:]#first 2 rows are heading
-        if (len(tables) > 2):
+        for tr in ag_entries:
+          ags.append(tr.css('.ssdb_02::text').extract_first())
+
+        collection['ag'] = ags
+
+        #tables = response.css('#content table')#[2].css('tr')[2:]#first 2 rows are heading
+        #if (len(tables) > 2):
             #inspect_response(response, self)
-            ag_entries = response.css('#content table')[2].css('tr')[2:]
-            for tr in ag_entries:
-               ags.append(tr.css('.ssdb_02::text').extract_first())
-            collection['ag'] = ags
+         #   ag_entries = response.css('#content table')[2].css('tr')[2:]
+         #   for tr in ag_entries:
+         #      ags.append(tr.css('.ssdb_02::text').extract_first())
+         #   collection['ag'] = ags
             #inspect_response(response, self)
-        request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
+
+
+        request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=470',
                                  meta={'cookiejar': response.meta['cookiejar']},
-                                 callback=self.parse_students,
+                                 callback=self.parse_schoollive,
                                  dont_filter=True)
         request.meta['collection'] = collection
-        request.meta['year'] = 2016
+
 
         yield request
+
+    def parse_schoollive(self, response):
+        #inspect_response(response, self)
+        collection = response.meta['collection']
+
+        forms = len(response.css('#tabform'))
+        requests = []
+        for formnumber in range(1, forms):
+            request = scrapy.FormRequest.from_response(
+                response,
+                formnumber=formnumber + 1,  # first form is search, skip that
+                meta={'cookiejar': formnumber},
+                dont_filter=True,
+                callback=self.parse_program_detail)
+            request.meta['collection'] = collection
+            requests.append(request)
+
+
+        if (forms > 0):
+            collection['programs'] = {}
+            yield scrapy.FormRequest.from_response(
+                response,
+                formnumber=1,  # first form is search, skip that
+                meta={'cookiejar': response.meta['cookiejar'],
+                      'collection': collection,
+                      'stash': requests},
+                dont_filter=True,
+                callback=self.parse_program_detail)
+        else:
+            request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
+                                     meta={'cookiejar': response.meta['cookiejar']},
+                                     callback=self.parse_students,
+                                     dont_filter=True)
+
+            request.meta['year'] = 2016
+            request.meta['collection'] = collection
+            yield request
+
+    def parse_program_detail(self, response):
+        meta = response.meta
+        stash = response.meta.get('stash')
+
+        data = []
+        program =response.css('b::text').extract_first()
+        table = response.css("table.ssdb_02 tr")
+        header = [value.strip() for value in table[0].css('td::text').extract()]
+        values = table[1:]
+        meta['collection']['programs'][program] = []
+        for row in values:
+            row_data = {}
+            tds = row.css("td")
+            for index, td in enumerate(row.css("td")):
+                value = td.css("::text").extract_first()
+                if (value is None):
+                    value = ''
+                row_data[header[index]] = value.strip()
+            data.append(row_data)
+        meta['collection']['programs'][program].append(data)
+
+        if len(stash) > 0:
+            next_request = meta['stash'].pop()
+            next_request.meta['stash'] = meta['stash']
+            next_request.meta['collection'] = meta['collection']
+            #inspect_response(response, self)
+            yield next_request
+        else:
+            request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
+                                     meta={'cookiejar': response.meta['cookiejar']},
+                                     callback=self.parse_students,
+                                     dont_filter=True)
+
+            request.meta['year'] = 2016
+            request.meta['collection'] = meta['collection']
+            yield request
 
     def parse_students(self, response):
         collection = response.meta.get('collection', {})
@@ -115,7 +199,10 @@ class SachsenSpider(scrapy.Spider):
                 # only get the rows that contain only raw data, no aggregates/ percentages
                 if len(tds) == len(headers):
                     for index, td in enumerate(tds):
-                        row[headers[index]] = td.css("::text").extract_first().strip()
+                        value = td.css("::text").extract_first()
+                        if (value is None):
+                            value = ''
+                        row[headers[index]] = value.strip()
                     collected_data.append(row)
 
             student_information = collection.get('student_information', {})

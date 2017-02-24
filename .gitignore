@@ -14,3 +14,7 @@ thueringen.json
 berlin/ag.json
 berlin/partner.json
 berlin/schools.json
+.idea
+berlin/node_modules
+berlin/output
+venv

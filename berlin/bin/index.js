@@ -43,15 +43,15 @@ function scrape(url, method = 'GET', formdata) {
 function parseSchoollist($) {
     //let $ = cheerio.load(body);
     let url = 'http://www.berlin.de/sen/bildung/schulverzeichnis_und_portraets/anwendung/SchulListe.aspx';
-    let $rows = $('#GridViewSchulen tr:not(:first-of-type)');
+    let $rows = $('#DataListSchulen tr:not(:first-of-type)');
     let schools = $rows.map((i, tr) => ({
         id: $(tr).find('a').attr('href').split('?IDSchulzweig=')[1],
         code: $(tr).find('a').text(),
         entryURL: URL.resolve(url, $(tr).find('a').attr('href')),
-        name: $(tr).find('td:nth-child(2)').text(),
-        type: $(tr).find('td:nth-child(3)').text(),
-        bezirk: $(tr).find('td:nth-child(4)').text(),
-        ortsteil: $(tr).find('td:nth-child(5)').text(),
+        name: $(tr).find('td span').eq(0).text(),
+        type: $(tr).find('td span').eq(1).text(),
+        bezirk: $(tr).find('td span').eq(2).text(),
+        ortsteil: $(tr).find('td span').eq(3).text(),
     })).get();
     return schools;
 }

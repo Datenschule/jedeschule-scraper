@@ -66,6 +66,7 @@ ROBOTSTXT_OBEY = False
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    #'jedeschule.pipelines.SchoolPipeline': 300,
+    'jedeschule.pipelines.JsonPipeline': 300
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

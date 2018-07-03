@@ -5,77 +5,50 @@ from scrapy.shell import inspect_response
 
 class SchleswigHolsteinSpider(scrapy.Spider):
     name = "schleswig-holstein"
-    start_urls = ['http://schulportraets.schleswig-holstein.de/portal/schule_suchen/']
+    base_url = 'https://www.secure-lernnetz.de/schuldatenbank/'
+    start_urls = [base_url]
 
     def parse(self, response):
-        yield scrapy.FormRequest.from_response(
-                response,
-                callback=self.after_login
-                )
+        inspect_response(response, self)
+        url = self.base_url + response.css('form::attr(action)').extract_first()
+        pages = response.css('#searchResultIndexTop li')
+        for page in pages:
+            formdata = self.parse_formdata(response)
+            key = page.css('input::attr(name)').extract_first()
+            formdata[key] = page.css('input::attr(value)').extract_first()
+            if formdata[key] == ">":
+                yield scrapy.FormRequest(url=url, formdata=formdata, callback=self.parse)
+            if formdata[key].isdigit():
+                yield scrapy.FormRequest(url=url, formdata=formdata, callback=self.parse_overview_table)
 
-    def after_login(self, response):
-        links = response.css("table tbody td b a::attr(href)").extract()
-        for link in links:
-            # turns /20/ into /20-1/ which is the details page that contains the data
-            detail_link = link[:-1] + "-1/"
-            yield scrapy.Request(response.urljoin(detail_link), callback=self.parse_detail)
-        yield scrapy.FormRequest.from_response(
-                response,
-                formcss=".userInput",
-                callback=self.other_pages
-                )
+    def parse_formdata(self, response):
+        formdata = {}
+        for form in response.css('#myContent > input'):
+            key = form.css('::attr(name)').extract_first()
+            formdata[key] = form.css('::attr(value)').extract_first()
 
-    def other_pages(self, response):
-        print("------>", response.request.body)
-        links = response.css("table tbody td b a::attr(href)").extract()
-        for link in links:
-            # turns /1/ into /1-1/ which is the details page that contains the data
-            detail_link = link[:-1] + "-1/"
-            yield scrapy.Request(response.urljoin(detail_link), callback=self.parse_detail)
+        formdata['filter[name1]'] = ''
+        formdata['filter[dnr]'] = ''
+        formdata['filter[schulart]'] = ''
+        formdata['filter[kreis]'] = ''
+        formdata['filter[ort]'] = ''
+        formdata['filter[strasse]'] = ''
 
-        if response.css("#content > div > form:nth-child(6)"):
-            yield scrapy.FormRequest.from_response(
-                    response,
-                    formcss="#content > div > form:nth-child(6)",
-                    callback=self.other_pages
-                    )
+        return formdata
 
-    def parse_detail(self, response):
-        collection = {}
-        for row in response.css('tbody tr'):
-            tds = row.css('td')
+    def parse_overview_table(self, response):
+        # inspect_response(response, self)
+        rows = response.css('table tbody tr')
+        for row in rows:
+            url = self.base_url + row.css('a::attr(href)').extract()[0]
+            yield scrapy.Request(url, callback=self.parse_school)
 
-            # last character is ":". Strip that
-            row_key = tds[0].css('::text').extract_first().strip()
-            row_value = tds[1].css('::text').extract_first().strip()
-            collection[row_key] = row_value
-
-        request = scrapy.Request(response.urljoin("../8-1/"),
-                                 callback=self.parse_students)
-        request.meta['data'] = collection
-        yield request
-
-    def parse_students(self, response):
-        collection = response.meta['data']
-        table = response.css("table")
-        if table:
-            collection['students'] = []
-            headers = table.css("th ::text").extract()
-            for tr in table.css("tbody tr"):
-                tds = tr.css("td ::text").extract()
-                row = {}
-                for index, td in enumerate(tds):
-                    row[headers[index]] = tds[index].strip()
-                collection['students'].append(row)
-
-        request = scrapy.Request(response.urljoin("../5-3/"),
-                                 callback=self.parse_partners)
-        request.meta['data'] = collection
-        yield request
-
-    def parse_partners(self, response):
-        collection = response.meta['data']
-        text = " ".join([text.strip() for text in response.css(".teaserBlock p ::text").extract()])
-        collection['partners_text'] = text
-
-        yield collection
+    def parse_school(self, response):
+        # inspect_response(response, self)
+        item = {}
+        item['name'] = response.css('table thead th::text').extract_first().strip()
+        for row in response.css('table tbody tr'):
+            key = row.css('td.bezeichner::text').extract_first().strip()
+            value = row.css('td.dbwert label::text').extract_first().strip()
+            item[key] = value
+        yield item

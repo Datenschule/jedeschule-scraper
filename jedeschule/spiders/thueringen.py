@@ -1,7 +1,7 @@
 import scrapy
 from scrapy.shell import inspect_response
 
-class SachsenSpider(scrapy.Spider):
+class ThueringenSpider(scrapy.Spider):
     name = "thueringen"
     base_url = "https://www.schulportal-thueringen.de"
 

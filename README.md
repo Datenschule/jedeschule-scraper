@@ -9,7 +9,9 @@ pip install -r requirement.txt
 
 ## Running:
 
+```bash
 ./run.py
+```
 
 Sources:
 

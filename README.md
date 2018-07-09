@@ -1,6 +1,17 @@
 # jedeschule-scraper
 
-Quellen:
+# Pretty session protocols
+
+## Installation
+```bash
+pip install -r requirement.txt
+```
+
+## Running:
+
+./run.py
+
+Sources:
 
 * Schulverzeichnis Bayern: [https://www.bllv.de/index.php?id=2707](https://www.bllv.de/index.php?id=2707)
 * Schulportraits Brandenburg: [https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=0&submit=Suchen](https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=0&submit=Suchen)

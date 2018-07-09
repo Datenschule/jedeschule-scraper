@@ -13,6 +13,8 @@ BOT_NAME = 'jedeschule'
 
 SPIDER_MODULES = ['jedeschule.spiders']
 NEWSPIDER_MODULE = 'jedeschule.spiders'
+CONCURRENT_ITEMS = 1
+CONCURRENT_REQUESTS = 1
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

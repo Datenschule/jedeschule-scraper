@@ -13,6 +13,8 @@ pip install -r requirement.txt
 ./run.py
 ```
 
+The script will generate a new directory "data". The result of each scraper is available as json file
+
 Sources:
 
 * Schulverzeichnis Bayern: [https://www.bllv.de/index.php?id=2707](https://www.bllv.de/index.php?id=2707)

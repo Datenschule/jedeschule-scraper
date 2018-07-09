@@ -9,7 +9,6 @@ class SchleswigHolsteinSpider(scrapy.Spider):
     start_urls = [base_url]
 
     def parse(self, response):
-        inspect_response(response, self)
         url = self.base_url + response.css('form::attr(action)').extract_first()
         pages = response.css('#searchResultIndexTop li')
         for page in pages:
@@ -37,14 +36,12 @@ class SchleswigHolsteinSpider(scrapy.Spider):
         return formdata
 
     def parse_overview_table(self, response):
-        # inspect_response(response, self)
         rows = response.css('table tbody tr')
         for row in rows:
             url = self.base_url + row.css('a::attr(href)').extract()[0]
             yield scrapy.Request(url, callback=self.parse_school)
 
     def parse_school(self, response):
-        # inspect_response(response, self)
         item = {}
         item['name'] = response.css('table thead th::text').extract_first().strip()
         for row in response.css('table tbody tr'):

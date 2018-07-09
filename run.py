@@ -20,6 +20,7 @@ from jedeschule.spiders.sachsen import SachsenSpider
 from jedeschule.spiders.sachsen_anhalt import SachsenAnhaltSpider
 from jedeschule.spiders.thueringen import ThueringenSpider
 from jedeschule.spiders.schleswig_holstein import SchleswigHolsteinSpider
+from jedeschule.spiders.berlin import BerlinSpider
 
 
 configure_logging()
@@ -134,6 +135,7 @@ def crawl():
     yield runner.crawl(SachsenAnhaltSpider)
     yield runner.crawl(ThueringenSpider)
     yield runner.crawl(SchleswigHolsteinSpider)
+    yield runner.crawl(BerlinSpider)
     reactor.stop()
 
 crawl()

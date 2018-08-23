@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 try:
     # python2
-    import urlparse
+    from urlparse import parse_qs
+    from urlparse import urlparse
+
 except ImportError:
     # python3
     from urllib.parse import urlparse
+    from urllib.parse import parse_qs
 import scrapy
 from scrapy.shell import inspect_response
 
@@ -20,8 +23,8 @@ class BrandenburgSpider(scrapy.Spider):
         for link in response.css("table a"):
             url = link.css("::attr(href)").extract_first()
             response.link = link
-            parsed_url = urlparse.urlparse(url)
-            parsed = urlparse.parse_qs(parsed_url.query)
+            parsed_url = urlparse(url)
+            parsed = parse_qs(parsed_url.query)
             meta = {}
             meta['nummer'] = parsed['schulnr'][0]
             meta['name'] = link.css('::text').extract_first()

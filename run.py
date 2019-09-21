@@ -216,8 +216,10 @@ def crawl():
     yield runner.crawl(BerlinSpider)
     reactor.stop()
 
-crawl()
-reactor.run() # the script will block here until the last crawl call is finished
-get_mv()
-get_hamburg()
-get_nrw()
+
+if __name__ == '__main__':
+    crawl()
+    reactor.run() # the script will block here until the last crawl call is finished
+    get_mv()
+    get_hamburg()
+    get_nrw()

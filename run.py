@@ -18,7 +18,6 @@ from jedeschule.spiders.bayern2 import Bayern2Spider
 from jedeschule.spiders.bremen import BremenSpider
 from jedeschule.spiders.brandenburg import BrandenburgSpider
 from jedeschule.spiders.niedersachsen import NiedersachsenSpider
-from jedeschule.spiders.nrw import NRWSpider
 from jedeschule.spiders.sachsen import SachsenSpider
 from jedeschule.spiders.sachsen_anhalt import SachsenAnhaltSpider
 from jedeschule.spiders.thueringen import ThueringenSpider
@@ -127,13 +126,36 @@ def get_mv():
     with open('data/mecklenburg-vorpommern.json', 'w') as json_file:
         json_file.write(json.dumps(data))
 
+
+def get_nrw():
+    # https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/key_schulbetriebsschluessel.xml
+    # https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/key_rechtsform.xml
+    # https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/key_traeger.xml
+    # https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/key_schulformschluessel.xml
+    # https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/SchuelerGesamtZahl/anzahlen.xml
+
+    url = 'https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/schuldaten.xml'
+    r = requests.get(url)
+    r.encoding = 'utf-8'
+    elem = etree.fromstring(r.content)
+    data = []
+    for member in elem:
+        print(member)
+        data_elem = {}
+        for attr in member:
+            print(attr)
+            data_elem[attr.tag] = attr.text
+        data.append(data_elem)
+    print('Parsed ' + str(len(data)) + ' data elements')
+    with open('data/nrw.json', 'w', encoding='utf-8') as json_file:
+        json_file.write(json.dumps(data))
+
 @defer.inlineCallbacks
 def crawl():
     yield runner.crawl(BremenSpider)
     yield runner.crawl(BrandenburgSpider)
     yield runner.crawl(Bayern2Spider)
     yield runner.crawl(NiedersachsenSpider)
-    yield runner.crawl(NRWSpider)
     yield runner.crawl(SachsenSpider)
     yield runner.crawl(SachsenAnhaltSpider)
     yield runner.crawl(ThueringenSpider)
@@ -145,3 +167,4 @@ crawl()
 reactor.run() # the script will block here until the last crawl call is finished
 get_mv()
 get_hamburg()
+get_nrw()

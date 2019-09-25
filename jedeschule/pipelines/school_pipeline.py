@@ -135,12 +135,24 @@ class SchoolPipeline(object):
                             phone=item.get('Telefon')
                             )
         elif spider.name == 'brandenburg':
+            # address parsing
+            name, address, zip, city = '', '', '', ''
+            if item.get('Adresse'):
+                name, address, city = item.get('Adresse').split('\n')
+                city_parts = city.split()
+                zip, city = city_parts[0], ' '.join(city_parts[1:])
+
+            # email
+            email = item.get('E-Mail').replace('|at|', '@') if item.get('E-Mail') else None
+
             school = School(
                 name=item.get('name'),
                 id='BB-{}'.format(item.get('nummer')),
-                address=item.get('Adresse'),
+                address=address,
+                zip=zip,
+                city=city,
                 website=item.get('Internet'),
-                email=item.get('E-Mail'),
+                email=email,
                 school_type=item.get('Schulform'),
                 provider=item.get('Schulamt'),
                 fax=item.get('Fax'),

@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 
+import re
 from scrapy.exceptions import DropItem
 from jedeschule.items import School
 
@@ -21,6 +22,32 @@ from jedeschule.items import School
 #         director=item.get('telephone'))
 
 
+def deobfuscate_th_email(orig):
+    """
+    Reverse-engineered version of the deobfuscation code on the website.
+
+    :param orig: the obfuscated string or the whole function call (`$(function() {...})`),
+        as long as it contains the prefix `#3b` and the suffix `3e#`.
+    :return: the deofuscated string
+    """
+    orig = re.search(r'#3b[a-z0-9 ]+3e#', orig).group(0)
+    s = orig.replace(' ', '').replace('#3b', '').replace('3e#', '').replace('o', '')
+
+    result = ''
+    last_value = 0
+    current_value = 0
+    for i, c in enumerate(s):
+        if c.isnumeric():
+            current_value = int(c)
+        else:
+            current_value = ord(c)-97+10
+
+        if i % 2 == 1:
+            t = int(last_value * 23 + current_value) // 2
+            result += chr(t)
+        last_value = current_value
+
+    return result
 
 
 class SchoolPipeline(object):
@@ -53,11 +80,15 @@ class SchoolPipeline(object):
                             address=item.get('Anschrift'),
                             id='BAY-{}'.format(item.get('Schulnummer')))
         elif spider.name == 'thueringen':
+            city_parts = item.get('Ort').split()
+            zip, city = city_parts[0], ' '.join(city_parts[1:])
             school = School(name=item.get('Schulname'),
                             id='TH-{}'.format(item.get('Schulnummer')),
-                            address=u"{} {}".format(item.get('Straße'), item.get('Ort')),
+                            address=u"{}".format(item.get('Straße')),
+                            zip=zip,
+                            city=city,
                             website=item.get('Internet'),
-                            email=item.get('E-Mail'),
+                            email=deobfuscate_th_email(item.get('E-Mail')),
                             school_type=item.get('Schulart'),
                             provider=item.get('Schulträger'),
                             fax=item.get('Telefax'),

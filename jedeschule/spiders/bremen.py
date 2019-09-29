@@ -22,4 +22,5 @@ class BremenSpider(scrapy.Spider):
             # Filter out this pointless entry
             if key is not None:
                 collection[key] = value
+            collection['data_url'] = response.url
         yield collection

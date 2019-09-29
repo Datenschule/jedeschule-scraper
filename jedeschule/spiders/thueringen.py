@@ -7,6 +7,7 @@ class ThueringenSpider(scrapy.Spider):
 
     start_urls = ['https://www.schulportal-thueringen.de/tip/schulportraet_suche/search.action?tspi=&tspm=&vsid=none&mode=&extended=0&anwf=schulportraet&freitextsuche=&name=&schulnummer=&strasse=&plz=&ort=&schulartDecode=&schulamtDecode=&kzFreierTraeger_cb=1&kzFreierTraeger=2&schultraegerDecode=&sortierungDecode=Schulname&rowsPerPage=999&schulartCode=&schulamtCode=&schultraegerCode=&sortierungCode=10&uniquePortletId=portlet_schulportraet_suche_WAR_tip1109990a_e473_4c62_872b_4ef69bdb6c5d&ajaxId=schulportraet_suche_results']
 
+    # TODO: parse last_modified
     def parse(self, response):
         headers = [header.css('::text').extract_first().strip() for header in response.css("th")]
         for tr in response.css(".tispo_row_odd,.tispo_row_normal"):

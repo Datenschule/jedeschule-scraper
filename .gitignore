@@ -19,3 +19,6 @@ berlin/node_modules
 berlin/output
 venv
 data/*
+
+# Mecklenburg-Vorpommern XLSX download
+mv*.xlsx

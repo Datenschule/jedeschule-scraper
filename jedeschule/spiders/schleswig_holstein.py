@@ -48,4 +48,6 @@ class SchleswigHolsteinSpider(scrapy.Spider):
             key = row.css('td.bezeichner::text').extract_first().strip()
             value = row.css('td.dbwert label::text').extract_first().strip()
             item[key] = value
+
+        item['data_url'] = response.url
         yield item

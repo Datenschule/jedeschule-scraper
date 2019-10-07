@@ -66,12 +66,17 @@ class SchoolPipeline(object):
                             email=email,
                             address=address)
         elif spider.name == 'niedersachsen':
-            address = u"{} {}".format(item.get('Straße', ""), item.get('Ort', ""))
+            city_parts = item.get('Ort').split()
+            zip, city = city_parts[0], ' '.join(city_parts[1:])
             school = School(name=item.get('Schule'),
                             phone=item.get('Tel'),
+                            fax='',
                             email=item.get('E-Mail'),
                             website=item.get('Homepage'),
-                            address=address,
+                            address=item.get('Straße'),
+                            zip=zip,
+                            city=city,
+                            school_type=item.get("Schul-gliederung(en)"),
                             id='NDS-{}'.format(item.get('Schulnummer')))
         elif spider.name == 'bayern':
             school = School(name=item.get('Name'),
@@ -94,16 +99,16 @@ class SchoolPipeline(object):
                             fax=item.get('Telefax'),
                             phone=item.get('Telefon'))
         elif spider.name == 'schleswig-holstein':
-            school = School(name=item.get('Name'),
-                            id='SH-{}'.format(item.get('Dienststellen Nr.')),
-                            address=u"{} {} {}".format(item.get('Straße'), item.get("PLZ"), item.get("Ort")),
-                            email=item.get('EMail'),
+            school = School(name=item.get('name'),
+                            id='SH-{}'.format(item.get('Dienststellennummer')),
+                            address=u"{} {} {}".format(item.get('Strasse'), item.get("Postleitzahl"), item.get("Ort")),
+                            email=item.get('E-Mail'),
                             school_type=item.get('Organisationsform'),
                             legal_status=item.get('Rechtsstatus'),
                             provider=item.get('Träger'),
                             fax=item.get('Fax'),
                             phone=item.get('Telefon'),
-                            director=item.get('Schulleiter(-in)'))
+                            director=item.get('Schulleitung'))
         elif spider.name == 'bremen':
             ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(',')
             item['Schulleitung'] = ansprechpersonen[0]

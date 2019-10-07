@@ -18,3 +18,4 @@ berlin/schools.json
 berlin/node_modules
 berlin/output
 venv
+data/*

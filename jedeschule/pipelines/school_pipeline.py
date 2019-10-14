@@ -77,13 +77,13 @@ class SchoolPipeline(object):
                             zip=zip,
                             city=city,
                             school_type=item.get("Schul-gliederung(en)"),
-                            id='NDS-{}'.format(item.get('Schulnummer')))
+                            id='NI-{}'.format(item.get('Schulnummer')))
         elif spider.name == 'bayern':
             school = School(name=item.get('Name'),
                             phone=item.get('Telefon'),
                             website=item.get('website'),
                             address=item.get('Anschrift'),
-                            id='BAY-{}'.format(item.get('Schulnummer')))
+                            id='BY-{}'.format(item.get('Schulnummer')))
         elif spider.name == 'thueringen':
             city_parts = item.get('Ort').split()
             zip, city = city_parts[0], ' '.join(city_parts[1:])

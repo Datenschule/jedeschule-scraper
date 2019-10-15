@@ -53,18 +53,22 @@ def deobfuscate_th_email(orig):
 class SchoolPipeline(object):
     def process_item(self, item, spider):
         if spider.name == 'saarland':
-            address = u"{} {}".format(item.get('street', ""), item.get('zip', ""))
-            if item.get('email'):
-                email = item['email'].replace('mailto:', '').replace('%40', '@')
-            else:
-                email = None
+            # address = u"{} {}".format(item.get('street', ""), item.get('zip', ""))
+            # if item.get('E-Mail'):
+            #     email = item['E-Mail'].replace('mailto:', '').replace('%40', '@')
+            # else:
+            #     email = None
+            zip, city = item['Stadt/Gemeinde'].split(', ')
+            phone = item.get('Telefon').split('\n')[0]
             school = School(name=item.get('name'),
-                            phone=item.get('telephone'),
-                            director=item.get('telephone'),
-                            website=item.get('website'),
-                            fax=item.get('fax'),
-                            email=email,
-                            address=address)
+                            phone=phone,
+                            director=item.get('Schulleiter/in'),
+                            website=item.get('Homepage'),
+                            fax=item.get('Telefax'),
+                            email=item.get('E-Mail'),  # email,
+                            address=item.get('Straße'),
+                            zip=zip,
+                            city=city)
         elif spider.name == 'niedersachsen':
             city_parts = item.get('Ort').split()
             zip, city = city_parts[0], ' '.join(city_parts[1:])

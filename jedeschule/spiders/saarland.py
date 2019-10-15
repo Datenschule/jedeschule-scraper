@@ -20,7 +20,8 @@ class SaarlandSpider(scrapy.Spider):
 
     def parse_list(self, response):
         school = response.css("body")
-        data = {'name': response.meta["name"]}
+        data = {'name': response.meta["name"],
+                'data-url': response.url}
 
         # All of the entries except for Homepage follow
         # the pattern `key:value`. For `Homepage` this is

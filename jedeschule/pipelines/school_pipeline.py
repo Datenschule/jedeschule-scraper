@@ -37,8 +37,7 @@ class SchoolPipeline(object):
                             website=item.get('website'),
                             fax=item.get('fax'),
                             email=email,
-                            address=address
-                            )
+                            address=address)
         elif spider.name == 'niedersachsen':
             address = u"{} {}".format(item.get('Straße', ""), item.get('Ort', ""))
             school = School(name=item.get('Schule'),
@@ -46,15 +45,13 @@ class SchoolPipeline(object):
                             email=item.get('E-Mail'),
                             website=item.get('Homepage'),
                             address=address,
-                            id='NDS-{}'.format(item.get('Schulnummer'))
-                            )
+                            id='NDS-{}'.format(item.get('Schulnummer')))
         elif spider.name == 'bayern':
             school = School(name=item.get('Name'),
                             phone=item.get('Telefon'),
                             website=item.get('website'),
                             address=item.get('Anschrift'),
-                            id='BAY-{}'.format(item.get('Schulnummer'))
-                            )
+                            id='BAY-{}'.format(item.get('Schulnummer')))
         elif spider.name == 'thueringen':
             school = School(name=item.get('Schulname'),
                             id='TH-{}'.format(item.get('Schulnummer')),
@@ -64,8 +61,7 @@ class SchoolPipeline(object):
                             school_type=item.get('Schulart'),
                             provider=item.get('Schulträger'),
                             fax=item.get('Telefax'),
-                            phone=item.get('Telefon')
-                            )
+                            phone=item.get('Telefon'))
         elif spider.name == 'schleswig-holstein':
             school = School(name=item.get('Name'),
                             id='SH-{}'.format(item.get('Dienststellen Nr.')),
@@ -76,8 +72,7 @@ class SchoolPipeline(object):
                             provider=item.get('Träger'),
                             fax=item.get('Fax'),
                             phone=item.get('Telefon'),
-                            director=item.get('Schulleiter(-in)')
-                            )
+                            director=item.get('Schulleiter(-in)'))
         elif spider.name == 'bremen':
             ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(',')
             item['Schulleitung'] = ansprechpersonen[0]
@@ -87,8 +82,7 @@ class SchoolPipeline(object):
                             website=item.get('Internet'),
                             email=item.get('E-Mail-Adresse'),
                             fax=item.get('Telefax'),
-                            phone=item.get('Telefon')
-                            )
+                            phone=item.get('Telefon'))
         elif spider.name == 'sachsen':
             school = School(name=item.get('title'),
                             id='SN-{}'.format(item.get('Dienststellenschlüssel')),
@@ -100,15 +94,15 @@ class SchoolPipeline(object):
                             provider=item.get('Schulträger'),
                             fax=item.get('Telefax'),
                             phone=item.get('phone_numbers'),
-                            director=item.get('Schulleiter')
-                            )
+                            director=item.get('Schulleiter'))
         elif spider.name == 'sachsen-anhalt':
             school = School(name=item.get('Name'),
                             address=item.get('Addresse'),
                             website=item.get('Homepage'),
                             email=item.get('E-Mail'),
                             fax=item.get('Fax'),
-                            phone=item.get('Telefon'))
+                            phone=item.get('Telefon')
+                            )
         elif spider.name == 'brandenburg':
             school = School(
                 name=item.get('name'),

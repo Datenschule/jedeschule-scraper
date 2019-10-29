@@ -53,7 +53,8 @@ class RheinlandPfalzSpider(scrapy.Spider):
             'Telefon'  : self.fix_data(details[7] if 7 < len(details) else ''),
             'Fax'      : self.fix_data(details[8] if 8 < len(details) else ''),
             'E-Mail'   : self.fix_data(email),
-            'Internet' : self.fix_data(internet)
+            'Internet' : self.fix_data(internet),
+            'data_url' : response.url
         }
 
         yield data

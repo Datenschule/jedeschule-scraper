@@ -1,3 +1,5 @@
+import re
+
 import scrapy
 from scrapy.shell import inspect_response
 from jedeschule.utils import cleanjoin
@@ -8,16 +10,18 @@ class RheinlandPfalzSpider(scrapy.Spider):
     root_url = "https://www.statistik.rlp.de/"
     abs_url = 'https://www.statistik.rlp.de/de/service/adress-suche/allgemeinbildende-schulen/'
     start_urls = [
-                  abs_url,
-                  #'https://www.statistik.rlp.de/de/service/adress-suche/berufsbildende-schulen/'
-                 ]
+        'https://www.statistik.rlp.de/de/service/adress-suche/allgemeinbildende-schulen/stala/search/General/school/',
+        'https://www.statistik.rlp.de/de/service/adress-suche/berufsbildende-schulen/stala/search/General/schoolp/'
+    ]
 
-    # search for "Schule" in all kinds of schools
-    def parse(self, response):
+    def start_requests(self):
         data = {
-            'tx_stala_general[name]:':'Schule',
+            'tx_stala_general[name]:': '',
         }
-        yield scrapy.FormRequest(url=self.abs_url+'stala/search/General/school/', formdata = data, callback=self.parse_schoolist)
+        return [scrapy.FormRequest(url=url,
+                                   formdata=data,
+                                   callback=self.parse_schoolist)
+                for url in self.start_urls]
 
     # go on each schools details side
     def parse_schoolist(self, response):
@@ -46,18 +50,24 @@ class RheinlandPfalzSpider(scrapy.Spider):
         email = online[0] if 0 < len(online) else ''
         internet = online[1] if 1 < len(online) else ''
 
+        # extract the school ID from the URL
+        m = re.search(r'/(\d+)/$', response.url)
+        school_id = m.group(1) if len(m.groups()) == 1 else None
+
         data = {
+            'id'       : school_id,
             'name'     : self.fix_data(info.css('h3::text').get()), 
             'Schulform': self.fix_data(response.meta.get('school_type')),         
             'Adresse'  : self.fix_data(place + street),
             'Telefon'  : self.fix_data(details[7] if 7 < len(details) else ''),
             'Fax'      : self.fix_data(details[8] if 8 < len(details) else ''),
             'E-Mail'   : self.fix_data(email),
-            'Internet' : self.fix_data(internet)
+            'Internet' : self.fix_data(internet),
+            'data_url' : response.url
         }
 
         yield data
-             
+
     # fix wrong tabs, spaces and backslashes
     def fix_data(self, string):
         string = ' '.join(string.split())

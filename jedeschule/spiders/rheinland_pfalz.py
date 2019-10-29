@@ -15,7 +15,7 @@ class RheinlandPfalzSpider(scrapy.Spider):
     # search for "Schule" in all kinds of schools
     def parse(self, response):
         data = {
-            'tx_stala_general[name]:':'Schule',
+            'tx_stala_general[name]:':'',
         }
         yield scrapy.FormRequest(url=self.abs_url+'stala/search/General/school/', formdata = data, callback=self.parse_schoolist)
 

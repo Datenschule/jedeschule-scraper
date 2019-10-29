@@ -5,21 +5,24 @@ from scrapy.shell import inspect_response
 from jedeschule.utils import cleanjoin
 import logging
 
+
 class RheinlandPfalzSpider(scrapy.Spider):
     name = "rheinland-pfalz"
     root_url = "https://www.statistik.rlp.de/"
     abs_url = 'https://www.statistik.rlp.de/de/service/adress-suche/allgemeinbildende-schulen/'
     start_urls = [
-                  abs_url,
-                  #'https://www.statistik.rlp.de/de/service/adress-suche/berufsbildende-schulen/'
-                 ]
+        'https://www.statistik.rlp.de/de/service/adress-suche/allgemeinbildende-schulen/stala/search/General/school/',
+        'https://www.statistik.rlp.de/de/service/adress-suche/berufsbildende-schulen/stala/search/General/schoolp/'
+    ]
 
-    # search for "Schule" in all kinds of schools
-    def parse(self, response):
+    def start_requests(self):
         data = {
-            'tx_stala_general[name]:':'',
+            'tx_stala_general[name]:': '',
         }
-        yield scrapy.FormRequest(url=self.abs_url+'stala/search/General/school/', formdata = data, callback=self.parse_schoolist)
+        return [scrapy.FormRequest(url=url,
+                                   formdata=data,
+                                   callback=self.parse_schoolist)
+                for url in self.start_urls]
 
     # go on each schools details side
     def parse_schoolist(self, response):
@@ -65,7 +68,7 @@ class RheinlandPfalzSpider(scrapy.Spider):
         }
 
         yield data
-             
+
     # fix wrong tabs, spaces and backslashes
     def fix_data(self, string):
         string = ' '.join(string.split())

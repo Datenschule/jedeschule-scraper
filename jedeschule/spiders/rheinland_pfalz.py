@@ -1,3 +1,5 @@
+import re
+
 import scrapy
 from scrapy.shell import inspect_response
 from jedeschule.utils import cleanjoin
@@ -46,7 +48,12 @@ class RheinlandPfalzSpider(scrapy.Spider):
         email = online[0] if 0 < len(online) else ''
         internet = online[1] if 1 < len(online) else ''
 
+        # extract the school ID from the URL
+        m = re.search(r'/(\d+)/$', response.url)
+        school_id = m.group(1) if len(m.groups()) == 1 else None
+
         data = {
+            'id'       : school_id,
             'name'     : self.fix_data(info.css('h3::text').get()), 
             'Schulform': self.fix_data(response.meta.get('school_type')),         
             'Adresse'  : self.fix_data(place + street),

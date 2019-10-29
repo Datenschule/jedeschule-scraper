@@ -117,6 +117,7 @@ class SchoolPipeline(object):
                 director=item.get('Schulleiter/in'))
         elif spider.name == 'rheinland-pfalz':
             school = School(name=item.get('name'),
+                            id='RP-{}'.format(item.get('id')),
                             address=item.get('Adresse'),
                             website=item.get('Internet'),
                             email=item.get('E-Mail'),

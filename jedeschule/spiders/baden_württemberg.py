@@ -2,6 +2,8 @@ import scrapy
 from scrapy.shell import inspect_response
 from jedeschule.utils import cleanjoin
 import logging
+import time
+import json
 
 class BadenWürttembergSpider(scrapy.Spider):
     name = "baden-württemberg"
@@ -14,56 +16,83 @@ class BadenWürttembergSpider(scrapy.Spider):
     # click the search button to return all results
     def parse(self, response):
         links_url = 'https://lobw.kultus-bw.de/didsuche/DienststellenSucheWebService.asmx/SearchDienststellen'
+        timestamp = str(int(time.time())) 
+        body = {"command":"QUICKSEARCH",
+                    "data":{
+                        "dscSearch":"",
+                        "dscPlz":"",
+                        "dscOrt":"",
+                        "dscDienststellenname":"",
+                        "dscSchulartenSelected":"",
+                        "dscSchulstatusSelected":"",
+                        "dscSchulaufsichtSelected":"",
+                        "dscOrtSelected":"",
+                        "dscEntfernung":"",
+                        "dscAusbildungsSchulenSelected":"",
+                        "dscAusbildungsSchulenSelectedSart":"",
+                        "dscPageNumber":"1",
+                        "dscPageSize":"1213",
+                        "dscUnique":timestamp
+                        }
+                }
+        payload = json.dumps({'json':str(body)})
         req = scrapy.Request(links_url,
-                     method='POST',
-                     body='{"filters": []}',
-                     headers={'X-Requested-With': 'XMLHttpRequest',
-                              'Content-Type': 'application/json; charset=UTF-8'},
-                     callback=self.parse_schoolist)
+                    method='POST',
+                    body=payload,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Host":"lobw.kultus-bw.de",
+                        "Connection":"keep-alive",
+                        "Accept":"application/json, text/javascript, */*; q=0.01",
+                        "Origin":"https://lobw.kultus-bw.de",
+                        "Referer":"https://lobw.kultus-bw.de/didsuche/"
+                       },
+                    callback=self.parse_schoolist)
         yield req
-      #  yield scrapy.FormRequest(url=self.abs_url+'stala/search/General/school/', formdata = data, callback=self.parse_schoolist)
 
     # go on each schools details side
     def parse_schoolist(self, response):
-        table = response.css('#resultlist')
-        print(table)
-        # school_type = ''
-        # for tr in table:
-        #     cols = tr.css("td a::text").getall()
-        #     if len(cols) > 1:
-        #         school_type = cols[0]
-        #     links = tr.css("td a::attr(href)").getall()
-        #     link = self.root_url+links[-1]
-        #     yield scrapy.Request(
-        #         response.urljoin(link),
-        #         meta = {'school_type' : school_type},
-        #         callback=self.parse_school_data
-        #         )
+        school_data_url = 'https://lobw.kultus-bw.de/didsuche/DienststellenSucheWebService.asmx/GetDienststelle'
+        items = json.loads(json.loads(response.text)['d'])['Rows']
+        for item in items:
+            disch = item['DISCH'][1:-1]  # remove ''
+            payload = json.dumps({'disch':disch})
+            req = scrapy.Request(school_data_url,
+                        method='POST',
+                        body=payload,
+                        headers={
+                            "Content-Type": "application/json",
+                            "Host":"lobw.kultus-bw.de",
+                            "Connection":"keep-alive",
+                            "Accept":"application/json, text/javascript, */*; q=0.01",
+                            "Origin":"https://lobw.kultus-bw.de",
+                            "Referer":"https://lobw.kultus-bw.de/didsuche/"
+                        },
+                        callback=self.parse_school_data)
+            yield req
 
     # get the information
     def parse_school_data(self, response):
-        info = response.css('div.links')
-        details = info.css('.list-address li::text').getall()
-        place = details[5] if 5 < len(details) else ''
-        street = details[6] if 6 < len(details) else ''
-        online = info.css('.list-address li a::text').getall()
-        email = online[0] if 0 < len(online) else ''
-        internet = online[1] if 1 < len(online) else ''
-
+        item = json.loads(json.loads(response.body_as_unicode())['d'])
         data = {
-            'name'     : self.fix_data(info.css('h3::text').get()), 
-            'Schulform': self.fix_data(response.meta.get('school_type')),         
-            'Adresse'  : self.fix_data(place + street),
-            'Telefon'  : self.fix_data(details[7] if 7 < len(details) else ''),
-            'Fax'      : self.fix_data(details[8] if 8 < len(details) else ''),
-            'E-Mail'   : self.fix_data(email),
-            'Internet' : self.fix_data(internet)
+            'name'             : item['NAME'], 
+            'id'               : item['DISCH'],
+            'Strasse'          : item['DISTR'],
+            'PLZ'              : item['PLZSTR'],
+            'Ort'              : item['DIORT'],
+            'Telefon'          : item['TELGANZ'], 
+            'Fax'              : item['FAXGANZ'], 
+            'E-Mail'           : item['VERWEMAIL'], 
+            'Internet'         : item['INTERNET'], 
+            'Schulamt'         : item['UEBERGEORDNET'],
+            'Schulamt_Website' : item['UEBERGEORDNET_INTERNET'],
+            'Kreis'            : item['KREISBEZEICHNUNG'],
+            'Schulleitung'     : item['SLFAMVOR'],
+            'Schulträger'      : item['STR_KURZ_BEZEICHNUNG'],
+            'Postfach'         : item['PFACH'],
+            'PLZ_Postfach'     : item['PLZPFACH'],
+            'Schueler'         : item['SCHUELER'],
+            'Klassen'          : item['KLASSEN'],
+            'Lehrer'           : item['LEHRER'],
         }
-
         yield data
-             
-    # fix wrong tabs, spaces and backslashes
-    def fix_data(self, string):
-        string = ' '.join(string.split())
-        string.replace('\\', '')
-        return string

@@ -124,6 +124,16 @@ class SchoolPipeline(object):
                             school_type=item.get('Schulform'),
                             fax=item.get('Fax'),
                             phone=item.get('Telefon'))
+        elif spider.name == 'baden-württemberg':
+            school = School(name=item.get('name'),
+                            id='BW-{}'.format(item.get('id')),
+                            address=item.get('Strasse')+" "+item.get('PLZ')+" "+item.get('Ort'),
+                            website=item.get('Internet'),
+                            email=item.get('E-Mail'),
+                            fax=item.get('Fax'),
+                            phone=item.get('Telefon'),
+                            provider=item.get('Schulamt'),
+                            director=item.get('Schulleitung'))    
         else:
             return item
             raise DropItem("Missing name in %s" % item)

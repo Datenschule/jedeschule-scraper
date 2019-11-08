@@ -3,7 +3,6 @@ import scrapy
 from scrapy.shell import inspect_response
 import re
 
-
 class BerlinSpider(scrapy.Spider):
     name = "berlin"
     # allowed_domains = ["www.berlin.de/sen/bildung/schule/berliner-schulen/schulverzeichnis/SchulListe.aspx"]
@@ -16,12 +15,14 @@ class BerlinSpider(scrapy.Spider):
         for i, school in enumerate(schools):
             yield scrapy.Request(self.start_url + school, callback=self.parse_detail, meta={'cookiejar': i})
 
-
     def parse_detail(self, response):
         meta = {}
         name = response.css('#ContentPlaceHolderMenuListe_lblSchulname::text').extract_first().strip().rsplit('-', 1)
         meta['name'] = name[0]
-        meta['id'] = name[1]
+        meta['id'] = self.remove_Spaces(name[1])
+        strasse = response.css('#ContentPlaceHolderMenuListe_lblStrasse::text').extract_first()
+        ort = response.css('#ContentPlaceHolderMenuListe_lblOrt::text').extract_first()
+        meta['address'] = strasse + " " + ort
         schooltype = re.split('[()]', response.css('#ContentPlaceHolderMenuListe_lblSchulart::text').extract_first())
         meta['schooltype'] = schooltype[0].strip()
         meta['legal_status'] = schooltype[1].strip()
@@ -100,3 +101,6 @@ class BerlinSpider(scrapy.Spider):
             for idx, value in enumerate(row.css('td')):
                 result[keys[idx]] = value.css('::text').extract_first()
         return result
+
+    def remove_Spaces(self, string):
+        return string.replace(' ','') 

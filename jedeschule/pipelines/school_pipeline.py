@@ -104,17 +104,16 @@ class SchoolPipeline(object):
                             phone=item.get('Telefon')
                             )
         elif spider.name == 'brandenburg':
-            school = School(
-                name=item.get('name'),
-                id=item.get('nummer'),
-                address=item.get('Adresse'),
-                website=item.get('Internet'),
-                email=item.get('E-Mail'),
-                school_type=item.get('Schulform'),
-                provider=item.get('Schulamt'),
-                fax=item.get('Fax'),
-                phone=item.get('Telefon'),
-                director=item.get('Schulleiter/in'))
+            school = School(name=item.get('name'),
+                            id='BB-{}'.format(item.get('id')),
+                            address=item.get('Adresse'),
+                            website=item.get('Internet'),
+                            email=item.get('E-Mail'),
+                            school_type=item.get('Schulform'),
+                            provider=item.get('Schulamt'),
+                            fax=item.get('Fax'),
+                            phone=item.get('Telefon'),
+                            director=item.get('Schulleiter'))
         elif spider.name == 'rheinland-pfalz':
             school = School(name=item.get('name'),
                             id='RP-{}'.format(item.get('id')),

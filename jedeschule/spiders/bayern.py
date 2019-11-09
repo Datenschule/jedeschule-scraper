@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from scrapy import Item
 from scrapy.shell import inspect_response
 
+from jedeschule.items import School
 from jedeschule.utils import get_first_or_none, cleanjoin
 
 
@@ -41,3 +43,15 @@ class BayernSpider(scrapy.Spider):
         collection['students'] = get_first_or_none(text.re("Schüler: ([0-9]+)"))
         collection['url'] = response.url
         yield collection
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        zip_code, *city_parts = item.get('city').split()
+        return School(name=item.get('name'),
+                      phone=item.get('phone'),
+                      website=item.get('web'),
+                      address=item.get('street'),
+                      city=' '.join(city_parts),
+                      zip=zip_code,
+                      id='BAY-{}'.format(item.get('number')))
+

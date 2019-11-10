@@ -4,7 +4,7 @@ try:
     import urlparse
 except ImportError:
     # python3
-    from urllib.parse import urlparse
+    from urllib import parse as urlparse
 import scrapy
 from scrapy.shell import inspect_response
 
@@ -40,6 +40,7 @@ class BrandenburgSpider(scrapy.Spider):
             content[key] = value
         content['name'] = response.meta['name']
         content['nummer'] = response.meta['nummer']
+        content['data_url'] = response.url
         response.content = content
         #inspect_response(response, self)
         yield content

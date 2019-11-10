@@ -13,7 +13,8 @@ class BrandenburgSpider(scrapy.Spider):
         table = response.xpath('//*[@id="c"]/div/table')
         data = {
             # extract the school ID from the URL
-            'id': response.url.rsplit('=', 1)[1]
+            'id': response.url.rsplit('=', 1)[1],
+            'data_url': response.url
         }
         for tr in table.css('tr:not(:first-child)'):
             key = tr.css('th ::text').get().replace(':', '').strip()

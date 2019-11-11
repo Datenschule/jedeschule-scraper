@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 import csv
 import json
-import sys
+import os
 from io import StringIO
 from urllib.parse import urljoin
 
 import wget
 import xlrd
-from xlrd import open_workbook
 import requests
 from lxml import etree
 
@@ -17,7 +16,7 @@ from scrapy.crawler import CrawlerRunner
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
 
-from jedeschule.spiders.bayern2 import Bayern2Spider
+from jedeschule.spiders.bayern import BayernSpider
 from jedeschule.spiders.bremen import BremenSpider
 from jedeschule.spiders.brandenburg import BrandenburgSpider
 from jedeschule.spiders.niedersachsen import NiedersachsenSpider
@@ -51,9 +50,10 @@ def get_hamburg():
 
 
 def get_mv():
-    url_mv = 'https://www.regierung-mv.de/serviceassistent/download?id=1599568'
-    wget.download(url_mv, 'mv.xls')
-    workbook = xlrd.open_workbook('mv.xls')
+    filename = 'mv.xlsx'
+    url_mv = 'http://service.mvnet.de/_php/download.php?datei_id=1614165'
+    wget.download(url_mv, filename)
+    workbook = xlrd.open_workbook(filename)
     sheets = ['Schulverzeichnis öffentl. ABS', 'Schulverzeichnis öffentl. BLS','Schulverzeichnis freie ABS']
 
     legend = {
@@ -117,17 +117,20 @@ def get_mv():
             row_data = {}
             for col_number, cell in enumerate(worksheet.row(row_number)):
                 row_data[keys[col_number]] = cell.value
-            if (row_data['Schulname'] != ''):
-                row_data['Staatl. Schulamt'] = legend['schulamt'][row_data['Staatl. Schulamt']]
-                row_data['Landkreis/ kreisfr. Stadt'] = legend['landkreis'][row_data['Landkreis/ kreisfr. Stadt']]
-                if sheet != 'Schulverzeichnis öffentl. BLS':
-                    row_data['Schulart/ Org.form'] = legend['schulart'][row_data['Schulart/ Org.form']]
-                else:
-                    row_data['Schulart/ Org.form'] = 'Berufliche Schule'
-                data.append(row_data)
+            print(row_data)
+            #if (row_data['Schulname'] != ''):
+            #    row_data['Staatl. Schulamt'] = legend['schulamt'][row_data['Staatl. Schulamt']]
+            #    row_data['Landkreis/ kreisfr. Stadt'] = legend['landkreis'][row_data['Landkreis/ kreisfr. Stadt']]
+            #    if sheet != 'Schulverzeichnis öffentl. BLS':
+            #        row_data['Schulart/ Org.form'] = legend['schulart'][row_data['Schulart/ Org.form']]
+            #    else:
+            #        row_data['Schulart/ Org.form'] = 'Berufliche Schule'
+            # TODO: Do all the cleaning in the school pipeline
+            data.append(row_data)
 
     with open('data/mecklenburg-vorpommern.json', 'w') as json_file:
         json_file.write(json.dumps(data))
+    os.remove(filename)
 
 
 def __retrieve_keys(url):
@@ -207,7 +210,7 @@ def get_nrw():
 def crawl():
     yield runner.crawl(BremenSpider)
     yield runner.crawl(BrandenburgSpider)
-    yield runner.crawl(Bayern2Spider)
+    yield runner.crawl(BayernSpider)
     yield runner.crawl(NiedersachsenSpider)
     yield runner.crawl(SachsenSpider)
     yield runner.crawl(SachsenAnhaltSpider)
@@ -220,7 +223,7 @@ def crawl():
 
 if __name__ == '__main__':
     crawl()
-    reactor.run() # the script will block here until the last crawl call is finished
+    reactor.run()  # the script will block here until the last crawl call is finished
     get_mv()
     get_hamburg()
     get_nrw()

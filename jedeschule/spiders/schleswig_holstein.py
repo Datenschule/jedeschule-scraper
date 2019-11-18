@@ -64,7 +64,7 @@ class SchleswigHolsteinSpider(SchoolSpider):
                       zip=item.get("Postleitzahl"),
                       city=item.get("Ort"),
                       email=item.get('E-Mail'),
-                      school_type=item.get('Organisationsform'),
+                      school_type=item.get('Schularten'),
                       fax=item.get('Fax'),
                       phone=item.get('Telefon'),
                       director=item.get('Schulleiter(-in)'))

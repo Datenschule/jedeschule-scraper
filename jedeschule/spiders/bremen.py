@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from scrapy import Item
 from scrapy.shell import inspect_response
 
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
-class BremenSpider(scrapy.Spider):
+
+class BremenSpider(SchoolSpider):
     name = "bremen"
     start_urls = ['http://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d']
 
@@ -24,3 +28,15 @@ class BremenSpider(scrapy.Spider):
                 collection[key] = value
             collection['data_url'] = response.url
         yield collection
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(',')
+        item['Schulleitung'] = ansprechpersonen[0]
+        item['Vertretung'] = ansprechpersonen[1]
+        return School(name=item.get('name'),
+                        address=item.get('Anschrift:'),
+                        website=item.get('Internet'),
+                        email=item.get('E-Mail-Adresse'),
+                        fax=item.get('Telefax'),
+                        phone=item.get('Telefon'))

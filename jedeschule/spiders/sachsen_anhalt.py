@@ -2,10 +2,14 @@
 import re
 
 import scrapy
+from scrapy import Item
 from scrapy.shell import inspect_response
 
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
-class SachsenAnhaltSpider(scrapy.Spider):
+
+class SachsenAnhaltSpider(SchoolSpider):
     name = "sachsen-anhalt"
     start_urls = ['https://www.bildung-lsa.de/ajax.php?m=getSSResult&q=&lk=-1&sf=-1&so=-1&timestamp=1480082277128/']
 
@@ -20,7 +24,6 @@ class SachsenAnhaltSpider(scrapy.Spider):
             request = scrapy.Request(self.detail_url.format(id), callback=self.parse_detail)
             request.meta['name'] = name.strip()
             yield request
-
 
     def parse_detail(self, response):
         tables = response.css("table")
@@ -40,3 +43,13 @@ class SachsenAnhaltSpider(scrapy.Spider):
         # in order to get only the address
         content['Adresse'] = content['Adresse'].replace(response.meta['name'], "").strip()
         yield content
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        return School(name=item.get('Name'),
+                      address=item.get('Addresse'),
+                      website=item.get('Homepage'),
+                      email=item.get('E-Mail'),
+                      fax=item.get('Fax'),
+                      phone=item.get('Telefon'),
+                      )

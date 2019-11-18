@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import re
-from scrapy.shell import inspect_response
+
+from jedeschule.items import School
 
 
 class SaarlandSpider(scrapy.Spider):
@@ -42,3 +42,17 @@ class SaarlandSpider(scrapy.Spider):
                 homepage_next = True
 
         yield data
+
+    @staticmethod
+    def normalize(item):
+        zip, city = item['Stadt/Gemeinde'].split(', ')
+        phone = item.get('Telefon').split('\n')[0]
+        return School(name=item.get('name'),
+                      phone=phone,
+                      director=item.get('Schulleiter/in'),
+                      website=item.get('Homepage'),
+                      fax=item.get('Telefax'),
+                      email=item.get('E-Mail'),  # email,
+                      address=item.get('Straße'),
+                      zip=zip,
+                      city=city)

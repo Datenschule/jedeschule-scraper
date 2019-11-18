@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from scrapy import Item
 from scrapy.shell import inspect_response
 
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
-class SchleswigHolsteinSpider(scrapy.Spider):
+
+class SchleswigHolsteinSpider(SchoolSpider):
     name = "schleswig-holstein"
     base_url = 'https://www.secure-lernnetz.de/schuldatenbank/'
     start_urls = [base_url]
@@ -51,3 +55,17 @@ class SchleswigHolsteinSpider(scrapy.Spider):
 
         item['data_url'] = response.url
         yield item
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        return School(name=item.get('name'),
+                      id='SH-{}'.format(item.get('Dienststellennummer')),
+                      address=item.get('Strasse'),
+                      zip=item.get("Postleitzahl"),
+                      city=item.get("Ort"),
+                      email=item.get('E-Mail'),
+                      school_type=item.get('Schularten'),
+                      fax=item.get('Fax'),
+                      phone=item.get('Telefon'),
+                      director=item.get('Schulleiter(-in)'))
+

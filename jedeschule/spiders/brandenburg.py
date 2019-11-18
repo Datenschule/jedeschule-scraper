@@ -1,7 +1,20 @@
+from typing import List, Optional
+
 import scrapy
+from scrapy import Item
+
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
 
-class BrandenburgSpider(scrapy.Spider):
+def first_or_none(item: List) -> Optional[str]:
+    try:
+        return item[0]
+    except IndexError:
+        return None
+
+
+class BrandenburgSpider(SchoolSpider):
     name = "brandenburg"
     start_urls = ['https://bildung-brandenburg.de/schulportraets/index.php?id=uebersicht']
 
@@ -31,3 +44,20 @@ class BrandenburgSpider(scrapy.Spider):
             return None
         string = ' '.join(string.split())
         return string.replace('\\', '').replace('|at|','@').strip()
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        *name, street, place = item.get('Adresse')
+        zip_code, *city_parts = place.split(" ")
+        return School(name=' '.join(name),
+                        id='BB-{}'.format(item.get('id')),
+                        address=street,
+                        zip=zip_code,
+                        city=' '.join(city_parts),
+                        website=first_or_none(item.get('Internet')),
+                        email=first_or_none(item.get('E-Mail')),
+                        school_type=first_or_none(item.get('Schulform')),
+                        provider=first_or_none(item.get('Schulamt')),
+                        fax=first_or_none(item.get('Fax')),
+                        phone=first_or_none(item.get('Telefon')),
+                        director=first_or_none(item.get('Schulleiter/in')))

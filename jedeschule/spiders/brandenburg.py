@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+from scrapy import Item
+
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
+
 try:
     # python2
     import urlparse
@@ -9,12 +14,12 @@ import scrapy
 from scrapy.shell import inspect_response
 
 
-
-class BrandenburgSpider(scrapy.Spider):
+class BrandenburgSpider(SchoolSpider):
     name = "brandenburg"
     # allowed_domains = ["https://www.bildung-brandenburg.de/schulportraets/index.php?id=3"]
-    start_urls = ['https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=0&submit=Suchen',
-                  'https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=1&submit=Suchen']
+    start_urls = [
+        'https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=0&submit=Suchen',
+        'https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=1&submit=Suchen']
 
     def parse(self, response):
         for link in response.css("table a"):
@@ -26,14 +31,14 @@ class BrandenburgSpider(scrapy.Spider):
             meta['nummer'] = parsed['schulnr'][0]
             meta['name'] = link.css('::text').extract_first()
             response.foo = meta
-            #inspect_response(response, self)
+            # inspect_response(response, self)
             yield scrapy.Request(response.urljoin(url), callback=self.parse_detail, meta=meta)
 
     def parse_detail(self, response):
         trs = response.css("table tr")
         content = {}
         # The first row is an image and a map
-        #inspect_response(response, self)
+        # inspect_response(response, self)
         for tr in trs[1:]:
             key = "\n".join(tr.css('th ::text').extract()).strip()[:-1].replace("**", "")
             value = "\n".join(tr.css("td ::text").extract()).replace("*", "")
@@ -42,5 +47,19 @@ class BrandenburgSpider(scrapy.Spider):
         content['nummer'] = response.meta['nummer']
         content['data_url'] = response.url
         response.content = content
-        #inspect_response(response, self)
+        # inspect_response(response, self)
         yield content
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        return School(
+            name=item.get('name'),
+            id=item.get('nummer'),
+            address=item.get('Adresse'),
+            website=item.get('Internet'),
+            email=item.get('E-Mail'),
+            school_type=item.get('Schulform'),
+            provider=item.get('Schulamt'),
+            fax=item.get('Fax'),
+            phone=item.get('Telefon'),
+            director=item.get('Schulleiter/in'))

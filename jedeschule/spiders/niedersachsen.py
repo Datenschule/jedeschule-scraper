@@ -1,8 +1,12 @@
 import scrapy
+from scrapy import Item
+
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.utils import cleanjoin
 
 
-class NiedersachsenSpider(scrapy.Spider):
+class NiedersachsenSpider(SchoolSpider):
     name = 'niedersachsen'
     start_urls = ['http://schulnetz.nibis.de/db/schulen/suche_2.php']
 
@@ -31,3 +35,17 @@ class NiedersachsenSpider(scrapy.Spider):
             collection[row_key] = row_value
         collection['data_url'] = response.url
         yield collection
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        city_parts = item.get('Ort').split()
+        zip, city = city_parts[0], ' '.join(city_parts[1:])
+        return School(name=item.get('Schule'),
+                        phone=item.get('Tel'),
+                        email=item.get('E-Mail'),
+                        website=item.get('Homepage'),
+                        address=item.get('Straße'),
+                        zip=zip,
+                        city=city,
+                        school_type=item.get("Schul-gliederung(en)"),
+                        id='NI-{}'.format(item.get('Schulnummer')))

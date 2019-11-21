@@ -1,7 +1,8 @@
 import scrapy
 from scrapy.shell import inspect_response
 from jedeschule.utils import cleanjoin
-import logging
+from jedeschule.items import School
+from scrapy import Item
 import time
 import json
 
@@ -75,24 +76,44 @@ class BadenWürttembergSpider(scrapy.Spider):
     def parse_school_data(self, response):
         item = json.loads(json.loads(response.body_as_unicode())['d'])
         data = {
-            'name'             : item['NAME'], 
-            'id'               : item['DISCH'],
-            'Strasse'          : item['DISTR'],
-            'PLZ'              : item['PLZSTR'],
-            'Ort'              : item['DIORT'],
-            'Telefon'          : item['TELGANZ'], 
-            'Fax'              : item['FAXGANZ'], 
-            'E-Mail'           : item['VERWEMAIL'], 
-            'Internet'         : item['INTERNET'], 
-            'Schulamt'         : item['UEBERGEORDNET'],
-            'Schulamt_Website' : item['UEBERGEORDNET_INTERNET'],
-            'Kreis'            : item['KREISBEZEICHNUNG'],
-            'Schulleitung'     : item['SLFAMVOR'],
-            'Schulträger'      : item['STR_KURZ_BEZEICHNUNG'],
-            'Postfach'         : item['PFACH'],
-            'PLZ_Postfach'     : item['PLZPFACH'],
+            'name'             : self.fix_data(item['NAME']), 
+            'id'               : self.fix_data(item['DISCH']),
+            'Strasse'          : self.fix_data(item['DISTR']),
+            'PLZ'              : self.fix_data(item['PLZSTR']),
+            'Ort'              : self.fix_data(item['DIORT']),
+            'Telefon'          : self.fix_data(item['TELGANZ']), 
+            'Fax'              : self.fix_data(item['FAXGANZ']), 
+            'E-Mail'           : self.fix_data(item['VERWEMAIL']), 
+            'Internet'         : self.fix_data(item['INTERNET']), 
+            'Schulamt'         : self.fix_data(item['UEBERGEORDNET']),
+            'Schulamt_Website' : self.fix_data(item['UEBERGEORDNET_INTERNET']),
+            'Kreis'            : self.fix_data(item['KREISBEZEICHNUNG']),
+            'Schulleitung'     : self.fix_data(item['SLFAMVOR']),
+            'Schulträger'      : self.fix_data(item['STR_KURZ_BEZEICHNUNG']),
+            'Postfach'         : self.fix_data(item['PFACH']),
+            'PLZ_Postfach'     : self.fix_data(item['PLZPFACH']),
             'Schueler'         : item['SCHUELER'],
             'Klassen'          : item['KLASSEN'],
             'Lehrer'           : item['LEHRER'],
         }
         yield data
+
+
+    # fix wrong tabs, spaces and new lines
+    def fix_data(self, string):
+        if string:
+            string = ' '.join(string.split())
+            string.replace('\n', '')
+        return string
+
+
+    def normalize(self, item: Item) -> School:
+        return School(name=item.get('name'),
+                      id='BW-{}'.format(item.get('id')),
+                      address=item.get('Strasse')+" "+item.get('PLZ')+" "+item.get('Ort'),
+                      website=item.get('Internet'),
+                      email=item.get('E-Mail'),
+                      fax=item.get('Fax'),
+                      phone=item.get('Telefon'),
+                      provider=item.get('Schulamt'),
+                      director=item.get('Schulleitung'))    

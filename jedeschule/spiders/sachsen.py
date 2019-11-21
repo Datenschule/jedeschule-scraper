@@ -1,9 +1,13 @@
 import scrapy
+from scrapy import Item
+
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.utils import cleanjoin
 from scrapy.shell import inspect_response
 
 
-class SachsenSpider(scrapy.Spider):
+class SachsenSpider(SchoolSpider):
     name = "sachsen"
 
     start_urls = ['https://schuldatenbank.sachsen.de/index.php?id=2']
@@ -80,11 +84,11 @@ class SachsenSpider(scrapy.Spider):
         collection = response.meta['collection']
         ags = []
 
-        tables = response.css('#content table')#[2].css('tr')[2:]#first 2 rows are heading
+        tables = response.css('#content table')  # [2].css('tr')[2:]#first 2 rows are heading
         if (len(tables) > 2):
             ag_entries = response.css('#content table')[2].css('tr')[2:]
             for tr in ag_entries:
-               ags.append(tr.css('.ssdb_02::text').extract_first())
+                ags.append(tr.css('.ssdb_02::text').extract_first())
             collection['ag'] = ags
         request = scrapy.Request('https://schuldatenbank.sachsen.de/index.php?id=430',
                                  meta={'cookiejar': response.meta['cookiejar']},
@@ -257,3 +261,17 @@ class SachsenSpider(scrapy.Spider):
             yield next_request
         else:
             yield meta['collection']
+
+    @staticmethod
+    def normalize(item: Item) -> School:
+        return School(name=item.get('title'),
+                      id='SN-{}'.format(item.get('Dienststellenschlüssel')),
+                      address=item.get('Postanschrift'),
+                      website=item.get('Homepage'),
+                      email=item.get('E-Mail'),
+                      school_type=item.get('Einrichtungsart'),
+                      legal_status=item.get('Rechtsstellung'),
+                      provider=item.get('Schulträger'),
+                      fax=item.get('Telefax'),
+                      phone=item.get('phone_numbers'),
+                      director=item.get('Schulleiter'))

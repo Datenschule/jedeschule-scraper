@@ -1,11 +1,16 @@
 import re
 
 import scrapy
+from scrapy import Item
 from scrapy.shell import inspect_response
+
+from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.utils import cleanjoin
 import logging
 
-class RheinlandPfalzSpider(scrapy.Spider):
+
+class RheinlandPfalzSpider(SchoolSpider):
     name = "rheinland-pfalz"
     root_url = "https://www.statistik.rlp.de/"
     abs_url = 'https://www.statistik.rlp.de/de/service/adress-suche/allgemeinbildende-schulen/'
@@ -33,12 +38,12 @@ class RheinlandPfalzSpider(scrapy.Spider):
             if len(cols) > 1:
                 school_type = cols[0]
             links = tr.css("td a::attr(href)").getall()
-            link = self.root_url+links[-1]
+            link = self.root_url + links[-1]
             yield scrapy.Request(
                 response.urljoin(link),
-                meta = {'school_type' : school_type},
+                meta={'school_type': school_type},
                 callback=self.parse_school_data
-                )
+            )
 
     # get the information
     def parse_school_data(self, response):
@@ -55,15 +60,15 @@ class RheinlandPfalzSpider(scrapy.Spider):
         school_id = m.group(1) if len(m.groups()) == 1 else None
 
         data = {
-            'id'       : school_id,
-            'name'     : self.fix_data(info.css('h3::text').get()), 
-            'Schulform': self.fix_data(response.meta.get('school_type')),         
-            'Adresse'  : self.fix_data(place + street),
-            'Telefon'  : self.fix_data(details[7] if 7 < len(details) else ''),
-            'Fax'      : self.fix_data(details[8] if 8 < len(details) else ''),
-            'E-Mail'   : self.fix_data(email),
-            'Internet' : self.fix_data(internet),
-            'data_url' : response.url
+            'id': school_id,
+            'name': self.fix_data(info.css('h3::text').get()),
+            'Schulform': self.fix_data(response.meta.get('school_type')),
+            'Adresse': self.fix_data(place + street),
+            'Telefon': self.fix_data(details[7] if 7 < len(details) else ''),
+            'Fax': self.fix_data(details[8] if 8 < len(details) else ''),
+            'E-Mail': self.fix_data(email),
+            'Internet': self.fix_data(internet),
+            'data_url': response.url
         }
 
         yield data
@@ -73,3 +78,13 @@ class RheinlandPfalzSpider(scrapy.Spider):
         string = ' '.join(string.split())
         string.replace('\\', '')
         return string
+
+    def normalize(self, item: Item) -> School:
+        return School(name=item.get('name'),
+                      id='RP-{}'.format(item.get('id')),
+                      address=item.get('Adresse'),
+                      website=item.get('Internet'),
+                      email=item.get('E-Mail'),
+                      school_type=item.get('Schulform'),
+                      fax=item.get('Fax'),
+                      phone=item.get('Telefon'))

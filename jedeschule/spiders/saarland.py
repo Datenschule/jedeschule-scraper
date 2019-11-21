@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import re
-from scrapy.shell import inspect_response
+
+from jedeschule.items import School
 
 
 class SaarlandSpider(scrapy.Spider):
@@ -20,7 +20,8 @@ class SaarlandSpider(scrapy.Spider):
 
     def parse_list(self, response):
         school = response.css("body")
-        data = {'name': response.meta["name"]}
+        data = {'name': response.meta["name"],
+                'data-url': response.url}
 
         # All of the entries except for Homepage follow
         # the pattern `key:value`. For `Homepage` this is
@@ -41,3 +42,17 @@ class SaarlandSpider(scrapy.Spider):
                 homepage_next = True
 
         yield data
+
+    @staticmethod
+    def normalize(item):
+        zip, city = item['Stadt/Gemeinde'].split(', ')
+        phone = item.get('Telefon').split('\n')[0]
+        return School(name=item.get('name'),
+                      phone=phone,
+                      director=item.get('Schulleiter/in'),
+                      website=item.get('Homepage'),
+                      fax=item.get('Telefax'),
+                      email=item.get('E-Mail'),  # email,
+                      address=item.get('Straße'),
+                      zip=zip,
+                      city=city)

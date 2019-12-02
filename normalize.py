@@ -93,4 +93,5 @@ if __name__ == '__main__':
     normalize('niedersachsen')
     normalize('thueringen')
     normalize('saarland')
+    normalize('schleswig-holstein')
     normalize_mv()

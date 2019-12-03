@@ -42,6 +42,7 @@ class NiedersachsenSpider(SchoolSpider):
         zip, city = city_parts[0], ' '.join(city_parts[1:])
         return School(name=item.get('Schule'),
                         phone=item.get('Tel'),
+                        fax=None,
                         email=item.get('E-Mail'),
                         website=item.get('Homepage'),
                         address=item.get('Straße'),

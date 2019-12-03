@@ -19,6 +19,7 @@ from scrapy.utils.project import get_project_settings
 from jedeschule.spiders.bayern import BayernSpider
 from jedeschule.spiders.bremen import BremenSpider
 from jedeschule.spiders.brandenburg import BrandenburgSpider
+from jedeschule.spiders.hamburg import HamburgSpider
 from jedeschule.spiders.niedersachsen import NiedersachsenSpider
 from jedeschule.spiders.sachsen import SachsenSpider
 from jedeschule.spiders.sachsen_anhalt import SachsenAnhaltSpider
@@ -32,21 +33,6 @@ settings = get_project_settings()
 runner = CrawlerRunner(settings)
 
 url_mv = 'https://www.regierung-mv.de/serviceassistent/download?id=1599568'
-
-def get_hamburg():
-    url = 'https://geoportal-hamburg.de/geodienste_hamburg_de/HH_WFS_Schulen?REQUEST=GetFeature&SERVICE=WFS&SRSNAME=EPSG%3A25832&TYPENAME=staatliche_schulen&VERSION=1.1.0&outpuFormat=application/json'
-    r = requests.get(url)
-    r.encoding = 'utf-8'
-    elem = etree.fromstring(r.content)
-    data = []
-    for member in elem:
-        data_elem = {}
-        for attr in member[0]:
-            data_elem[attr.tag.split('}', 1)[1]] = attr.text
-        data.append(data_elem)
-    print('Parsed ' + str(len(data)) + ' data elements')
-    with open('data/hamburg.json', 'w') as json_file:
-        json_file.write(json.dumps(data))
 
 
 def get_mv():
@@ -211,6 +197,7 @@ def crawl():
     yield runner.crawl(BremenSpider)
     yield runner.crawl(BrandenburgSpider)
     yield runner.crawl(BayernSpider)
+    yield runner.crawl(HamburgSpider)
     yield runner.crawl(NiedersachsenSpider)
     yield runner.crawl(SachsenSpider)
     yield runner.crawl(SachsenAnhaltSpider)
@@ -225,5 +212,4 @@ if __name__ == '__main__':
     crawl()
     reactor.run()  # the script will block here until the last crawl call is finished
     get_mv()
-    get_hamburg()
     get_nrw()

@@ -32,8 +32,9 @@ class BerlinSpider(scrapy.Spider):
         meta['fax'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblFax::text').extract_first())
         meta['mail'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_HLinkEMail::text').extract_first())
         meta['web'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_HLinkWeb::attr(href)').extract_first())
-        headmaster = response.css('#ContentPlaceHolderMenuListe_lblLeitung::text').extract_first().strip()
-        meta['headmaster'] = self.fix_data(' '.join(headmaster.split(',')[::-1]).strip())
+        headmaster = response.css('#ContentPlaceHolderMenuListe_lblLeitung::text').extract_first()
+        if headmaster:
+            meta['headmaster'] = self.fix_data(' '.join(headmaster.split(',')[::-1]).strip())  
         meta['cookiejar'] = response.meta['cookiejar']
         activities = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblAGs::text').extract_first())
         if activities:
@@ -112,7 +113,7 @@ class BerlinSpider(scrapy.Spider):
 
     def normalize(self, item: Item) -> School:
         return School(name=item.get('name'),
-                      id='BER-{}'.format(item.get('id')),
+                      id='BE-{}'.format(item.get('id')),
                       address=item.get('address'),
                       website=item.get('web'),
                       email=item.get('mail'),

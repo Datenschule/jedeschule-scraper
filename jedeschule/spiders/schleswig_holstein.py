@@ -67,5 +67,5 @@ class SchleswigHolsteinSpider(SchoolSpider):
                       school_type=item.get('Schularten'),
                       fax=item.get('Fax'),
                       phone=item.get('Telefon'),
-                      director=item.get('Schulleiter(-in)'))
+                      director=item.get('Schulleitung'))
 

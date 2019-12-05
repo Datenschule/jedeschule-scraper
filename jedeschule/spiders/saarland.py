@@ -16,11 +16,13 @@ class SaarlandSpider(scrapy.Spider):
             details_url = f"https://www.saarland.de/schuldetails.htm?id={uuid}"
             request = scrapy.Request(details_url, callback=self.parse_list)
             request.meta['name'] = name.strip() if name else ""
+            request.meta['uuid'] = uuid
             yield request
 
     def parse_list(self, response):
         school = response.css("body")
-        data = {'name': response.meta["name"],
+        data = {'id': f'SL-{response.meta["uuid"]}',
+                'name': response.meta["name"],
                 'data-url': response.url}
 
         # All of the entries except for Homepage follow
@@ -46,8 +48,9 @@ class SaarlandSpider(scrapy.Spider):
     @staticmethod
     def normalize(item):
         zip, city = item['Stadt/Gemeinde'].split(', ')
-        phone = item.get('Telefon').split('\n')[0]
-        return School(name=item.get('name'),
+        phone = item.get('Telefon').split('\n')[0] if item.get('Telefon') else None
+        return School(id=item['id'],
+                      name=item.get('name'),
                       phone=phone,
                       director=item.get('Schulleiter/in'),
                       website=item.get('Homepage'),

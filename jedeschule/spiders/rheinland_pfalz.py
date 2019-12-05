@@ -49,8 +49,8 @@ class RheinlandPfalzSpider(SchoolSpider):
     def parse_school_data(self, response):
         info = response.css('div.links')
         details = info.css('.list-address li::text').getall()
-        place = details[5] if 5 < len(details) else ''
-        street = details[6] if 6 < len(details) else ''
+        street = details[5] if 5 < len(details) else ''
+        city = details[6] if 6 < len(details) else ''
         online = info.css('.list-address li a::text').getall()
         email = online[0] if 0 < len(online) else ''
         internet = online[1] if 1 < len(online) else ''
@@ -63,7 +63,8 @@ class RheinlandPfalzSpider(SchoolSpider):
             'id': school_id,
             'name': self.fix_data(info.css('h3::text').get()),
             'Schulform': self.fix_data(response.meta.get('school_type')),
-            'Adresse': self.fix_data(place + street),
+            'Adresse': self.fix_data(street),
+            'Ort': self.fix_data(city),
             'Telefon': self.fix_data(details[7] if 7 < len(details) else ''),
             'Fax': self.fix_data(details[8] if 8 < len(details) else ''),
             'E-Mail': self.fix_data(email),
@@ -83,6 +84,7 @@ class RheinlandPfalzSpider(SchoolSpider):
         return School(name=item.get('name'),
                       id='RP-{}'.format(item.get('id')),
                       address=item.get('Adresse'),
+                      city=item.get('Ort'),
                       website=item.get('Internet'),
                       email=item.get('E-Mail'),
                       school_type=item.get('Schulform'),

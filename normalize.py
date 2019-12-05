@@ -29,7 +29,7 @@ School = namedtuple('School',
 def normalize(state):
     with open(os.path.join(BASE_PATH, 'data/{}.json'.format(state))) as f:
         data = json.load(f)
-    with open(os.path.join(BASE_PATH, 'data/{}.csv'.format(state)), 'w') as f:
+    with open(os.path.join(BASE_PATH, 'data/{}.csv'.format(state)), 'w', newline='') as f:
         output = csv.writer(f)
         output.writerow(School._fields)
 
@@ -93,4 +93,5 @@ if __name__ == '__main__':
     normalize('niedersachsen')
     normalize('thueringen')
     normalize('saarland')
+    normalize('schleswig-holstein')
     normalize_mv()

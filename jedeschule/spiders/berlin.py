@@ -7,7 +7,6 @@ import re
 
 class BerlinSpider(scrapy.Spider):
     name = "berlin"
-    # allowed_domains = ["www.berlin.de/sen/bildung/schule/berliner-schulen/schulverzeichnis/SchulListe.aspx"]
     base_url = 'http://www.berlin.de/sen/bildung/schule/berliner-schulen/schulverzeichnis/'
     start_url = base_url + 'SchulListe.aspx/'
     start_urls = [start_url]
@@ -22,9 +21,8 @@ class BerlinSpider(scrapy.Spider):
         name = response.css('#ContentPlaceHolderMenuListe_lblSchulname::text').extract_first().strip().rsplit('-', 1)
         meta['name'] = self.fix_data(name[0])
         meta['id'] = self.fix_data(name[1])
-        strasse = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblStrasse::text').extract_first())
-        ort = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblOrt::text').extract_first())
-        meta['address'] = strasse + " " + ort
+        meta['address'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblStrasse::text').extract_first())
+        meta['zip'], meta['city'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblOrt::text').extract_first()).split(" ", 1)
         schooltype = re.split('[()]', response.css('#ContentPlaceHolderMenuListe_lblSchulart::text').extract_first())
         meta['schooltype'] = self.fix_data(schooltype[0].strip())
         meta['legal_status'] = self.fix_data(schooltype[1].strip())
@@ -115,6 +113,8 @@ class BerlinSpider(scrapy.Spider):
         return School(name=item.get('name'),
                       id='BE-{}'.format(item.get('id')),
                       address=item.get('address'),
+                      zip=item.get('zip'),
+                      city=item.get('city'),
                       website=item.get('web'),
                       email=item.get('mail'),
                       school_type=item.get('schooltype'),

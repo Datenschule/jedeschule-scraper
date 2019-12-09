@@ -34,6 +34,7 @@ class BerlinSpider(scrapy.Spider):
         if headmaster:
             meta['headmaster'] = self.fix_data(' '.join(headmaster.split(',')[::-1]).strip())  
         meta['cookiejar'] = response.meta['cookiejar']
+        meta['data_url'] = response.url
         activities = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblAGs::text').extract_first())
         if activities:
             meta['activities'] = [x.strip() for x in activities.split(';')]

@@ -1,13 +1,14 @@
+import logging
 import os
 
-from scrapy.exceptions import DropItem
 from sqlalchemy import String, Column, JSON
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from jedeschule.items import School
-
+from jedeschule.pipelines.school_pipeline import SchoolPipelineItem
 
 Base = declarative_base()
 engine = create_engine(os.environ.get("DATABASE_URL"), echo=False)
@@ -33,9 +34,24 @@ class School(Base):
     director = Column(String)
     raw = Column(JSON)
 
+    @staticmethod
+    def update_or_create(item: SchoolPipelineItem) -> School:
+        school = session.query(School).get(item.info['id'])
+        if school:
+            session.query(School).filter_by(id=item.info['id']).update({**item, 'raw': item.item})
+        else:
+            school = School(**item.info, raw=item.item)
+        return school
+
 
 class DatabasePipeline(object):
     def process_item(self, item, spider):
-        school = School(**item['info'], raw=item['item'])
-        session.add(school)
-        session.commit()
+        school = School.update_or_create(item)
+        try:
+            session.add(school)
+            session.commit()
+        except SQLAlchemyError as e:
+            logging.warning('Error when putting to DB')
+            logging.warning(e)
+            session.rollback()
+        return school

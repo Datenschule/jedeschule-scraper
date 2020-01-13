@@ -20,6 +20,9 @@ class School(Base):
     id = Column(String, primary_key=True)
     name = Column(String)
     address = Column(String)
+    address2 = Column(String)
+    zip = Column(String)
+    city = Column(String)
     website = Column(String)
     email = Column(String)
     school_type = Column(String)
@@ -27,6 +30,7 @@ class School(Base):
     provider = Column(String)
     fax = Column(String)
     phone = Column(String)
+    director = Column(String)
     raw = Column(JSON)
 
 

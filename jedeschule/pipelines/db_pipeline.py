@@ -10,7 +10,7 @@ from jedeschule.items import School
 
 
 Base = declarative_base()
-engine = create_engine(os.environ.get("DATABASE_URL"), echo=True)
+engine = create_engine(os.environ.get("DATABASE_URL"), echo=False)
 Session = sessionmaker(bind=engine)
 session = Session()
 

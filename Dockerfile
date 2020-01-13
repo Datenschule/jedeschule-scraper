@@ -4,9 +4,6 @@ COPY . .
 
 RUN pip install -r requirements.txt
 
-RUN pwd
-RUN ls
-
 # Install pg_isready to await db start
 RUN apt-get update
 RUN apt-get install postgresql-client-11 cron --yes

@@ -32,12 +32,10 @@ configure_logging()
 settings = get_project_settings()
 runner = CrawlerRunner(settings)
 
-url_mv = 'https://www.regierung-mv.de/serviceassistent/download?id=1599568'
-
 
 def get_mv():
     filename = 'mv.xlsx'
-    url_mv = 'http://service.mvnet.de/_php/download.php?datei_id=1614165'
+    url_mv = 'http://service.mvnet.de/_php/download.php?datei_id=1619185'
     wget.download(url_mv, filename)
     workbook = xlrd.open_workbook(filename)
     sheets = ['Schulverzeichnis öffentl. ABS', 'Schulverzeichnis öffentl. BLS','Schulverzeichnis freie ABS']
@@ -103,7 +101,6 @@ def get_mv():
             row_data = {}
             for col_number, cell in enumerate(worksheet.row(row_number)):
                 row_data[keys[col_number]] = cell.value
-            print(row_data)
             #if (row_data['Schulname'] != ''):
             #    row_data['Staatl. Schulamt'] = legend['schulamt'][row_data['Staatl. Schulamt']]
             #    row_data['Landkreis/ kreisfr. Stadt'] = legend['landkreis'][row_data['Landkreis/ kreisfr. Stadt']]

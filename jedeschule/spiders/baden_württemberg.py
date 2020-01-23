@@ -116,4 +116,5 @@ class BadenWürttembergSpider(scrapy.Spider):
                       fax=item.get('Fax'),
                       phone=item.get('Telefon'),
                       provider=item.get('Schulamt'),
-                      director=item.get('Schulleitung'))    
+                      director=item.get('Schulleitung'),
+                      school_type='')    

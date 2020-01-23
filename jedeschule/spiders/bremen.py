@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import re
 from scrapy import Item
 from scrapy.shell import inspect_response
 
@@ -29,14 +30,26 @@ class BremenSpider(SchoolSpider):
             collection['data_url'] = response.url
         yield collection
 
+    def fix_number(number):
+        new = ''
+        for letter in number:
+            if letter.isdigit():
+                new+=letter
+        return new
+
     @staticmethod
     def normalize(item: Item) -> School:
         ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(',')
         item['Schulleitung'] = ansprechpersonen[0]
         item['Vertretung'] = ansprechpersonen[1]
         return School(name=item.get('name'),
-                        address=item.get('Anschrift:'),
+                        address=re.split('\d{5}', item.get('Anschrift:').strip())[0].strip(),
+                        zip=re.findall('\d{5}', item.get('Anschrift:').strip())[0],
+                        city=re.split('\d{5}', item.get('Anschrift:').strip())[1].strip(),
                         website=item.get('Internet'),
-                        email=item.get('E-Mail-Adresse'),
-                        fax=item.get('Telefax'),
-                        phone=item.get('Telefon'))
+                        email=item.get('E-Mail-Adresse').strip(),
+                        fax=BremenSpider.fix_number(item.get('Telefax')),
+                        phone=BremenSpider.fix_number(item.get('Telefon'))
+                        )
+    
+

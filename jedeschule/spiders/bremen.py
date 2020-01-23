@@ -11,6 +11,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 class BremenSpider(SchoolSpider):
     name = "bremen"
     start_urls = ['http://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d']
+    global_id = 1000
 
     def parse(self, response):
         for link in response.css(".table_daten_container a ::attr(href)").extract():
@@ -20,6 +21,8 @@ class BremenSpider(SchoolSpider):
         lis = response.css(".kogis_main_visitenkarte ul li")
 
         collection = {}
+        collection['id'] = self.global_id
+        self.global_id+=1
         collection['name'] = response.css(".main_article h3 ::text").extract_first()
         for li in lis:
             key = li.css("span ::attr(title)").extract_first()
@@ -43,6 +46,7 @@ class BremenSpider(SchoolSpider):
         item['Schulleitung'] = ansprechpersonen[0]
         item['Vertretung'] = ansprechpersonen[1]
         return School(name=item.get('name'),
+                        id='HB-{}'.format(item.get('id')),
                         address=re.split('\d{5}', item.get('Anschrift:').strip())[0].strip(),
                         zip=re.findall('\d{5}', item.get('Anschrift:').strip())[0],
                         city=re.split('\d{5}', item.get('Anschrift:').strip())[1].strip(),

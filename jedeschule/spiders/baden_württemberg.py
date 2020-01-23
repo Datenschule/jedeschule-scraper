@@ -110,7 +110,9 @@ class BadenWürttembergSpider(scrapy.Spider):
     def normalize(self, item: Item) -> School:
         return School(name=item.get('name'),
                       id='BW-{}'.format(item.get('id')),
-                      address=item.get('Strasse')+" "+item.get('PLZ')+" "+item.get('Ort'),
+                      address=item.get('Strasse'),
+                      zip=item.get('PLZ'),
+                      city=item.get('Ort'),
                       website=item.get('Internet'),
                       email=item.get('E-Mail'),
                       fax=item.get('Fax'),

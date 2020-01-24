@@ -1,4 +1,6 @@
 import scrapy
+import re
+
 from jedeschule.utils import cleanjoin
 from scrapy.shell import inspect_response
 from jedeschule.items import School
@@ -219,7 +221,9 @@ class SachsenSpider(scrapy.Spider):
     def normalize(item: Item) -> School:
         return School(name=item.get('title'),
                       id='SN-{}'.format(item.get('Dienststellenschlüssel')),
-                      address=item.get('Postanschrift'),
+                      address=re.split('\d{5}', item.get('Postanschrift').strip())[0].strip(),
+                      zip=re.findall('\d{5}', item.get('Postanschrift').strip())[0],
+                      city=re.split('\d{5}', item.get('Postanschrift').strip())[1].strip(),
                       website=item.get('Homepage'),
                       email=item.get('E-Mail'),
                       school_type=item.get('Einrichtungsart'),

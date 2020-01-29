@@ -230,7 +230,7 @@ class SachsenSpider(scrapy.Spider):
                       legal_status=item.get('Rechtsstellung'),
                       provider=item.get('Schulträger'),
                       fax=item.get('Telefax'),
-                      phone=item.get('phone_numbers'),
+                      phone=list(item.get('phone_numbers').values())[0],
                       director=item.get('Schulleiter') or item.get('Schulleiter/in'))
 
 

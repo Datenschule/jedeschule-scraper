@@ -4,6 +4,6 @@ do
 done
 
 echo "Initializing DB"
-python create_db.py
+alembic upgrade head
 echo "Done with DB initialization"
 

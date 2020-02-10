@@ -7,6 +7,19 @@
 pip install -r requirements.txt
 ```
 
+Make your you have a postgres database running if you want
+to use the database pipeline and export an enviornment
+variable pointing to it like so:
+```sh
+export DATABASE_URL=postgres://postgres@0.0.0.0:5432/jedeschule
+```
+Then, run the migrations to bring you database up to date
+```sh
+alembic upgrade head
+```
+
+
+
 ## Running:
 
 ```bash

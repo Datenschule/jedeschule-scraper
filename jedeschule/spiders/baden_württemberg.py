@@ -32,7 +32,7 @@ class BadenWürttembergSpider(scrapy.Spider):
                         "dscAusbildungsSchulenSelected":"",
                         "dscAusbildungsSchulenSelectedSart":"",
                         "dscPageNumber":"1",
-                        "dscPageSize":"1213",
+                        "dscPageSize":"10000",                    # crawl at least the number of existing schools
                         "dscUnique":timestamp
                         }
                 }

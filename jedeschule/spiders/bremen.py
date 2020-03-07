@@ -18,7 +18,6 @@ class BremenSpider(SchoolSpider):
             request.meta['id'] = link.split("de&Sid=", 1)[1]
             yield request
 
-
     def parse_detail(self, response):
         lis = response.css(".kogis_main_visitenkarte ul li")
         collection = {}

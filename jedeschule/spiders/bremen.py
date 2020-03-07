@@ -11,6 +11,7 @@ class BremenSpider(SchoolSpider):
     name = "bremen"
     start_urls = ['http://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d']
 
+
     def parse(self, response):
         for link in response.css(".table_daten_container a ::attr(href)").extract():
             request = scrapy.Request(response.urljoin(link), callback=self.parse_detail)

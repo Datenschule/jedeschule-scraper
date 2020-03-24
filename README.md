@@ -1,14 +1,18 @@
 # jedeschule-scraper
 
-# Pretty session protocols
+Scrapers for German school data. As Germany is a federal country and education is a state level matter every 
+state publishes their data differently. The goal of this project is to scraper all data and to make it available
+under a common data format.
 
 ## Installation
+Note that at least Python 3.7 is required.
+
 ```bash
 pip install -r requirements.txt
 ```
 
 Make your you have a postgres database running if you want
-to use the database pipeline and export an enviornment
+to use the database pipeline and export an environment
 variable pointing to it like so:
 ```sh
 export DATABASE_URL=postgres://postgres@0.0.0.0:5432/jedeschule

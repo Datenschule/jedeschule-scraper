@@ -38,7 +38,7 @@ class School(Base):
     def update_or_create(item: SchoolPipelineItem) -> School:
         school = session.query(School).get(item.info['id'])
         if school:
-            session.query(School).filter_by(id=item.info['id']).update({**item, 'raw': item.item})
+            session.query(School).filter_by(id=item.info['id']).update({**item.info, 'raw': item.item})
         else:
             school = School(**item.info, raw=item.item)
         return school

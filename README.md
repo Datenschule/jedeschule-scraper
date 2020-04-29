@@ -23,6 +23,11 @@ alembic upgrade head
 ```
 
 
+## Testing
+To run some very basic integration tests run:
+```
+./test.sh
+```
 
 ## Running:
 

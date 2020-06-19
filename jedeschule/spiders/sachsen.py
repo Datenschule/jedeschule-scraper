@@ -20,10 +20,11 @@ class SachsenSpider(scrapy.Spider):
 
     def parse_schoolist(self, response):
         forms = len(response.css('.ssdb_02 form'))
+        # TODO: use enumerate
         for formnumber in range(forms):
             yield scrapy.FormRequest.from_response(
                 response,
-                formnumber=formnumber + 3,
+                formnumber=formnumber,
                 meta={'cookiejar': formnumber},
                 dont_filter=True,
                 callback=self.parse_school)
@@ -75,7 +76,7 @@ class SachsenSpider(scrapy.Spider):
                 tables = response.css('table.ssdb_02')
                 collected_data = []
                 
-                if tables[0]:
+                if tables and tables.get(0):
                     students_count_table = tables[0]
                     rows = students_count_table.css('tr')
                     headers = [h.strip() for h in rows[0].css('td::text').extract()]
@@ -219,6 +220,8 @@ class SachsenSpider(scrapy.Spider):
 
     @staticmethod
     def normalize(item: Item) -> School:
+        v = list(item.get('phone_numbers').values())
+        phone_numbers = v[0] if len(v) > 0 else None
         return School(name=item.get('title'),
                       id='SN-{}'.format(item.get('Dienststellenschlüssel')),
                       address=re.split('\d{5}', item.get('Postanschrift').strip())[0].strip(),
@@ -230,7 +233,7 @@ class SachsenSpider(scrapy.Spider):
                       legal_status=item.get('Rechtsstellung'),
                       provider=item.get('Schulträger'),
                       fax=item.get('Telefax'),
-                      phone=list(item.get('phone_numbers').values())[0],
+                      phone=phone_numbers,
                       director=item.get('Schulleiter') or item.get('Schulleiter/in'))
 
 

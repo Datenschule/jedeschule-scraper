@@ -33,6 +33,7 @@ class SachsenSpider(scrapy.Spider):
     def parse_school(self, response):
         collection = {'phone_numbers': {}}
         collection['title'] = self.fix_data(response.css("#content h2::text").extract_first().strip())
+        collection['data_url'] = response.url
         entries = response.css(".kontaktliste li")
         for entry in entries:
             # Remove the trailing `:` from the key (:-1)

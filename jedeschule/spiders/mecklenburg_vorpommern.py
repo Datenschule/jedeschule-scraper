@@ -37,69 +37,6 @@ class MecklenburgVorpommernSpider(scrapy.Spider):
         url_mv = 'https://www.regierung-mv.de' + href
         wget.download(url_mv, filename)
 
-        ### OLD HARDCODED LEGEND: obsolet as legend sheet of xlsx is stored in a dict
-        # legend = {
-        #     'schulart': {
-        #         'Agy': 'Abendgymnasium',
-        #         'FöL': 'Schule mit dem Förderschwerpunkt Lernen',
-        #         'FöS': 'Schule mit dem Förderschwerpunkt Sehen',
-        #         'FöSp': 'Schule mit dem Förderschwerpunkt Sprache',
-        #         'FöK': 'Schule mit dem Förderschwerpunkt körperliche und motorische Entwicklung',
-        #         'FöK/GS': 'Schule mit dem Förderschwerpunkt körperliche und motorische Entwicklung mit Grundschule',
-        #         'FöG': 'Schule mit dem Förderschwerpunkt geistige Entwicklung',
-        #         'FöG/FöKr': 'Schule mit dem Förderschwerpunkt geistige Entwicklung und dem Unterricht kranker Schülerinnen und Schüler',
-        #         'FöKr': 'Schule mit dem Förderschwerpunkt Unterricht kranker Schülerinnen und Schüler',
-        #         'FöL/FöG': 'Schule mit dem Förderschwerpunkt Lernen und  dem Förderschwerpunkt geistige Entwicklung',
-        #         'FöL/FöKr':	'Schule mit dem Förderschwerpunkt Lernen und dem Förderschwerpunkt Unterricht kranker Schülerinnen und Schüler',
-        #         'FöL/FöV': 'Schule mit dem Förderschwerpunkt emotionale und soziale Entwicklung und dem Förderschwerpunkt Lernen',
-        #         'FöV': 'Schule mit dem Förderschwerpunkt emotionale und soziale Entwicklung',
-        #         'FöV/FöKr': 'Schule mit dem Förderschwerpunkt emotionale und soziale Entwicklung und dem Förderschwerpunkt Unterricht kranker Schülerinnen und Schüler',
-        #         'FöV/FöL': 'Schule mit dem Förderschwerpunkt emotionale und soziale Entwicklung und dem Förderschwerpunkt Lernen)',
-        #         'FöL/FöV/FöKr': 'Schule mit den Förderschwerpunkten Lernen, dem Förderschwerpunkt emotionale und soziale Entwicklung sowie dem Förderschwerpunkt Unterricht kranker Schülerinnen und Schüler',
-        #         'FöL/FöV/FöSp': 'Schule mit den Förderschwerpunkten Lernen, dem Förderschwerpunkt emotionale und soziale Entwicklung sowie dem Förderschwerpunkt Sprache',
-        #         'FöH': 'Schule mit dem Förderschwerpunkt Hören',
-        #         'GS': 'Grundschule',
-        #         'GS/OS': 'Grundschule mit schulartunabhängiger Orientierungsstufe',
-        #         'GS/FöSp': 'Grundschule mit selbstständigen Klassen mit dem Förderschwerpunkt Sprache',
-        #         'GS/OS/Gy': 'Grundschule mit schulartunabhängiger Orientierungsstufe und Gymnasium',
-        #         'Gy': 'Gymnasium',
-        #         'Gy/OS': 'Gymnasium mit schulartunabhängiger Orientierungsstufe (z.B. auch Musikgymnasien und Gymnasien für hochbegabte Schülerinnen und Schüler)',
-        #         'Gy/GS/OS': 'Gymnasium mit Grundschule und schulartunabhängiger Orientierungsstufe',
-        #         'Gy/RegS': 'Gymnasium mit Regionaler Schule (z.B. auch Sportgymnasien)',
-        #         'Gy/RegS/GS': 'Gymnasium mit Regionaler Schule und Grundschule',
-        #         'IGS': 'Integrierte Gesamtschule',
-        #         'IGS/GS': 'Integrierte Gesamtschule mit Grundschule',
-        #         'IGS/GS/FöG': 'Integrierte Gesamtschule mit Grundschule  und Schule mit dem Förderschwerpunkt geistige Entwicklung',
-        #         'KGS': 'Kooperative Gesamtschule',
-        #         'KGS/GS': 'Kooperative Gesamtschule mit Grundschule',
-        #         'KGS/GS/\nFöL': 'Kooperative Gesamtschule mit Grundschule und Schule mit dem Förderschwerpunkt Lernen',
-        #         'RegS': 'Regionale Schule',
-        #         'RegS/GS': 'Regionale Schule mit Grundschule',
-        #         'RegS/Gy': 'Regionale Schule mit Gymnasium',
-        #         'WS': 'Waldorfschule',
-        #         '': 'unknown'
-        #     },
-        #     'schulamt': {
-        #         'GW': 'Greifswald',
-        #         'NB': 'Neubrandenburg',
-        #         'RO': 'Rostock',
-        #         'SN': 'Schwerin',
-        #         'BM': 'Ministerium für Bildung, Wissenschaft und Kultur',
-        #         '': 'unknown'
-        #     },
-        #     'landkreis': {
-        #         'HRO': 'Hansestadt Rostock',
-        #         'SN': 'Landeshauptstadt Schwerin',
-        #         'LRO': 'Landkreis Rostock',
-        #         'LUP': 'Landkreis Ludwigslust-Parchim',
-        #         'MSE': 'Landkreis Mecklenburgische Seenplatte',
-        #         'NWM': 'Landkreis Nordwestmecklenburg',
-        #         'VG': 'Landkreis Vorpommern-Greifswald',
-        #         'VR': 'Landkreis Vorpommern-Rügen',
-        #         '': 'unknown'
-        #     }
-        # }
-
         workbook = xlrd.open_workbook(filename)
         # get all sheet names of workbook rather than hardcoding the names
         sheets = workbook.sheet_names()

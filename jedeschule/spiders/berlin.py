@@ -49,66 +49,6 @@ class BerlinSpider(scrapy.Spider):
         if partner:
             meta['partner'] = [x.strip() for x in partner.split(';')]
         yield meta
-        # yield scrapy.Request('https://www.berlin.de/sen/bildung/schule/berliner-schulen/schulverzeichnis/schuelerschaft.aspx?view=jgs',
-        #                      meta=meta, callback=self.call_students, dont_filter=True)
-
-    # def call_students(self, response):
-    #     links = response.css('#NaviSchuelerschaft ul ul li a::attr(href)').extract()
-    #     meta = response.meta
-    #     meta['cookiejar'] = response.meta['cookiejar']
-    #     if len(links) > 0:
-    #         meta['student_links'] = links[1:]
-
-    #         yield scrapy.Request(self.base_url + links[0], meta=response.meta, dont_filter=True, callback=self.parse_students)
-    #     else:
-    #         yield response.meta
-
-    # def parse_students(self, response):
-    #     year = response.request.url.rsplit('=', 1)[1]
-    #     meta = response.meta
-    #     if 'students' not in meta.keys():
-    #         meta['students'] = {}
-    #     meta['students'][year] = self.parse_table(response.css('#ContentPlaceHolderMenuListe_GridViewJahrgansstufen'))
-    #     links = meta['student_links']
-
-    #     if len(links) > 0:
-    #         meta['student_links'] = links[1:]
-    #         yield scrapy.Request(self.base_url + links[0], meta=response.meta, dont_filter=True, callback=self.parse_students)
-    #     else:
-    #         yield scrapy.Request('https://www.berlin.de/sen/bildung/schule/berliner-schulen/schulverzeichnis/schulpersonal.aspx?view=pers',
-    #                              meta=meta, callback=self.call_teacher, dont_filter=True)
-
-    # def call_teacher(self, response):
-    #     links = response.css('#NaviSchulpersonal ul ul li a::attr(href)').extract()
-    #     meta = response.meta
-    #     meta['cookiejar'] = response.meta['cookiejar']
-    #     if len(links) > 0:
-    #         meta['teacher_links'] = links[1:]
-    #         yield scrapy.Request(self.base_url + links[0], meta=response.meta, dont_filter=True, callback=self.parse_teachers)
-    #     else:
-    #         yield response.meta
-
-    # def parse_teachers(self, response):
-    #     year = response.request.url.rsplit('=', 1)[1]
-    #     meta = response.meta
-    #     if 'teachers' not in meta.keys():
-    #         meta['teachers'] = {}
-    #     meta['teachers'][year] = self.parse_table(response.css('#ContentPlaceHolderMenuListe_GridViewPersonal'))
-    #     links = meta['teacher_links']
-
-    #     if len(links) > 0:
-    #         meta['teacher_links'] = links[1:]
-    #         yield scrapy.Request(self.base_url + links[0], meta=meta, dont_filter=True, callback=self.parse_students)
-    #     else:
-    #         yield meta
-
-    # def parse_table(self, table):
-    #     result = {}
-    #     keys = table.css('th::text').extract()
-    #     for row in table.css('tr'):
-    #         for idx, value in enumerate(row.css('td')):
-    #             result[keys[idx]] = value.css('::text').extract_first()
-    #     return result
 
     # fix wrong tabs, spaces and new lines
     def fix_data(self, string):

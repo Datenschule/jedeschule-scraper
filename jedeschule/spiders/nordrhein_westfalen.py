@@ -1,48 +1,134 @@
-from csv import DictReader
-
+import scrapy
 from scrapy import Item
-
-from jedeschule.spiders.nordrhein_westfalen_helper import NordRheinWestfalenHelper
-from jedeschule.spiders.school_spider import SchoolSpider
+import wget
+import xlrd
+import json
+import os
 from jedeschule.items import School
+import requests
+from urllib.parse import urljoin
+from io import StringIO
+import csv
+from lxml import etree
 
-# for an overview of the data provided by the State of
-# Nordrhein-Westfalen, check out the overview page here:
-# https://www.schulministerium.nrw.de/ministerium/open-government/offene-daten
+# [2020-12-05, htw-kevkev]
+#   Created separate nw scraper for harmonization and to normalize data via school pipeline
 
-
-class NordrheinWestfalenSpider(SchoolSpider):
-    name = 'nordrhein-westfalen'
-
-    start_urls = [
-        'https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/schuldaten.csv',
-    ]
+class NordrheinWestfalenSpider(scrapy.Spider):
+    name = "nordrhein-westfalen"
+    base_url = 'https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/'
+    start_urls = ['https://www.schulministerium.nrw.de']
 
     def parse(self, response):
-        # TODO: This data provider actually provides coordinate values that
-        # we can use at a later point. Extract them from here so that we don't
-        # have to fall back to geocoding
+        # get Schulbetriebssschluessel
+        r = requests.get(urljoin(self.base_url, 'key_schulbetriebsschluessel.csv'))
+        r.encoding = 'utf-8'
+        sio = StringIO(r.content.decode('utf-8'))
+        sb_csv = csv.reader(sio, delimiter=';')
+        # Skip the first two lines
+        next(sb_csv)
+        next(sb_csv)
+        schulbetrieb = {row[0]: row[1] for row in sb_csv}
 
-        body = response.body.decode('utf-8').splitlines()
-        # skip the first line which contains information about the separator
-        reader = DictReader(body[1:], delimiter=';')
-        for line in reader:
-            yield line
+        # get Schulformschluessel
+        r = requests.get(urljoin(self.base_url, 'key_schulformschluessel.csv'))
+        r.encoding = 'utf-8'
+        sio = StringIO(r.content.decode('utf-8'))
+        sb_csv = csv.reader(sio, delimiter=';')
+        # Skip the first two lines
+        next(sb_csv)
+        next(sb_csv)
+        schulform = {row[0]: row[1] for row in sb_csv}
+
+        # get rechtsform
+        r = requests.get(urljoin(self.base_url, 'key_rechtsform.csv'))
+        r.encoding = 'utf-8'
+        sio = StringIO(r.content.decode('utf-8'))
+        sb_csv = csv.reader(sio, delimiter=';')
+        # Skip the first two lines
+        next(sb_csv)
+        next(sb_csv)
+        rechtsform = {row[0]: row[1] for row in sb_csv}
+
+        # get schuelerzahl
+        r = requests.get(urljoin(self.base_url, 'SchuelerGesamtZahl/anzahlen.csv'))
+        r.encoding = 'utf-8'
+        sio = StringIO(r.content.decode('utf-8'))
+        sb_csv = csv.reader(sio, delimiter=';')
+        # Skip the first two lines
+        next(sb_csv)
+        next(sb_csv)
+        schuelerzahl = {row[0]: row[1] for row in sb_csv}
+
+        # get traeger
+        r = requests.get(urljoin(self.base_url, 'key_traeger.xml'))
+        r.encoding = 'utf-8'
+        elem = etree.fromstring(r.content)
+        traeger_raw = []
+        for member in elem:
+            data_elem = {}
+            for attr in member:
+                data_elem[attr.tag] = attr.text
+            traeger_raw.append(data_elem)
+        traeger = {x['Traegernummer']: x for x in traeger_raw}
+
+
+        r = requests.get(urljoin(self.base_url, 'schuldaten.xml'))
+        r.encoding = 'utf-8'
+        elem = etree.fromstring(r.content)
+        data = []
+        for member in elem:
+            data_elem = {}
+
+            for attr in member:
+                data_elem[attr.tag] = attr.text
+
+                if attr.tag == 'Schulnummer':
+                    data_elem['Schuelerzahl'] = schuelerzahl.get(attr.text)
+
+                if attr.tag == 'Schulbetriebsschluessel':
+                    data_elem['Schulbetrieb'] = schulbetrieb[attr.text]
+
+                if attr.tag == 'Schulform':
+                    data_elem['Schulformschluessel'] = attr.text
+                    data_elem['Schulform'] = schulform[attr.text]
+
+                if attr.tag == 'Rechtsform':
+                    data_elem['Rechtsformschluessel'] = attr.text
+                    data_elem['Rechtsform'] = rechtsform[attr.text]
+
+                if attr.tag == 'Traegernummer':
+                    data_elem['Traeger'] = traeger.get(attr.text)
+
+            data.append(data_elem)
+
+
+        for row in data:
+            yield row
 
     @staticmethod
     def normalize(item: Item) -> School:
-        name = "".join([item.get("Schulbezeichnung_1", ""),
-                        item.get("Schulbezeichnung_2", ""),
-                        item.get("Schulbezeichnung_3", "")])
-        helper = NordRheinWestfalenHelper()
-        return School(name=name,
+        schoolname = item.get('Schulbezeichnung_1')+' '+item.get('Schulbezeichnung_2')+' '+ item.get('Schulbezeichnung_3')
+        schoolfax = item.get('Faxvorwahl') + item.get('Fax')
+        schoolphone = item.get('Telefonvorwahl') + item.get('Telefon')
+
+        legal = 'öffentlich'
+        if 'privat' in item.get('Rechtsform'):
+            legal = 'privat'
+
+        schoolprovider = item.get('Traeger').get('Traegerbezeichnung_1')+' '+item.get('Traeger').get('Traegerbezeichnung_2')+' '+item.get('Traeger').get('Traegerbezeichnung_3')
+
+        return School(name=schoolname.strip(),
                       id='NW-{}'.format(item.get('Schulnummer')),
                       address=item.get('Strasse'),
-                      zip=item.get("PLZ"),
+                      address2='',
+                      zip=item.get('PLZ'),
                       city=item.get('Ort'),
                       website=item.get('Homepage'),
                       email=item.get('E-Mail'),
-                      legal_status=helper.resolve('rechtsform', item.get('Rechtsform')),
-                      school_type=helper.resolve('schulform', item.get('Schulform')),
-                      fax=f"{item.get('Faxvorwahl')}{item.get('Fax')}",
-                      phone=f"{item.get('Telefonvorwahl')}{item.get('Telefon')}")
+                      school_type=item.get('Schulform'),
+                      fax=schoolfax.strip(),
+                      phone=schoolphone.strip(),
+                      provider=schoolprovider.strip(),
+                      legal_status = legal,
+                      director='')

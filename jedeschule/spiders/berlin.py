@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import urllib.parse as urlparse
+from typing import List
+from urllib.parse import parse_qs
 import scrapy
 from scrapy.shell import inspect_response
 from jedeschule.items import School
@@ -25,9 +28,9 @@ class BerlinSpider(scrapy.Spider):
 
     def parse_detail(self, response):
         meta = {}
-        name = response.css('#ContentPlaceHolderMenuListe_lblSchulname::text').extract_first().strip().rsplit('-', 1)
-        meta['name'] = self.fix_data(name[0])
-        meta['id'] = self.fix_data(name[1])
+        name = response.css('#ContentPlaceHolderMenuListe_lblSchulname::text').extract_first().strip()#.rsplit('-', 1)
+        meta['name'] = self.fix_data(name)
+        meta['id'] = self._parse_school_no(response.url)
         meta['address'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblStrasse::text').extract_first())
         meta['zip'], meta['city'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblOrt::text').extract_first()).split(" ", 1)
         schooltype = re.split('[()]', response.css('#ContentPlaceHolderMenuListe_lblSchulart::text').extract_first())
@@ -49,6 +52,14 @@ class BerlinSpider(scrapy.Spider):
         if partner:
             meta['partner'] = [x.strip() for x in partner.split(';')]
         yield meta
+
+    def _parse_school_no(self, url):
+        """Parses the school number from the 'IDSchulzweig' parameter in the url"""
+        parsed = urlparse.urlparse(url)
+        id_in_url: List[str] = parse_qs(parsed.query, max_num_fields=1)['IDSchulzweig']
+        assert len(id_in_url) == 1
+
+        return id_in_url[0].strip()
 
     # fix wrong tabs, spaces and new lines
     def fix_data(self, string):

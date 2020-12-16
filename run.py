@@ -16,19 +16,20 @@ from scrapy.crawler import CrawlerRunner
 from scrapy.utils.log import configure_logging
 from scrapy.utils.project import get_project_settings
 
+from jedeschule.spiders.baden_württemberg import BadenWürttembergSpider
 from jedeschule.spiders.bayern import BayernSpider
-from jedeschule.spiders.bremen import BremenSpider
+from jedeschule.spiders.berlin import BerlinSpider
 from jedeschule.spiders.brandenburg import BrandenburgSpider
+from jedeschule.spiders.bremen import BremenSpider
 from jedeschule.spiders.hamburg import HamburgSpider
+from jedeschule.spiders.mecklenburg_vorpommern import MecklenburgVorpommernSpider
 from jedeschule.spiders.niedersachsen import NiedersachsenSpider
+from jedeschule.spiders.nordrhein_westfalen import NordrheinWestfalenSpider
+from jedeschule.spiders.rheinland_pfalz import RheinlandPfalzSpider
 from jedeschule.spiders.sachsen import SachsenSpider
 from jedeschule.spiders.sachsen_anhalt import SachsenAnhaltSpider
-from jedeschule.spiders.thueringen import ThueringenSpider
 from jedeschule.spiders.schleswig_holstein import SchleswigHolsteinSpider
-from jedeschule.spiders.berlin import BerlinSpider
-from jedeschule.spiders.rheinland_pfalz import RheinlandPfalzSpider
-from jedeschule.spiders.mecklenburg_vorpommern import MecklenburgVorpommernSpider
-from jedeschule.spiders.nordrhein_westfalen import NordrheinWestfalenSpider
+from jedeschule.spiders.thueringen import ThueringenSpider
 
 configure_logging()
 settings = get_project_settings()
@@ -36,19 +37,20 @@ runner = CrawlerRunner(settings)
 
 @defer.inlineCallbacks
 def crawl():
-    yield runner.crawl(BremenSpider)
-    yield runner.crawl(BrandenburgSpider)
+    yield runner.crawl(BadenWürttembergSpider)
     yield runner.crawl(BayernSpider)
+    yield runner.crawl(BerlinSpider)
+    yield runner.crawl(BrandenburgSpider)
+    yield runner.crawl(BremenSpider)
     yield runner.crawl(HamburgSpider)
+    yield runner.crawl(MecklenburgVorpommernSpider)
     yield runner.crawl(NiedersachsenSpider)
+    yield runner.crawl(NordrheinWestfalenSpider)
+    yield runner.crawl(RheinlandPfalzSpider)
     yield runner.crawl(SachsenSpider)
     yield runner.crawl(SachsenAnhaltSpider)
-    yield runner.crawl(ThueringenSpider)
     yield runner.crawl(SchleswigHolsteinSpider)
-    yield runner.crawl(BerlinSpider)
-    yield runner.crawl(RheinlandPfalzSpider)
-    yield runner.crawl(MecklenburgVorpommernSpider)
-    yield runner.crawl(NordrheinWestfalenSpider)
+    yield runner.crawl(ThueringenSpider)
     reactor.stop()
 
 

@@ -8,10 +8,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 
 def first_or_none(item: List) -> Optional[str]:
-    try:
-        return item[0]
-    except IndexError:
-        return None
+    return next(iter(item or []), None)
 
 
 class BrandenburgSpider(SchoolSpider):

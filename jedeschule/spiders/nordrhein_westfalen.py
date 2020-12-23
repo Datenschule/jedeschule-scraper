@@ -109,8 +109,14 @@ class NordrheinWestfalenSpider(scrapy.Spider):
     @staticmethod
     def normalize(item: Item) -> School:
         schoolname = item.get('Schulbezeichnung_1')+' '+item.get('Schulbezeichnung_2')+' '+ item.get('Schulbezeichnung_3')
-        schoolfax = item.get('Faxvorwahl') + item.get('Fax')
-        schoolphone = item.get('Telefonvorwahl') + item.get('Telefon')
+
+        schoolfax = ''
+        if item.get('Faxvorwahl') and item.get('Fax'):
+            schoolfax = item.get('Faxvorwahl') + item.get('Fax')
+
+        schoolphone = ''
+        if item.get('Telefonvorwahl') and item.get('Telefon'):
+            schoolphone = item.get('Telefonvorwahl') + item.get('Telefon')
 
         legal = 'öffentlich'
         if 'privat' in item.get('Rechtsform'):

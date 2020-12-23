@@ -30,7 +30,8 @@ class BremenSpider(SchoolSpider):
             if key is not None:
                 collection[key] = value
             collection['data_url'] = response.url
-        yield collection
+        if collection['name']:
+            yield collection
 
     def fix_number(number):
         new = ''
@@ -41,10 +42,14 @@ class BremenSpider(SchoolSpider):
 
     @staticmethod
     def normalize(item: Item) -> School:
-        ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(',')
-        item['Schulleitung'] = ansprechpersonen[0]
-        item['Vertretung'] = ansprechpersonen[1]
-        return School(name=item.get('name'),
+        if 'Ansprechperson' in item:
+            ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(',')
+            director = ansprechpersonen[0].replace('\n','')
+            substitute = ansprechpersonen[1].replace('\n','')
+        else:
+            director = 'N.N.'
+            substitute = 'N.N.'
+        return School(name=item.get('name').strip(),
                         id='HB-{}'.format(item.get('id')),
                         address=re.split('\d{5}', item.get('Anschrift:').strip())[0].strip(),
                         zip=re.findall('\d{5}', item.get('Anschrift:').strip())[0],

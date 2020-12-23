@@ -72,21 +72,23 @@ class ThueringenSpider(SchoolSpider):
             as long as it contains the prefix `#3b` and the suffix `3e#`.
         :return: the deofuscated string
         """
-        orig = re.search(r'#3b[a-z0-9 ]+3e#', orig).group(0)
-        s = orig.replace(' ', '').replace('#3b', '').replace('3e#', '').replace('o', '')
 
         result = ''
-        last_value = 0
-        current_value = 0
-        for i, c in enumerate(s):
-            if c.isnumeric():
-                current_value = int(c)
-            else:
-                current_value = ord(c) - 97 + 10
+        if orig and re.search(r'#3b[a-z0-9 ]+3e#', orig):
+            orig = re.search(r'#3b[a-z0-9 ]+3e#', orig).group(0)
+            s = orig.replace(' ', '').replace('#3b', '').replace('3e#', '').replace('o', '')
 
-            if i % 2 == 1:
-                t = int(last_value * 23 + current_value) // 2
-                result += chr(t)
-            last_value = current_value
+            last_value = 0
+            current_value = 0
+            for i, c in enumerate(s):
+                if c.isnumeric():
+                    current_value = int(c)
+                else:
+                    current_value = ord(c) - 97 + 10
+
+                if i % 2 == 1:
+                    t = int(last_value * 23 + current_value) // 2
+                    result += chr(t)
+                last_value = current_value
 
         return result

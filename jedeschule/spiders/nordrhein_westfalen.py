@@ -2,6 +2,7 @@ from csv import DictReader
 
 from scrapy import Item
 
+from jedeschule.spiders.nordrhein_westfalen_helper import NordRheinWestfalenHelper
 from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.items import School
 
@@ -33,9 +34,7 @@ class NordrheinWestfalenSpider(SchoolSpider):
         name = "".join([item.get("Schulbezeichnung_1", ""),
                         item.get("Schulbezeichnung_2", ""),
                         item.get("Schulbezeichnung_3", "")])
-        # TODO: Get school type by also loading the mapping table from
-        # here https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/key_schulformschluessel.csv
-        # and then joining the results
+        helper = NordRheinWestfalenHelper()
         return School(name=name,
                       id='NW-{}'.format(item.get('Schulnummer')),
                       address=item.get('Strasse'),
@@ -43,5 +42,7 @@ class NordrheinWestfalenSpider(SchoolSpider):
                       city=item.get('Ort'),
                       website=item.get('Homepage'),
                       email=item.get('E-Mail'),
+                      legal_status=helper.resolve('rechtsform', item.get('Rechtsform')),
+                      school_type=helper.resolve('schulform', item.get('Schulform')),
                       fax=f"{item.get('Faxvorwahl')}{item.get('Fax')}",
                       phone=f"{item.get('Telefonvorwahl')}{item.get('Telefon')}")

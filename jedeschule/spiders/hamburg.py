@@ -1,4 +1,5 @@
-from lxml import etree
+import xml.etree.ElementTree as ET
+
 from scrapy import Item
 
 from jedeschule.spiders.school_spider import SchoolSpider
@@ -11,7 +12,7 @@ class HamburgSpider(SchoolSpider):
     start_urls = ['https://geoportal-hamburg.de/geodienste_hamburg_de/HH_WFS_Schulen?REQUEST=GetFeature&SERVICE=WFS&SRSNAME=EPSG%3A25832&TYPENAME=staatliche_schulen&VERSION=1.1.0']
 
     def parse(self, response):
-        elem = etree.fromstring(response.body)
+        elem = ET.fromstring(response.body)
 
         for member in elem:
             data_elem = {}

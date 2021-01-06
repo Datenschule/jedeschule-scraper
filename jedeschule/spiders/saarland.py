@@ -54,10 +54,14 @@ class SaarlandSpider(CrawlSpider):
         
     @staticmethod
     def normalize(item: Item) -> School:
+        if item.get('telefon'):
+            tel = item.get('telefon')
+        else:
+            tel = 'N.N.'
         return School(name=item.get('name'),
-                      phone=item.get('telefon'),
+                      phone=tel,
                       website=item.get('homepage'),
                       address=item.get('straße'),
                       city=item.get('ort'),
                       zip=item.get('plz'),
-                      id='SL-{' + item.get('telefon').replace(" ", "-") + '}')
+                      id='SL-{}'.format(tel.replace(" ", "-")))

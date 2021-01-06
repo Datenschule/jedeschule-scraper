@@ -22,10 +22,12 @@ from jedeschule.spiders.berlin import BerlinSpider
 from jedeschule.spiders.brandenburg import BrandenburgSpider
 from jedeschule.spiders.bremen import BremenSpider
 from jedeschule.spiders.hamburg import HamburgSpider
+from jedeschule.spiders.hessen import HessenSpider
 from jedeschule.spiders.mecklenburg_vorpommern import MecklenburgVorpommernSpider
 from jedeschule.spiders.niedersachsen import NiedersachsenSpider
 from jedeschule.spiders.nordrhein_westfalen import NordrheinWestfalenSpider
 from jedeschule.spiders.rheinland_pfalz import RheinlandPfalzSpider
+from jedeschule.spiders.saarland import SaarlandSpider
 from jedeschule.spiders.sachsen import SachsenSpider
 from jedeschule.spiders.sachsen_anhalt import SachsenAnhaltSpider
 from jedeschule.spiders.schleswig_holstein import SchleswigHolsteinSpider
@@ -43,10 +45,12 @@ def crawl():
     yield runner.crawl(BrandenburgSpider)
     yield runner.crawl(BremenSpider)
     yield runner.crawl(HamburgSpider)
+    yield runner.crawl(HessenSpider)
     yield runner.crawl(MecklenburgVorpommernSpider)
     yield runner.crawl(NiedersachsenSpider)
     yield runner.crawl(NordrheinWestfalenSpider)
     yield runner.crawl(RheinlandPfalzSpider)
+    yield runner.crawl(SaarlandSpider)
     yield runner.crawl(SachsenSpider)
     yield runner.crawl(SachsenAnhaltSpider)
     yield runner.crawl(SchleswigHolsteinSpider)

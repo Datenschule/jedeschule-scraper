@@ -80,8 +80,10 @@ class HessenSpider(scrapy.Spider):
     def normalize(item: Item) -> School:
         return School(name = item.get('name'),
                       phone = item.get('telefon'),
+                      fax=item.get('fax'),
                       website = item.get('homepage'),
                       address = item.get('straße'),
                       city = item.get('ort'),
                       zip = item.get('plz'),
+                      school_type= item.get('schultyp'),
                       id = 'HE-{}'.format(item.get('id')))

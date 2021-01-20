@@ -1,0 +1,33 @@
+name: Publish Docker Image
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@2.11
+        with:
+          name: knuthuehne/jedeschule-scrapers
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: server
+    steps:
+      - name: Pull latest docker images and restart
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /home/jedeschule/
+            sudo docker-compose pull scrapers
+            sudo docker-compose up --detach --build scrapers
+            sudo docker image prune -f

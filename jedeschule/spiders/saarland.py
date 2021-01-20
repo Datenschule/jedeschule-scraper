@@ -41,27 +41,52 @@ class SaarlandSpider(CrawlSpider):
                 key = keys[index].strip(":").lower()
                 
                 if key == "homepage" :
-                    school[key] = card_copy.xpath('//a[@target="_blank"]/text()')[0]
-                elif key == "e-mail" : 
-                    school[key] = card_copy.xpath('//a[contains(@title, "E-Mail senden an:")]/@href')[0].strip("mailto:")
-                else:
+                    school["homepage"] = card_copy.xpath('//a[@target="_blank"]/text()')[0]
+
+                if key == "e-mail" : 
+                    school["e-mail"] = card_copy.xpath('//a[contains(@title, "E-Mail senden an:")]/@href')[0].strip("mailto:")
+
+                if key != "homepage" and key != "e-mail" :
                     school[key] = info[index]
             
             #schools.append(school)
             yield school
-        
-        
-        
+
     @staticmethod
     def normalize(item: Item) -> School:
+        if item.get('homepage'):
+            hp = item.get('homepage')
+        else:
+            hp = 'N.N.'
+
+        if item.get('e-mail'):
+            mail = item.get('e-mail')
+        else:
+            mail = 'N.N.'
+
         if item.get('telefon'):
             tel = item.get('telefon')
         else:
             tel = 'N.N.'
+
+        if item.get('telefax'):
+            fax = item.get('telefax')
+        else:
+            fax = 'N.N.'
+
+        if item.get('schulleitung'):
+            leitung = item.get('schulleitung')
+        else:
+            leitung = 'N.N.'
+
         return School(name=item.get('name'),
                       phone=tel,
-                      website=item.get('homepage'),
+                      fax=fax,
+                      website=hp,
+                      email=mail,
                       address=item.get('straße'),
                       city=item.get('ort'),
                       zip=item.get('plz'),
+                      school_type=item.get('schultyp'),
+                      director=leitung,
                       id='SL-{}'.format(tel.replace(" ", "-")))

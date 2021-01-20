@@ -1,22 +1,18 @@
-name: Tests
+name: Show scraper result changes
 
-on:
-  - pull_request
+on: [push]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.7', '3.8'] 
-    name: Tests with Python ${{ matrix.python-version }} 
+    name: Show changes in scraper results
     steps:
       - uses: actions/checkout@v2
       - name: Setup python
         uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.8
           architecture: x64
       - run: sudo apt-get install libxml2-dev libxslt1-dev python-dev
       - run: pip install -r requirements.txt
-      - run: ./test.sh
+      - run: ./test_changes.sh

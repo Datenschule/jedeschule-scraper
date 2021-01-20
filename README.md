@@ -29,6 +29,16 @@ To run some very basic integration tests run:
 ./test.sh
 ```
 
+If you made changes to scrapers, you can also run a script to check the 
+changes between your new scraper results and the data that is currently
+hosted on the server at jedeschule.codefor.de.
+
+To do so, run the `./test_changes.sh` script on your feature branch. This
+will find the scrapers that have been changed on your branch and will then run
+them to get some sample data. For each fetched result, it will call the upstream API
+and compare the results for this ID. Note that the script always returns
+with a 0 exit code, hence you need to evaluate the changes manually.
+
 ## Running:
 
 ```bash

@@ -46,7 +46,7 @@ class SachsenAnhaltSpider(SchoolSpider):
     @staticmethod
     def normalize(item: Item) -> School:
         return School(name=item.get('Name'),
-                      id = 'SA-{}'.format(item.get('ID')),
+                      id = 'ST-{}'.format(item.get('ID')),
                       address=re.split('\d{5}', item.get('Adresse').strip())[0].strip(),
                       zip=re.findall('\d{5}', item.get('Adresse').strip())[0],
                       city=re.split('\d{5}', item.get('Adresse').strip())[1].strip(),

@@ -49,9 +49,12 @@ class BayernSpider(scrapy.Spider):
         zip_code, *city_parts = item.get('city').split()
         return School(name=item.get('name'),
                       phone=item.get('phone'),
+                      fax=item.get('fax'),
                       website=item.get('web'),
                       address=item.get('street'),
                       city=' '.join(city_parts),
                       zip=zip_code,
+                      school_type=item.get('school_type'),
+                      legal_status=item.get('type'),
                       id='BY-{}'.format(item.get('number')))
 

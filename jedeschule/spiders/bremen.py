@@ -44,7 +44,7 @@ class BremenSpider(SchoolSpider):
         if 'Ansprechperson' in item:
             ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(
                 ',')
-            director = ansprechpersonen[0].replace('\n', '')
+            director = ansprechpersonen[0].replace('\n', '').strip()
         else:
             director = None
         return School(name=item.get('name').strip(),

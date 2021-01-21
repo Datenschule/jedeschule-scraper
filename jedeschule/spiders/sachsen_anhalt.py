@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 import re
-
 import scrapy
 from scrapy import Item
 from scrapy.shell import inspect_response
-
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
-
 
 class SachsenAnhaltSpider(SchoolSpider):
     name = "sachsen-anhalt"
@@ -22,6 +19,7 @@ class SachsenAnhaltSpider(SchoolSpider):
         names = response.css("b::text").extract()
         for id, name in zip(ids, names):
             request = scrapy.Request(self.detail_url.format(id), callback=self.parse_detail)
+            request.meta['id'] = id
             request.meta['name'] = name.strip()
             yield request
 
@@ -39,6 +37,7 @@ class SachsenAnhaltSpider(SchoolSpider):
 
                 content[key] = value
         content['Name'] = response.meta['name']
+        content['ID'] = response.meta['id']
         # The name is included in the "Adresse" field so we remove that
         # in order to get only the address
         content['Adresse'] = content['Adresse'].replace(response.meta['name'], "").strip()
@@ -47,9 +46,13 @@ class SachsenAnhaltSpider(SchoolSpider):
     @staticmethod
     def normalize(item: Item) -> School:
         return School(name=item.get('Name'),
-                      address=item.get('Addresse'),
+                      id = 'ST-{}'.format(item.get('ID')),
+                      address=re.split('\d{5}', item.get('Adresse').strip())[0].strip(),
+                      zip=re.findall('\d{5}', item.get('Adresse').strip())[0],
+                      city=re.split('\d{5}', item.get('Adresse').strip())[1].strip(),
+                     # address=item.get('Adresse'),
                       website=item.get('Homepage'),
                       email=item.get('E-Mail'),
-                      fax=item.get('Fax'),
+                      fax=item.get('Telefax'),
                       phone=item.get('Telefon'),
                       )

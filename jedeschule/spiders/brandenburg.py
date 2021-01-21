@@ -1,65 +1,60 @@
-# -*- coding: utf-8 -*-
+from typing import List, Optional
+
+import scrapy
 from scrapy import Item
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
 
-try:
-    # python2
-    import urlparse
-except ImportError:
-    # python3
-    from urllib import parse as urlparse
-import scrapy
-from scrapy.shell import inspect_response
+
+def first_or_none(item: List) -> Optional[str]:
+    return next(iter(item or []), None)
 
 
 class BrandenburgSpider(SchoolSpider):
     name = "brandenburg"
-    # allowed_domains = ["https://www.bildung-brandenburg.de/schulportraets/index.php?id=3"]
-    start_urls = [
-        'https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=0&submit=Suchen',
-        'https://www.bildung-brandenburg.de/schulportraets/index.php?id=3&schuljahr=2016&kreis=&plz=&schulform=&jahrgangsstufe=0&traeger=1&submit=Suchen']
+    start_urls = ['https://bildung-brandenburg.de/schulportraets/index.php?id=uebersicht']
 
     def parse(self, response):
-        for link in response.css("table a"):
-            url = link.css("::attr(href)").extract_first()
-            response.link = link
-            parsed_url = urlparse.urlparse(url)
-            parsed = urlparse.parse_qs(parsed_url.query)
-            meta = {}
-            meta['nummer'] = parsed['schulnr'][0]
-            meta['name'] = link.css('::text').extract_first()
-            response.foo = meta
-            # inspect_response(response, self)
-            yield scrapy.Request(response.urljoin(url), callback=self.parse_detail, meta=meta)
+        for link in response.xpath('/html/body/div/div[5]/div[2]/div/div[2]/table/tbody/tr/td/a/@href').getall():
+            yield scrapy.Request(response.urljoin(link), callback=self.parse_details)
 
-    def parse_detail(self, response):
-        trs = response.css("table tr")
-        content = {}
-        # The first row is an image and a map
-        # inspect_response(response, self)
-        for tr in trs[1:]:
-            key = "\n".join(tr.css('th ::text').extract()).strip()[:-1].replace("**", "")
-            value = "\n".join(tr.css("td ::text").extract()).replace("*", "")
-            content[key] = value
-        content['name'] = response.meta['name']
-        content['nummer'] = response.meta['nummer']
-        content['data_url'] = response.url
-        response.content = content
-        # inspect_response(response, self)
-        yield content
+    def parse_details(self, response):
+        table = response.xpath('//*[@id="c"]/div/table')
+        data = {
+            # extract the school ID from the URL
+            'id': response.url.rsplit('=', 1)[1],
+            'data_url': response.url
+        }
+        for tr in table.css('tr:not(:first-child)'):
+            key = tr.css('th ::text').get().replace(':', '').strip()
+            value = tr.css('td ::text').getall()
+            data[key] = [self.fix_data(part) for part in value]
+        yield data
+
+    def fix_data(self, string):
+        """
+        fix wrong tabs, spaces and backslashes
+        fix @ in email addresses
+        """
+        if string is None:
+            return None
+        string = ' '.join(string.split())
+        return string.replace('\\', '').replace('|at|','@').strip()
 
     @staticmethod
     def normalize(item: Item) -> School:
-        return School(
-            name=item.get('name'),
-            id=item.get('nummer'),
-            address=item.get('Adresse'),
-            website=item.get('Internet'),
-            email=item.get('E-Mail'),
-            school_type=item.get('Schulform'),
-            provider=item.get('Schulamt'),
-            fax=item.get('Fax'),
-            phone=item.get('Telefon'),
-            director=item.get('Schulleiter/in'))
+        *name, street, place = item.get('Adresse')
+        zip_code, *city_parts = place.split(" ")
+        return School(name=' '.join(name),
+                        id='BB-{}'.format(item.get('id')),
+                        address=street,
+                        zip=zip_code,
+                        city=' '.join(city_parts),
+                        website=first_or_none(item.get('Internet')),
+                        email=first_or_none(item.get('E-Mail')),
+                        school_type=first_or_none(item.get('Schulform')),
+                        provider=first_or_none(item.get('Schulamt')),
+                        fax=first_or_none(item.get('Fax')),
+                        phone=first_or_none(item.get('Telefon')),
+                        director=first_or_none(item.get('Schulleiter/in')))

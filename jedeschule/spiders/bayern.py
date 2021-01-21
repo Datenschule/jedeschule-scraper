@@ -53,5 +53,5 @@ class BayernSpider(scrapy.Spider):
                       address=item.get('street'),
                       city=' '.join(city_parts),
                       zip=zip_code,
-                      id='BAY-{}'.format(item.get('number')))
+                      id='BY-{}'.format(item.get('number')))
 

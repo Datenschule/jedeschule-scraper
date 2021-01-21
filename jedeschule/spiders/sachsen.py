@@ -1,13 +1,13 @@
 import scrapy
 import re
 
+from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.utils import cleanjoin
-from scrapy.shell import inspect_response
 from jedeschule.items import School
 from scrapy import Item
 
 
-class SachsenSpider(scrapy.Spider):
+class SachsenSpider(SchoolSpider):
     name = "sachsen"
 
     base_url = 'https://schuldatenbank.sachsen.de/'

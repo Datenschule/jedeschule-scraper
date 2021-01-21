@@ -41,9 +41,11 @@ class SchleswigHolsteinSpider(SchoolSpider):
 
     def parse_overview_table(self, response):
         rows = response.css('table tbody tr')
+        # use the second href element as it is only available for schools which are not "aufgeloest"
         for row in rows:
-            url = self.base_url + row.css('a::attr(href)').extract()[0]
-            yield scrapy.Request(url, callback=self.parse_school)
+            if len(row.css('a::attr(href)').extract()) > 1:
+                url = self.base_url + row.css('a::attr(href)').extract()[1]
+                yield scrapy.Request(url, callback=self.parse_school)
 
     def parse_school(self, response):
         item = {}

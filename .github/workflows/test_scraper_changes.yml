@@ -8,6 +8,8 @@ jobs:
     name: Show changes in scraper results
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Setup python
         uses: actions/setup-python@v1
         with:

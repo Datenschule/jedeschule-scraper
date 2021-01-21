@@ -46,12 +46,15 @@ def main():
     data = load_data()
     for school in data[:10]:
         school_id = school.get('info').get('id')
+
+        upstream_data = {}
         try:
             upstream_data = fetch_data(school_id)
             upstream_data.pop('raw')
-            compare_schools(school.get('info'), upstream_data)
-        except HTTPError:
-            print(f"Could not fetch old data for school-id {school_id}")
+        except HTTPError as e:
+            print(f"Could not fetch old data for school-id {school_id}: {e}")
+
+        compare_schools(school.get('info'), upstream_data)
 
 
 if __name__ == "__main__":

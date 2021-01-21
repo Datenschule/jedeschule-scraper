@@ -24,8 +24,6 @@ def get_clean_item(data):
 
 
 def compare_schools(new_school, old_school):
-    print()
-    print(f"Comparing {new_school.get('id')}")
     new_school = sort_dict(new_school)
     old_school = sort_dict(old_school)
 
@@ -46,12 +44,19 @@ def main():
     data = load_data()
     for school in data[:10]:
         school_id = school.get('info').get('id')
+
+        print()
+        print('#'*10, f'Comparing {school_id}')
+
+        upstream_data = {}
         try:
             upstream_data = fetch_data(school_id)
             upstream_data.pop('raw')
-            compare_schools(school.get('info'), upstream_data)
-        except HTTPError:
-            print(f"Could not fetch old data for school-id {school_id}")
+        except HTTPError as e:
+            print(f"WARN: Could not fetch old data for school-id {school_id}: {e}")
+            print()
+
+        compare_schools(school.get('info'), upstream_data)
 
 
 if __name__ == "__main__":

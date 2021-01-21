@@ -11,7 +11,6 @@ class BremenSpider(SchoolSpider):
     name = "bremen"
     start_urls = ['http://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d']
 
-
     def parse(self, response):
         for link in response.css(".table_daten_container a ::attr(href)").extract():
             request = scrapy.Request(response.urljoin(link), callback=self.parse_detail)
@@ -37,27 +36,25 @@ class BremenSpider(SchoolSpider):
         new = ''
         for letter in number:
             if letter.isdigit():
-                new+=letter
+                new += letter
         return new
 
     @staticmethod
     def normalize(item: Item) -> School:
         if 'Ansprechperson' in item:
-            ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(',')
-            director = ansprechpersonen[0].replace('\n','')
-            substitute = ansprechpersonen[1].replace('\n','')
+            ansprechpersonen = item['Ansprechperson'].replace('Schulleitung:', '').replace('Vertretung:', ',').split(
+                ',')
+            director = ansprechpersonen[0].replace('\n', '')
         else:
-            director = 'N.N.'
-            substitute = 'N.N.'
+            director = None
         return School(name=item.get('name').strip(),
-                        id='HB-{}'.format(item.get('id')),
-                        address=re.split('\d{5}', item.get('Anschrift:').strip())[0].strip(),
-                        zip=re.findall('\d{5}', item.get('Anschrift:').strip())[0],
-                        city=re.split('\d{5}', item.get('Anschrift:').strip())[1].strip(),
-                        website=item.get('Internet'),
-                        email=item.get('E-Mail-Adresse').strip(),
-                        fax=BremenSpider.fix_number(item.get('Telefax')),
-                        phone=BremenSpider.fix_number(item.get('Telefon'))
-                        )
-    
-
+                      id='HB-{}'.format(item.get('id')),
+                      address=re.split('\d{5}', item.get('Anschrift:').strip())[0].strip(),
+                      zip=re.findall('\d{5}', item.get('Anschrift:').strip())[0],
+                      city=re.split('\d{5}', item.get('Anschrift:').strip())[1].strip(),
+                      website=item.get('Internet'),
+                      email=item.get('E-Mail-Adresse').strip(),
+                      fax=BremenSpider.fix_number(item.get('Telefax')),
+                      phone=BremenSpider.fix_number(item.get('Telefon')),
+                      director=director
+                      )

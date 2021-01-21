@@ -1,18 +1,17 @@
-import scrapy
-from scrapy.shell import inspect_response
-from jedeschule.utils import cleanjoin
-from jedeschule.items import School
-from scrapy import Item
 import time
 import json
 
-class BadenWürttembergSpider(scrapy.Spider):
-    name = "baden-württemberg"
-    root_url = "https://www.statistik.rlp.de/"
+import scrapy
+from scrapy import Item
+
+from jedeschule.spiders.school_spider import SchoolSpider
+from jedeschule.items import School
+
+
+class BadenWuerttembergSpider(SchoolSpider):
+    name = "baden-wuerttemberg"
     url = 'https://lobw.kultus-bw.de/didsuche/'
-    start_urls = [
-                  url,
-                 ]
+    start_urls = [url]
 
     # click the search button to return all results
     def parse(self, response):
@@ -98,14 +97,12 @@ class BadenWürttembergSpider(scrapy.Spider):
         }
         yield data
 
-
     # fix wrong tabs, spaces and new lines
     def fix_data(self, string):
         if string:
             string = ' '.join(string.split())
             string.replace('\n', '')
         return string
-
 
     def normalize(self, item: Item) -> School:
         return School(name=item.get('name'),

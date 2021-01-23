@@ -49,39 +49,15 @@ class SaarlandSpider(CrawlSpider):
 
     @staticmethod
     def normalize(item: Item) -> School:
-        if item.get('homepage'):
-            hp = item.get('homepage')
-        else:
-            hp = 'N.N.'
-
-        if item.get('e-mail'):
-            mail = item.get('e-mail')
-        else:
-            mail = 'N.N.'
-
-        if item.get('telefon'):
-            tel = item.get('telefon')
-        else:
-            tel = 'N.N.'
-
-        if item.get('telefax'):
-            fax = item.get('telefax')
-        else:
-            fax = 'N.N.'
-
-        if item.get('schulleitung'):
-            leitung = item.get('schulleitung')
-        else:
-            leitung = 'N.N.'
-
+        tel = item.get('telefon')
         return School(name=item.get('name'),
                       phone=tel,
-                      fax=fax,
-                      website=hp,
-                      email=mail,
+                      fax=item.get('telefax'),
+                      website=item.get('homepage'),
+                      email=item.get('e-mail'),
                       address=item.get('straße'),
                       city=item.get('ort'),
                       zip=item.get('plz'),
                       school_type=item.get('schultyp'),
-                      director=leitung,
+                      director=item.get('schulleitung'),
                       id='SL-{}'.format(tel.replace(" ", "-")))

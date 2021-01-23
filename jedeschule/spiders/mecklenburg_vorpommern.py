@@ -5,14 +5,6 @@ import xlrd
 from jedeschule.items import School
 
 
-# [2020-12-05, htw-kevkev]
-#   Created separate mv scraper to get url of download file dynamically (is hopefully more stable)
-#   Added output to regular School pipeline instead of individual json
-#   FURTHER TO-DOs:
-#      - adjust run.py for mv
-#         - get_mv method can be deleted and removed from main
-#         - "yield runner.crawl(MecklenburgVorpommernSpider)" can be added to crawl method
-
 class MecklenburgVorpommernSpider(scrapy.Spider):
     name = "mecklenburg-vorpommern"
     base_url = 'https://www.regierung-mv.de/Landesregierung/bm/Bildung/Schule'

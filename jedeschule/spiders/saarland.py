@@ -3,12 +3,12 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy import Item
 
 from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
 # School types: Berufliche Schule, Erweitere Realschule, Förderschule, Freie Waldorfschule,
 # Gemeinschatsschule, Grundschule, Gymnasium, Lyzeum, Realschule, Studienseminare
 
-
-class SaarlandSpider(CrawlSpider):
+class SaarlandSpider(CrawlSpider, SchoolSpider):
     name = "saarland"
     start_urls = ['https://www.saarland.de/mbk/DE/portale/bildungsserver/themen/schulen-und-bildungswege/schuldatenbank/_functions/Schulsuche_Formular.html']
 

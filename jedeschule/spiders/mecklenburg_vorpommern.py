@@ -1,9 +1,7 @@
 import scrapy
 from scrapy import Item
-import wget
 import xlrd
-import json
-import os
+
 from jedeschule.items import School
 
 
@@ -24,20 +22,18 @@ class MecklenburgVorpommernSpider(scrapy.Spider):
         # get titles of all a elements first
         titles = response.css('a::attr(title)').extract()
 
-        # our relevant title might contain "Download" and "Schulverzeichnis"
-        for title in titles:
-            if "Download" in title:
-                if "Schulverzeichnis" in title:
-                    relevant_title = title
-                    break
+        # our relevant title must contain "Download" and "Schulverzeichnis"
+        relevant_title = next(title for title in titles
+                              if "Download" in title
+                              and "Schulverzeichnis" in title)
 
-        href = response.css('a[title="' + relevant_title + '"]::attr(href)').extract()[0]
+        href = response.css(f'a[title="{relevant_title}"]::attr(href)').extract_first()
 
-        filename = 'mv.xlsx'
-        url_mv = 'https://www.regierung-mv.de' + href
-        wget.download(url_mv, filename)
+        url = f"https://www.regierung-mv.de{href}"
+        yield scrapy.Request(url, callback=self.parse_xml)
 
-        workbook = xlrd.open_workbook(filename)
+    def parse_xml(self, response: scrapy.http.Response):
+        workbook = xlrd.open_workbook(file_contents=response.body)
         # get all sheet names of workbook rather than hardcoding the names
         sheets = workbook.sheet_names()
         sheet_legend = ''
@@ -125,10 +121,6 @@ class MecklenburgVorpommernSpider(scrapy.Spider):
                 # of course only rows with a schulname should be added
                 if row_data['Schulname'] != '':
                     data.append(row_data)
-
-        # with open('data/mecklenburg-vorpommern2.json', 'w') as json_file:
-        #     json_file.write(json.dumps(data))
-        os.remove(filename)
 
         for row in data:
             yield row

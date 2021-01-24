@@ -16,5 +16,6 @@ jobs:
           python-version: 3.8
           architecture: x64
       - run: sudo apt-get install libxml2-dev libxslt1-dev python-dev
+      - run: pip install wheel
       - run: pip install -r requirements.txt
       - run: ./test_changes.sh

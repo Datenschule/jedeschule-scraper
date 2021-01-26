@@ -3,9 +3,10 @@ from scrapy import Item
 import xlrd
 
 from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
 
-class MecklenburgVorpommernSpider(scrapy.Spider):
+class MecklenburgVorpommernSpider(SchoolSpider):
     name = "mecklenburg-vorpommern"
     base_url = 'https://www.regierung-mv.de/Landesregierung/bm/Bildung/Schule'
     start_urls = [base_url]

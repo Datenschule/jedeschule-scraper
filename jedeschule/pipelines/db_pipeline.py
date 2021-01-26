@@ -21,6 +21,9 @@ def get_session():
     return session
 
 
+session = get_session()
+
+
 class School(Base):
     __tablename__ = 'schools'
     id = Column(String, primary_key=True)
@@ -41,8 +44,6 @@ class School(Base):
 
     @staticmethod
     def update_or_create(item: SchoolPipelineItem) -> School:
-        session = get_session()
-
         school = session.query(School).get(item.info['id'])
         if school:
             session.query(School).filter_by(id=item.info['id']).update({**item.info, 'raw': item.item})
@@ -55,7 +56,6 @@ class DatabasePipeline(object):
     def process_item(self, item, spider):
         school = School.update_or_create(item)
         try:
-            session = get_session()
             session.add(school)
             session.commit()
         except SQLAlchemyError as e:

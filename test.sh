@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 touch /tmp/jedeschule-test.sqlite
 
 export DATABASE_URL=sqlite:////tmp/jedeschule-test.sqlite

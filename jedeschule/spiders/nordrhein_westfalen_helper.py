@@ -33,7 +33,7 @@ class NordRheinWestfalenHelper:
         # the separator
         # and the second line which contains the headers
         reader = csv.reader(response.text.splitlines()[2:], delimiter=';')
-        return {line[0]: " ".join(line[n] for n in range(1,4)) for line in reader}
+        return {line[0]: " ".join(line[n] for n in range(1,4)).strip() for line in reader}
 
     def load_data(self):
         base_data = {

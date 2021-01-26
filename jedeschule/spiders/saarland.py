@@ -1,61 +1,63 @@
-# -*- coding: utf-8 -*-
-import scrapy
+from scrapy.spiders import Rule, CrawlSpider
+from scrapy.linkextractors import LinkExtractor
+from scrapy import Item
 
 from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
+# School types: Berufliche Schule, Erweitere Realschule, Förderschule, Freie Waldorfschule,
+# Gemeinschatsschule, Grundschule, Gymnasium, Lyzeum, Realschule, Studienseminare
 
-class SaarlandSpider(scrapy.Spider):
+class SaarlandSpider(CrawlSpider, SchoolSpider):
     name = "saarland"
-    # allowed_domains = ["www.saarland.de/4526.htm"]
-    start_urls = ['https://www.saarland.de/schuldatenbank.htm?typ=alle&ort=']
+    start_urls = ['https://www.saarland.de/mbk/DE/portale/bildungsserver/themen/schulen-und-bildungswege/schuldatenbank/_functions/Schulsuche_Formular.html']
 
-    def parse(self, response):
-        for school in response.css(".accordion h3"):
-            uuid = school.css("::attr(data-id)").extract_first()
-            name = school.css("::text").extract_first()
-            details_url = f"https://www.saarland.de/schuldetails.htm?id={uuid}"
-            request = scrapy.Request(details_url, callback=self.parse_list)
-            request.meta['name'] = name.strip() if name else ""
-            request.meta['uuid'] = uuid
-            yield request
+    rules = (Rule(LinkExtractor(allow=(), restrict_xpaths=('//a[@class="forward button"]',)), callback="parse_start_url", follow= True),)
 
-    def parse_list(self, response):
-        school = response.css("body")
-        data = {'id': f'SL-{response.meta["uuid"]}',
-                'name': response.meta["name"],
-                'data-url': response.url}
+    def parse_start_url(self, response):
+        cards = response.xpath('//div[@class="c-teaser-card"]')
 
-        # All of the entries except for Homepage follow
-        # the pattern `key:value`. For `Homepage` this is
-        # `key:
-        #  value`
-        # This is why we have some extra code to keep track of this
-        homepage_next = False
-        for line in school.css("::text").extract():
-            parts = line.split(': ')
-            key = parts[0].strip()
-            if len(parts) == 2:
-                value = parts[1].strip()
-                data[key] = value
-            if homepage_next:
-                data["Homepage"] = key
-                homepage_next = False
-            if key == "Homepage":
-                homepage_next = True
+        for card in cards:
+            school = {}
+            school["name"] = card.xpath('.//h3/text()').extract_first().strip()
 
-        yield data
+            c_badge = card.xpath('.//span[@class="c-badge"]/text()').extract()
+            school["schultyp"] = c_badge[0]
+            school["ort"] = c_badge[1]
+
+            adress = card.xpath('.//p/text()').extract_first().split(", ")
+
+            school["straße"] = adress[0]
+            school["plz"] = adress[1].strip(" " + school['ort'])
+
+            keys = card.xpath('.//dt/text()').extract()
+            info = card.xpath('.//dd/text()').extract()
+
+            for index in range(0, len(keys)):
+                key = keys[index].strip(":").lower()
+
+                if key == "homepage" :
+                    school["homepage"] = card.xpath('.//a[@target="_blank"]/text()').extract_first()
+
+                if key == "e-mail" :
+                    school["e-mail"] = card.xpath('.//a[contains(@title, "E-Mail senden an:")]/@href').extract_first().strip("mailto:")
+
+                if key != "homepage" and key != "e-mail" :
+                    school[key] = info[index]
+
+            yield school
 
     @staticmethod
-    def normalize(item):
-        zip, city = item['Stadt/Gemeinde'].split(', ')
-        phone = item.get('Telefon').split('\n')[0] if item.get('Telefon') else None
-        return School(id=item['id'],
-                      name=item.get('name'),
-                      phone=phone,
-                      director=item.get('Schulleiter/in'),
-                      website=item.get('Homepage'),
-                      fax=item.get('Telefax'),
-                      email=item.get('E-Mail'),  # email,
-                      address=item.get('Straße'),
-                      zip=zip,
-                      city=city)
+    def normalize(item: Item) -> School:
+        tel = item.get('telefon')
+        return School(name=item.get('name'),
+                      phone=tel,
+                      fax=item.get('telefax'),
+                      website=item.get('homepage'),
+                      email=item.get('e-mail'),
+                      address=item.get('straße'),
+                      city=item.get('ort'),
+                      zip=item.get('plz'),
+                      school_type=item.get('schultyp'),
+                      director=item.get('schulleitung'),
+                      id='SL-{}'.format(tel.replace(" ", "-")))

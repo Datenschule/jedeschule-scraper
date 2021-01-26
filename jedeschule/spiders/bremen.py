@@ -19,6 +19,11 @@ class BremenSpider(SchoolSpider):
 
     def parse_detail(self, response):
         lis = response.css(".kogis_main_visitenkarte ul li")
+
+        if len(lis) == 0:
+            # Detail page contains no info, see https://github.com/Datenschule/jedeschule-scraper/issues/54
+            return
+
         collection = {}
         collection['id'] = response.meta['id'].zfill(3)
         collection['name'] = response.css(".main_article h3 ::text").extract_first()

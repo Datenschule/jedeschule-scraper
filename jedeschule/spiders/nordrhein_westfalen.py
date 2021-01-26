@@ -31,9 +31,9 @@ class NordrheinWestfalenSpider(SchoolSpider):
 
     @staticmethod
     def normalize(item: Item) -> School:
-        name = "".join([item.get("Schulbezeichnung_1", ""),
-                        item.get("Schulbezeichnung_2", ""),
-                        item.get("Schulbezeichnung_3", "")])
+        name = " ".join([item.get("Schulbezeichnung_1", ""),
+                         item.get("Schulbezeichnung_2", ""),
+                         item.get("Schulbezeichnung_3", "")])
         helper = NordRheinWestfalenHelper()
         return School(name=name,
                       id='NW-{}'.format(item.get('Schulnummer')),

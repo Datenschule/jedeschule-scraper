@@ -6,6 +6,7 @@ from jedeschule.spiders.nordrhein_westfalen_helper import NordRheinWestfalenHelp
 from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.items import School
 
+
 # for an overview of the data provided by the State of
 # Nordrhein-Westfalen, check out the overview page here:
 # https://www.schulministerium.nrw.de/ministerium/open-government/offene-daten
@@ -44,5 +45,6 @@ class NordrheinWestfalenSpider(SchoolSpider):
                       email=item.get('E-Mail'),
                       legal_status=helper.resolve('rechtsform', item.get('Rechtsform')),
                       school_type=helper.resolve('schulform', item.get('Schulform')),
+                      provider=helper.resolve('provider', item.get('Traegernummer')),
                       fax=f"{item.get('Faxvorwahl')}{item.get('Fax')}",
                       phone=f"{item.get('Telefonvorwahl')}{item.get('Telefon')}")

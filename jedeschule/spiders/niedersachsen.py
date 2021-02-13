@@ -41,11 +41,23 @@ class NiedersachsenSpider(SchoolSpider):
         yield json_response
 
     @staticmethod
+    def _get(dict_like, key, default):
+        # This is almost like dict_like.get(key, default)
+        # but it also returns default if the dictionary's
+        # value for the key is `None`.
+        # A regular `.get` would just return `None` there
+        # as it only fills in if the key is not defined
+        # at all.
+        return dict_like.get(key) or default
+
+    @staticmethod
     def normalize(item: Item) -> School:
         name = " ".join([item.get('schulname', ''),
                          item.get('namenszuatz', '')]).strip()
         address = item.get('sdb_adressen', [{}])[0]
         ort = address.get('sdb_ort', {})
+        school_type = NiedersachsenSpider._get(item, 'sdb_art', {}).get('art')
+        provider = NiedersachsenSpider._get(item, 'sdb_traeger', {}).get('name')
         return School(name=name,
                       phone=item.get('telefon'),
                       fax=item.get('fax'),
@@ -54,7 +66,7 @@ class NiedersachsenSpider(SchoolSpider):
                       address=address.get('strasse'),
                       zip=ort.get('plz'),
                       city=ort.get('ort'),
-                      school_type=item.get("sdb_art", {}).get('art'),
-                      provider=item.get("sdb_traeger", {}).get('name'),
+                      school_type=school_type,
+                      provider=provider,
                       legal_status=item.get("sdb_traegerschaft", {}).get('bezeichnung'),
                       id='NI-{}'.format(item.get('schulnr')))

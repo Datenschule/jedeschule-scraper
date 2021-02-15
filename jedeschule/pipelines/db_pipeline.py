@@ -50,7 +50,7 @@ class School(Base):
 
         school_data = {**item.info}
         school = session.query(School).get(item.info['id'])
-        if school_data['latitude'] and school_data['longitude']:
+        if "latitude" in school_data and "longitude" in school_data:
             location = WKTElement(f"POINT({school_data['longitude']} {school_data['latitude']})",
                                   srid=4326)
             school_data['location'] = location

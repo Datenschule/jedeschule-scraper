@@ -19,8 +19,12 @@ depends_on = None
 
 
 def upgrade():
+    conn = op.get_bind()
+    conn.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
     op.add_column('schools', sa.Column('location', geoalchemy2.types.Geometry(geometry_type='POINT', from_text='ST_GeomFromEWKT', name='geometry'), nullable=True))
 
 
 def downgrade():
     op.drop_column('schools', 'location')
+    conn = op.get_bind()
+    conn.execute("DROP EXTENSION IF EXISTS postgis;")

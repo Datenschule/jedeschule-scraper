@@ -36,10 +36,7 @@ jobs:
       - run: sudo apt-get install libxml2-dev libxslt1-dev python-dev
       - run: pip install wheel
       - run: pip install -r requirements.txt
-      - run: |
-          set -e
-          createdb jedeschule_test
-          psql jedeschule_test -c "CREATE EXTENSION postgis";
+      - run: createdb jedeschule_test
         env:
           PGHOST: localhost
           PGPASSWORD: postgres

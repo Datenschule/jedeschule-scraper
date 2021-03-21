@@ -1,52 +1,72 @@
+import json
+import urllib
+
 import scrapy
 from scrapy import Item
+from scrapy.http import Response
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
-from jedeschule.utils import cleanjoin
 
 
 class NiedersachsenSpider(SchoolSpider):
     name = 'niedersachsen'
-    start_urls = ['http://schulnetz.nibis.de/db/schulen/suche_2.php']
+    start_urls = ['https://schulen.nibis.de/search/advanced']
 
-    def parse(self, response):
-        for link in response.css('tr.fliess td:nth-child(4) a ::attr(href)').extract():
-            yield scrapy.Request(response.urljoin(link), callback=self.parse_detail)
+    def parse(self, response: Response):
+        parts = [cookie.decode('utf-8').split("=") for cookie in response.headers.getlist('Set-Cookie')]
+        headers = {part[0]: part[1].split(';')[0] for part in parts}
+        xsrf = urllib.parse.unquote(headers.get('XSRF-TOKEN'))
+        yield scrapy.Request(
+            "https://schulen.nibis.de/school/search",
+            method="POST",
+            body="""{"type":"Advanced","eingabe":null,"filters":{"classifications":[],"lschb":["RLSB Braunschweig","RLSB Hannover","RLSB Lüneburg","RLSB Osnabrück"],"towns":[],"countys":[],"regions":[],"features":[],"bbs_classifications":[],"bbs_occupations":[],"bbs_orientations":[],"plz":0,"oeffentlich":"on","privat":"on"}}""",
+            headers={
+                'X-XSRF-TOKEN': xsrf,
+                'X-Inertia': "true",
+                'Content-Type': 'application/json;charset=utf-8',
+            },
+            callback=self.parse_list)
 
-        for link in response.css('tr.fliessbgg td:nth-child(4) a ::attr(href)').extract():
-            yield scrapy.Request(response.urljoin(link), callback=self.parse_detail)
+    def parse_list(self, response: Response):
+        json_response = json.loads(response.body.decode('utf-8'))
+        for school in json_response['props']['schools']:
+            yield scrapy.Request(
+                f"https://schulen.nibis.de/school/getInfo/{school.get('schulnr')}",
+                callback=self.parse_details
+            )
 
-    def parse_detail(self, response):
-        collection = {}
-        for index, row in enumerate(response.css('tr')):
-            # skip disclaimer header
-            if index == 0:
-                continue
-            tds = row.css('td')
+    def parse_details(self, response: Response):
+        json_response = json.loads(response.body.decode('utf-8'))
+        yield json_response
 
-            # last character is ":". Strip that
-            row_key = cleanjoin(tds[0].css('::text').extract())[:-1]
-            row_value = cleanjoin(tds[1].css('::text').extract(), "\n")
-
-            if row_key == 'Schulname':
-                row_value = row_value.replace('\n', ' ')
-
-            collection[row_key] = row_value
-        collection['data_url'] = response.url
-        yield collection
+    @staticmethod
+    def _get(dict_like, key, default):
+        # This is almost like dict_like.get(key, default)
+        # but it also returns default if the dictionary's
+        # value for the key is `None`.
+        # A regular `.get` would just return `None` there
+        # as it only fills in if the key is not defined
+        # at all.
+        return dict_like.get(key) or default
 
     @staticmethod
     def normalize(item: Item) -> School:
-        city_parts = item.get('Ort').split()
-        zip, city = city_parts[0], ' '.join(city_parts[1:])
-        return School(name=item.get('Schule'),
-                        phone=item.get('Tel'),
-                        fax=None,
-                        email=item.get('E-Mail'),
-                        website=item.get('Homepage'),
-                        address=item.get('Straße'),
-                        zip=zip,
-                        city=city,
-                        school_type=item.get("Schul-gliederung(en)"),
-                        id='NI-{}'.format(item.get('Schulnummer')))
+        name = " ".join([item.get('schulname', ''),
+                         item.get('namenszuatz', '')]).strip()
+        address = item.get('sdb_adressen', [{}])[0]
+        ort = address.get('sdb_ort', {})
+        school_type = NiedersachsenSpider._get(item, 'sdb_art', {}).get('art')
+        provider = NiedersachsenSpider._get(item, 'sdb_traeger', {}).get('name')
+        return School(name=name,
+                      phone=item.get('telefon'),
+                      fax=item.get('fax'),
+                      email=item.get('email'),
+                      website=item.get('homepage'),
+                      address=address.get('strasse'),
+                      zip=ort.get('plz'),
+                      city=ort.get('ort'),
+                      school_type=school_type,
+                      provider=provider,
+                      legal_status=item.get("sdb_traegerschaft", {}).get('bezeichnung'),
+                      id='NI-{}'.format(item.get('schulnr')))

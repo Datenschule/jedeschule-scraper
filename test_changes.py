@@ -51,7 +51,6 @@ def main():
         upstream_data = {}
         try:
             upstream_data = fetch_data(school_id)
-            upstream_data.pop('raw')
         except HTTPError as e:
             print(f"WARN: Could not fetch old data for school-id {school_id}: {e}")
             print()

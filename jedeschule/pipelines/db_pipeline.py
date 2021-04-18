@@ -50,12 +50,11 @@ class School(Base):
 
         school_data = {**item.info}
         school = session.query(School).get(item.info['id'])
-        if "latitude" in school_data and "longitude" in school_data:
-            location = WKTElement(f"POINT({school_data['longitude']} {school_data['latitude']})",
-                                  srid=4326)
+        latitude = school_data.pop('latitude', None)
+        longitude = school_data.pop('longitude', None)
+        if latitude is not None and longitude is not None:
+            location = WKTElement(f"POINT({longitude} {latitude})", srid=4326)
             school_data['location'] = location
-            school_data.pop('latitude')
-            school_data.pop('longitude')
         if school:
             session.query(School).filter_by(id=item.info['id']).update({**school_data, 'raw': item.item})
         else:

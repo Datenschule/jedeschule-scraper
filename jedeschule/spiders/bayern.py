@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from urllib import parse
+
 import scrapy
 from scrapy import Item
 from scrapy.shell import inspect_response
@@ -9,7 +11,7 @@ from jedeschule.utils import get_first_or_none, cleanjoin
 
 class BayernSpider(scrapy.Spider):
     name = "bayern"
-    #allowed_domains = ["https://www.km.bayern.de/schueler/schulsuche.html"]
+    # allowed_domains = ["https://www.km.bayern.de/schueler/schulsuche.html"]
     start_urls = ['https://www.km.bayern.de/schueler/schulsuche.html?s=&t=9999&r=9999&o=9999&u=0&m=3&seite=1']
 
     def parse(self, response):
@@ -25,10 +27,18 @@ class BayernSpider(scrapy.Spider):
         for link in links:
             yield scrapy.Request(response.urljoin(link), callback=self.parse_detail)
 
+    def get_lat_lon(self, response):
+        try:
+            geoportal_href = response.css("article > a::attr(href)").extract_first()
+            querystring = parse.parse_qs(geoportal_href)
+            return querystring['N'][0], querystring['E'][0]
+        except:
+            return None, None
+
     def parse_detail(self, response):
         # inspect_response(response, self)
-        text = response.css("article ::text")
         collection = {}
+        text = response.css("article ::text")
         street, city = response.css("article > p")[0].css("::text").extract()
         collection['street'] = street
         collection['city'] = city
@@ -42,6 +52,7 @@ class BayernSpider(scrapy.Spider):
         collection['teachers'] = get_first_or_none(text.re("Hauptamtliche Lehrkräfte: ([0-9]+)"))
         collection['students'] = get_first_or_none(text.re("Schüler: ([0-9]+)"))
         collection['url'] = response.url
+        collection['latitude'], collection['longitude'] = self.get_lat_lon(response)
         yield collection
 
     @staticmethod
@@ -56,5 +67,7 @@ class BayernSpider(scrapy.Spider):
                       zip=zip_code,
                       school_type=item.get('school_type'),
                       legal_status=item.get('type'),
-                      id='BY-{}'.format(item.get('number')))
-
+                      id='BY-{}'.format(item.get('number')),
+                      latitude=item.get('latitude'),
+                      longitude=item.get('longitude')
+                      )

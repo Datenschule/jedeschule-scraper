@@ -61,6 +61,9 @@ class School(Base):
             school = School(**school_data, raw=item.item)
         return school
 
+    def __str__(self):
+        return f'<School id={self.id}, name={self.name}>'
+
 
 class DatabasePipeline:
     def __init__(self):

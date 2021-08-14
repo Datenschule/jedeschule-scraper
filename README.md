@@ -4,6 +4,13 @@ Scrapers for German school data. As Germany is a federal country and education i
 state publishes their data differently. The goal of this project is to scraper all data and to make it available
 under a common data format.
 
+## Using the data
+A version of these scrapers is deployed at [https://jedeschule.codefor.de/](jedeschule.codefor.de).
+You can use it one of three ways:
+1. Using the API. Documentation is available at https://jedeschule.codefor.de/docs
+2. Using the CSV dump provided at https://jedeschule.codefor.de/csv-data/
+3. Exploring the data using a small interactive dashboard at: https://knutator2.github.io/jedeschule-explore/#/dashboard
+
 ## Installation
 Note that at least Python 3.7 is required.
 

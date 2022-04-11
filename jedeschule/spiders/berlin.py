@@ -15,8 +15,8 @@ class BerlinSpider(scrapy.Spider):
     # 502 with user agent = default (scrapy) -> use a real user agent like "jedeschule"
     # 429 with download delay = default -> set download delay to slow down scrapy
     # custom settings avoid other spiders from being affected of solving a spider individual problem
-    custom_settings = {'USER_AGENT': 'jedeschule (open data project)', 'DOWNLOAD_DELAY': 1,}
-    base_url = 'https://www.berlin.de/sen/bildung/schule/berliner-schulen/schulverzeichnis/'
+    custom_settings = {'USER_AGENT': 'jedeschule (open data project)', 'DOWNLOAD_DELAY': 1 }
+    base_url = 'https://www.bildung.berlin.de/Schulverzeichnis/'
     start_url = base_url + 'SchulListe.aspx'
     start_urls = [start_url]
 
@@ -51,7 +51,43 @@ class BerlinSpider(scrapy.Spider):
         partner = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblPartner::text').extract_first())
         if partner:
             meta['partner'] = [x.strip() for x in partner.split(';')]
-        yield meta
+        yield scrapy.Request(self.base_url + 'schuelerschaft.aspx?view=jgs', callback=self.parse_students, meta=meta, dont_filter=True)
+
+    def parse_students(self, response):
+        #inspect_response(response, self)
+        years = response.css('#portrait_hauptnavi li a::attr(href)').extract()
+        relevant = []
+        for i, year in enumerate(years):
+            if (re.search('.*view=jgs&jahr.*', year)):
+                relevant.append(year)
+        meta = response.meta
+        if (len(relevant) > 0):
+            meta['student_years'] = relevant[1:]
+            yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta, dont_filter=True)
+        else:
+            yield meta
+
+    def parse_student_year(self, response):
+        #inspect_response(response, self)
+        meta = response.meta
+        if (len(meta['student_years']) > 0):
+            headers = response.css('th::text').extract()
+            rows = response.css('table tr.odd, table tr.even')
+            title = re.sub('[\t\n\r]', '', response.css('table caption::text').extract_first()).replace('Jahrgangsstufen', '').strip()
+            if not 'students' in meta.keys():
+                meta['students'] = []
+            for i, row in enumerate(rows):
+                result = {}
+                entries = row.css('td::text').extract()
+                for j, header in enumerate(headers):
+                    result[header] = entries[j]
+                result['year'] = title
+                meta['students'].append(result)
+            relevant = meta['student_years']
+            meta['student_years'] = relevant[1:]
+            yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta, dont_filter=True)
+        else:
+            yield meta
 
     def _parse_school_no(self, url):
         """Parses the school number from the 'IDSchulzweig' parameter in the url"""

@@ -28,11 +28,13 @@ class BerlinSpider(scrapy.Spider):
 
     def parse_detail(self, response):
         meta = {}
-        name = response.css('#ContentPlaceHolderMenuListe_lblSchulname::text').extract_first().strip()#.rsplit('-', 1)
+        name = response.css(
+            '#ContentPlaceHolderMenuListe_lblSchulname::text').extract_first().strip()  # .rsplit('-', 1)
         meta['name'] = self.fix_data(name)
         meta['id'] = self._parse_school_no(response.url)
         meta['address'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblStrasse::text').extract_first())
-        meta['zip'], meta['city'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblOrt::text').extract_first()).split(" ", 1)
+        meta['zip'], meta['city'] = self.fix_data(
+            response.css('#ContentPlaceHolderMenuListe_lblOrt::text').extract_first()).split(" ", 1)
         schooltype = re.split('[()]', response.css('#ContentPlaceHolderMenuListe_lblSchulart::text').extract_first())
         meta['schooltype'] = self.fix_data(schooltype[0].strip())
         meta['legal_status'] = self.fix_data(schooltype[1].strip())
@@ -42,7 +44,7 @@ class BerlinSpider(scrapy.Spider):
         meta['web'] = self.fix_data(response.css('#ContentPlaceHolderMenuListe_HLinkWeb::attr(href)').extract_first())
         headmaster = response.css('#ContentPlaceHolderMenuListe_lblLeitung::text').extract_first()
         if headmaster:
-            meta['headmaster'] = self.fix_data(' '.join(headmaster.split(',')[::-1]).strip())  
+            meta['headmaster'] = self.fix_data(' '.join(headmaster.split(',')[::-1]).strip())
         meta['cookiejar'] = response.meta['cookiejar']
         meta['data_url'] = response.url
         activities = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblAGs::text').extract_first())
@@ -51,10 +53,11 @@ class BerlinSpider(scrapy.Spider):
         partner = self.fix_data(response.css('#ContentPlaceHolderMenuListe_lblPartner::text').extract_first())
         if partner:
             meta['partner'] = [x.strip() for x in partner.split(';')]
-        yield scrapy.Request(self.base_url + 'schuelerschaft.aspx?view=jgs', callback=self.parse_students, meta=meta, dont_filter=True)
+        yield scrapy.Request(self.base_url + 'schuelerschaft.aspx?view=jgs', callback=self.parse_students, meta=meta,
+                             dont_filter=True)
 
     def parse_students(self, response):
-        #inspect_response(response, self)
+        # inspect_response(response, self)
         years = response.css('#portrait_hauptnavi li a::attr(href)').extract()
         relevant = []
         for i, year in enumerate(years):
@@ -63,17 +66,19 @@ class BerlinSpider(scrapy.Spider):
         meta = response.meta
         if (len(relevant) > 0):
             meta['student_years'] = relevant[1:]
-            yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta, dont_filter=True)
+            yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta,
+                                 dont_filter=True)
         else:
             yield meta
 
     def parse_student_year(self, response):
-        #inspect_response(response, self)
+        # inspect_response(response, self)
         meta = response.meta
         if (len(meta['student_years']) > 0):
             headers = response.css('th::text').extract()
             rows = response.css('table tr.odd, table tr.even')
-            title = re.sub('[\t\n\r]', '', response.css('table caption::text').extract_first()).replace('Jahrgangsstufen', '').strip()
+            title = self.fix_data(response.css('table caption::text').extract_first()).replace('Jahrgangsstufen',
+                                                                                               '').strip()
             if not 'students' in meta.keys():
                 meta['students'] = []
             for i, row in enumerate(rows):
@@ -85,7 +90,8 @@ class BerlinSpider(scrapy.Spider):
                 meta['students'].append(result)
             relevant = meta['student_years']
             meta['student_years'] = relevant[1:]
-            yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta, dont_filter=True)
+            yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta,
+                                 dont_filter=True)
         else:
             yield meta
 
@@ -103,6 +109,7 @@ class BerlinSpider(scrapy.Spider):
             string = ' '.join(string.split())
             string.replace('\n', '')
             string.replace('\t', '')
+            string.replace('\r', '')
         return string
 
     def normalize(self, item: Item) -> School:

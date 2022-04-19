@@ -19,6 +19,7 @@ class BerlinSpider(scrapy.Spider):
     base_url = 'https://www.bildung.berlin.de/Schulverzeichnis/'
     start_url = base_url + 'SchulListe.aspx'
     start_urls = [start_url]
+    url_parse_staff = base_url + 'schulpersonal.aspx?view=pers'
 
     def parse(self, response):
         schools = response.css('td a::attr(href)').extract()
@@ -69,7 +70,7 @@ class BerlinSpider(scrapy.Spider):
             yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta,
                                  dont_filter=True)
         else:
-            yield meta
+            yield scrapy.Request(self.url_parse_staff, callback=self.parse_staff, meta=meta, dont_filter=True)
 
     def parse_student_year(self, response):
         # inspect_response(response, self)
@@ -91,6 +92,41 @@ class BerlinSpider(scrapy.Spider):
             relevant = meta['student_years']
             meta['student_years'] = relevant[1:]
             yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_student_year, meta=meta,
+                                 dont_filter=True)
+        else:
+            yield scrapy.Request(self.url_parse_staff, callback=self.parse_staff, meta=meta, dont_filter=True)
+
+    def parse_staff(self, response):
+        years = response.css('#NaviSchulpersonal ul')[0].css('li a[href*="jahr"]::attr(href)').extract()
+        meta = response.meta
+        if (len(years) > 0):
+            meta['staff_years'] = years[1:]
+            yield scrapy.Request(self.base_url + years[0], callback=self.parse_staff_year, meta=meta, dont_filter=True)
+        else:
+            yield response.meta
+
+    def parse_staff_year(self, response):
+        inspect_response(response, self)
+        meta = response.meta
+        headers = response.css('th::text').extract()
+        rows = response.css('table tr.odd, table tr.even')
+        title_raw = self.fix_data(response.css('table caption::text').extract_first())
+        title = ''
+        if title_raw == None:
+            title = title_raw.replace('Jahrgangsstufen','').strip()
+        if not 'staff' in meta.keys():
+            meta['staff'] = []
+        for i, row in enumerate(rows):
+            result = {}
+            entries = row.css('td::text').extract()
+            for j, header in enumerate(headers):
+                result[header] = entries[j]
+            result['year'] = title
+            meta['staff'].append(result)
+        relevant = meta['staff_years']
+        if (len(relevant) > 0):
+            meta['staff_years'] = relevant[1:]
+            yield scrapy.Request(self.base_url + relevant[0], callback=self.parse_staff_year, meta=meta,
                                  dont_filter=True)
         else:
             yield meta

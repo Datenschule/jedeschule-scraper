@@ -106,7 +106,6 @@ class BerlinSpider(scrapy.Spider):
             yield response.meta
 
     def parse_staff_year(self, response):
-        inspect_response(response, self)
         meta = response.meta
         headers = response.css('th::text').extract()
         rows = response.css('table tr.odd, table tr.even')

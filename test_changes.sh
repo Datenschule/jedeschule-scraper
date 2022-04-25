@@ -9,8 +9,9 @@ else
   HEAD_REF="HEAD"
 fi
 
-git show $HEAD_REF
+git show HEAD
 git show origin/master
+git show $HEAD_REF
 
 echo "Using head reference: ${HEAD_REF}"
 

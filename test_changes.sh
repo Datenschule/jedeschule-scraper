@@ -2,14 +2,19 @@
 
 set -euxo pipefail
 
-
 CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..HEAD  |
                   grep spiders |
                   grep -v helper |
                   sed 's/jedeschule\/spiders\///' |
                   sed 's/\.py//' |
                   sed 's/_/\-/' |
-                  uniq)
+                  uniq || echo "")
+
+if [ -z "$CHANGED_SCRAPERS" ]
+then
+      echo "No scrapers changed. Exiting"
+      exit 0
+fi
 
 for SPIDER in $CHANGED_SCRAPERS
 do

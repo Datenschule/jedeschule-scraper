@@ -2,20 +2,8 @@
 
 set -euxo pipefail
 
-if [ $CI ]
-then
-  HEAD_REF=${GITHUB_REF}
-else
-  HEAD_REF="HEAD"
-fi
 
-git show HEAD
-git show origin/master
-git show $HEAD_REF
-
-echo "Using head reference: ${HEAD_REF}"
-
-CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..${HEAD_REF}  |
+CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..HEAD  |
                   grep spiders |
                   grep -v helper |
                   sed 's/jedeschule\/spiders\///' |

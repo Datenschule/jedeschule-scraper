@@ -9,6 +9,9 @@ else
   HEAD_REF="HEAD"
 fi
 
+git show $HEAD_REF
+git show origin/master
+
 echo "Using head reference: ${HEAD_REF}"
 
 CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..${HEAD_REF}  |

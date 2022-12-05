@@ -9,7 +9,7 @@ from jedeschule.items import School
 class HamburgSpider(SchoolSpider):
     name = 'hamburg'
 
-    start_urls = ['https://geoportal-hamburg.de/geodienste_hamburg_de/HH_WFS_Schulen?REQUEST=GetFeature&SERVICE=WFS&SRSNAME=EPSG%3A25832&TYPENAME=staatliche_schulen&VERSION=1.1.0']
+    start_urls = ['https://geodienste.hamburg.de/HH_WFS_Schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&typename=de.hh.up:nicht_staatliche_schulen,de.hh.up:staatliche_schulen']
 
     def parse(self, response):
         elem = ET.fromstring(response.body)

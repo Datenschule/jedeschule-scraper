@@ -8,7 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ '3.7', '3.8'] 
+        python-version: [ '3.11', '3.12']
+      fail-fast: false
     name: Tests with Python ${{ matrix.python-version }}
     services:
       postgres:
@@ -34,7 +35,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: sudo apt-get install libxml2-dev libxslt1-dev
-      - run: pip install wheel
       - run: pip install -r requirements.txt
       - run: createdb jedeschule_test
         env:

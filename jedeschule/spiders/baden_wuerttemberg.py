@@ -73,7 +73,7 @@ class BadenWuerttembergSpider(SchoolSpider):
 
     # get the information
     def parse_school_data(self, response):
-        item = json.loads(json.loads(response.body_as_unicode())['d'])
+        item = json.loads(json.loads(response.text)['d'])
         data = {
             'name'             : self.fix_data(item['NAME']), 
             'id'               : self.fix_data(item['DISCH']),

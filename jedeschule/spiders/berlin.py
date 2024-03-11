@@ -16,7 +16,7 @@ class BerlinSpider(scrapy.Spider):
     # 429 with download delay = default -> set download delay to slow down scrapy
     # custom settings avoid other spiders from being affected of solving a spider individual problem
     custom_settings = {'USER_AGENT': 'jedeschule (open data project)', 'DOWNLOAD_DELAY': 1,}
-    base_url = 'https://www.berlin.de/sen/bildung/schule/berliner-schulen/schulverzeichnis/'
+    base_url = 'https://www.bildung.berlin.de/Schulverzeichnis/'
     start_url = base_url + 'SchulListe.aspx'
     start_urls = [start_url]
 

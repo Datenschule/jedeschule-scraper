@@ -34,14 +34,14 @@ class SaarlandSpider(CrawlSpider, SchoolSpider):
             school = {}
             school["name"] = card.xpath('.//h3/text()').extract_first().strip()
 
-            c_badge = card.xpath('.//span[@class="c-badge"]/text()').extract()
-            school["schultyp"] = c_badge[0]
-            school["ort"] = c_badge[1]
+            badges = card.css('.c-badge')
+            school["schultyp"] = badges[0].css("::text").extract_first()
+            school["ort"] = badges[1].css("::text").extract_first()
 
-            adress = card.xpath('.//p/text()').extract_first().split(", ")
+            address = card.xpath('.//p/text()').extract_first().split(", ")
 
-            school["straße"] = adress[0]
-            school["plz"] = adress[1].strip(" " + school['ort'])
+            school["straße"] = address[0]
+            school["plz"] = address[1].strip(" " + school['ort'])
 
             keys = card.xpath('.//dt/text()').extract()
             info = card.xpath('.//dd/text()').extract()
@@ -61,16 +61,26 @@ class SaarlandSpider(CrawlSpider, SchoolSpider):
             yield school
 
     @staticmethod
+    def get_id(item: Item) -> str:
+        # There are no IDs on the page that we could use.
+        # We will fall back to phone number, e-mail or name
+        # and fall back to e-mail in the worst case
+        if tel := item.get('telefon'):
+            return tel.replace(" ", "-")
+        if email := item.get('e-mail'):
+            return email.replace("@", "AT")
+        return item.get('name')
+
+    @staticmethod
     def normalize(item: Item) -> School:
-        tel = item.get('telefon')
         return School(name=item.get('name'),
-                      phone=tel,
+                      phone=item.get('telefon'),
                       fax=item.get('telefax'),
                       website=item.get('homepage'),
-                      email=item.get('e-mail'),
+                      email=item.get("e-mail"),
                       address=item.get('straße'),
                       city=item.get('ort'),
                       zip=item.get('plz'),
                       school_type=item.get('schultyp'),
                       director=item.get('schulleitung'),
-                      id='SL-{}'.format(tel.replace(" ", "-")))
+                      id='SL-{}'.format(SaarlandSpider.get_id(item)))

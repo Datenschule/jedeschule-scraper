@@ -2,15 +2,9 @@ import csv
 
 import requests
 
+from jedeschule.utils import singleton
 
-# See https://www.python.org/dev/peps/pep-0318/#examples
-def singleton(cls):
-    instances = {}
-    def getinstance():
-        if cls not in instances:
-            instances[cls] = cls()
-        return instances[cls]
-    return getinstance
+
 
 
 @singleton

@@ -29,6 +29,7 @@ class SachsenSpider(SchoolSpider):
         school['zip'] = building.get("postcode")
         school['city'] = building.get("community")
         school['email'] = building.get("mail")
+        school['website'] = building.get("homepage")
         school['fax'] = "".join([building.get("fax_code") or "", building.get("fax_number") or ""])
         school['phone'] = "".join([building.get("phone_code_1") or "" , building.get("phone_number_1") or  ""])
         school['latitude'] = building.get("latitude")

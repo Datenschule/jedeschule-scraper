@@ -2,9 +2,10 @@ from __future__ import annotations  # needed so that update_or_create can define
 
 import logging
 import os
+from datetime import datetime
 
 from geoalchemy2 import Geometry, WKTElement
-from sqlalchemy import String, Column, JSON
+from sqlalchemy import String, Column, JSON, DateTime, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
@@ -41,6 +42,7 @@ class School(Base):
     phone = Column(String)
     director = Column(String)
     raw = Column(JSON)
+    update_timestamp = Column(DateTime, onupdate=func.now())
     location = Column(Geometry('POINT'))
 
     @staticmethod

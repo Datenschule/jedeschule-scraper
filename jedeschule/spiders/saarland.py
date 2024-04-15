@@ -1,6 +1,6 @@
 from scrapy.spiders import Rule, CrawlSpider
 from scrapy.linkextractors import LinkExtractor
-from scrapy import Item
+from scrapy import Item, FormRequest, Request
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
@@ -10,11 +10,24 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class SaarlandSpider(CrawlSpider, SchoolSpider):
     name = "saarland"
-    start_urls = ['https://www.saarland.de/mbk/DE/portale/bildungsserver/themen/schulen-und-bildungswege/schuldatenbank/_functions/Schulsuche_Formular.html']
+    start_urls = ['https://www.saarland.de/mbk/DE/portale/bildungsserver/schulen-und-bildungswege/schuldatenbank']
 
     rules = (Rule(LinkExtractor(allow=(), restrict_xpaths=('//a[@class="forward button"]',)), callback="parse_start_url", follow= True),)
 
+
     def parse_start_url(self, response):
+        yield FormRequest.from_response(response,
+                                        formname="searchSchool",
+                                        callback=self.parse_page)
+
+    def parse_page(self, response):
+        for school in self.parse_schools(response):
+            yield school
+        next_button = response.xpath('//a[@class="forward button"]/@href').extract_first()
+        if next_button:
+            yield Request(next_button, callback=self.parse_page)
+
+    def parse_schools(self, response):
         cards = response.xpath('//div[@class="c-teaser-card"]')
 
         for card in cards:

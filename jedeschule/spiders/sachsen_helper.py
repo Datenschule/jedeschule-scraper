@@ -12,6 +12,8 @@ class SachsenHelper:
         return self.school_types.get(key)
 
     def load_school_types(self):
-        response = requests.get("https://schuldatenbank.sachsen.de/api/v1/key_tables/school_types?format=json")
+        response = requests.get(
+            "https://schuldatenbank.sachsen.de/api/v1/key_tables/school_types?format=json"
+        )
         data = response.json()
-        return {int(entry['key']): entry['label'] for entry in data}
+        return {int(entry["key"]): entry["label"] for entry in data}

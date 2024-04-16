@@ -1,7 +1,7 @@
 from csv import DictReader
 
 from scrapy import Item
-from pyproj import Proj, transform
+from pyproj import Transformer
 
 from jedeschule.spiders.nordrhein_westfalen_helper import NordRheinWestfalenHelper
 from jedeschule.spiders.school_spider import SchoolSpider
@@ -34,9 +34,8 @@ class NordrheinWestfalenSpider(SchoolSpider):
                          item.get("Schulbezeichnung_3", "")]).strip()
         helper = NordRheinWestfalenHelper()
         right, high = item.get('UTMRechtswert'), item.get('UTMHochwert')
-        this_projection = Proj(item.get('EPSG'))
-        target_projection = Proj('epsg:4326')
-        lon, lat = transform(this_projection, target_projection, right, high)
+        transformer = Transformer.from_crs(item.get("EPSG"), "EPSG:4326")
+        lon, lat = transformer.transform(right, high)
 
         return School(name=name,
                       id='NW-{}'.format(item.get('Schulnummer')),

@@ -38,7 +38,13 @@ class NordrheinWestfalenSpider(SchoolSpider):
         ).strip()
         helper = NordRheinWestfalenHelper()
         right, high = item.get("UTMRechtswert"), item.get("UTMHochwert")
-        transformer = Transformer.from_crs(item.get("EPSG"), "EPSG:4326")
+        # There are some entries which have the string "null" in the EPSG
+        # column. All others have "EPSG:25832". It seems save enough to assume
+        # that this is a mistake in the data and should also be "EPSG:25832".
+        source_crs = item.get("EPSG")
+        if source_crs == 'null':
+            source_crs = "EPSG:25832"
+        transformer = Transformer.from_crs(source_crs, "EPSG:4326")
         lon, lat = transformer.transform(right, high)
 
         return School(

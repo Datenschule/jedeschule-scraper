@@ -16,8 +16,7 @@ CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..${HEAD
                   grep -v helper |
                   sed 's/jedeschule\/spiders\///' |
                   sed 's/\.py//' |
-                  sed 's/_/\-/' |
-                  uniq)
+                  sed 's/_/\-/')
 
 for SPIDER in $CHANGED_SCRAPERS
 do

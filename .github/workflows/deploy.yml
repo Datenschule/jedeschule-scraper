@@ -20,7 +20,7 @@ jobs:
     environment: server
     steps:
       - name: Pull latest docker images and restart
-        uses: appleboy/ssh-action@v0.1.4
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}

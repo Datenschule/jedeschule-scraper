@@ -10,16 +10,29 @@ class BrandenburgSpider(SchoolSpider):
     name = "brandenburg"
 
     start_urls = [
-        "https://schullandschaft.brandenburg.de/edugis/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&typename=ms:Schul_Standorte"
+        "https://schullandschaft.brandenburg.de/edugis/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&typename=ms:Schul_Standorte&srsname=epsg:4326"
     ]
 
     def parse(self, response):
-        elem = ET.fromstring(response.body)
+        tree = ET.fromstring(response.body)
 
-        for member in elem:
+        namespaces = {
+            "gml": "http://www.opengis.net/gml",
+            "ms": "http://mapserver.gis.umn.edu/mapserver",
+        }
+        for school in tree.findall("gml:featureMember", namespaces):
             data_elem = {}
-            for attr in member[0]:
-                data_elem[attr.tag.split("}", 1)[1]] = attr.text
+            for entry in school[0]:
+                if entry.tag == "{http://mapserver.gis.umn.edu/mapserver}msGeometry":
+                    # This nested entry contains the coordinates that we would like to expand
+                    lat, lon = entry.findtext(
+                        "gml:Point/gml:pos", namespaces=namespaces
+                    ).split(" ")
+                    data_elem["lat"] = lat
+                    data_elem["lon"] = lon
+                    continue
+                # strip the namespace before returning
+                data_elem[entry.tag.split("}", 1)[1]] = entry.text
             yield data_elem
 
     @staticmethod
@@ -36,4 +49,6 @@ class BrandenburgSpider(SchoolSpider):
             school_type=item.get("schulform"),
             fax=item.get("faxnummer"),
             phone=item.get("telefonnummer"),
+            longitude=item.get("lon"),
+            latitude=item.get("lat"),
         )

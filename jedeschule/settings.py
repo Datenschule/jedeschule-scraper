@@ -19,7 +19,7 @@ CONCURRENT_REQUESTS = 1
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-# USER_AGENT = 'jedeschule (+http://www.yourdomain.com)'
+USER_AGENT = 'jedeschule (+http://jedeschule.codefor.de/docs)'
 
 REQUEST_FINGERPRINTER_IMPLEMENTATION='2.7'
 

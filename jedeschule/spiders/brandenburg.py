@@ -41,7 +41,6 @@ class BrandenburgSpider(SchoolSpider):
             name=item.get("schulname"),
             id="BB-{}".format(item.get("schul_nr")),
             address=item.get("strasse_hausnr"),
-            address2="",
             zip=item.get("plz"),
             city=item.get("ort"),
             website=item.get("homepage"),
@@ -49,6 +48,7 @@ class BrandenburgSpider(SchoolSpider):
             school_type=item.get("schulform"),
             fax=item.get("faxnummer"),
             phone=item.get("telefonnummer"),
+            provider=item.get('schulamtname'),
             longitude=item.get("lon"),
             latitude=item.get("lat"),
         )

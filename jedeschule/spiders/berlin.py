@@ -16,10 +16,12 @@ class BerlinSpider(scrapy.Spider):
             "gml": "http://www.opengis.net/gml",
             "fis": "http://www.berlin.de/broker",
         }
-        for school in tree.findall("gml:featureMember", namespaces):
+        for school in tree.find('gml:featureMembers', namespaces).findall("{schulen}schulen", namespaces):
             data_elem = {}
-            for entry in school[0]:
-                if entry.tag == "{http://www.berlin.de/broker}geom":
+            for entry in school:
+                if entry.tag == '{http://www.opengis.net/gml}boundedBy':
+                    continue
+                if entry.tag == "{schulen}geom":
                     # This nested entry contains the coordinates that we would like to expand
                     lat, lon = entry.findtext(
                         "gml:Point/gml:pos", namespaces=namespaces
@@ -33,7 +35,7 @@ class BerlinSpider(scrapy.Spider):
 
     @staticmethod
     def normalize(item: Item) -> School:
-        return School(name=item.get('name'),
+        return School(name=item.get('schulname'),
                       id='BE-{}'.format(item.get('bsn')),
                       address=" ".join([item.get('strasse'), item.get('hausnr')]),
                       zip=item.get('plz'),

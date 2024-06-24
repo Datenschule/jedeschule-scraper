@@ -7,7 +7,7 @@ from scrapy import Item
 
 class BerlinSpider(scrapy.Spider):
     name = "berlin"
-    start_urls = ['https://fbinter.stadt-berlin.de/fb/wfs/data/senstadt/s_schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:25833&typename=fis:s_schulen']
+    start_urls = ['https://gdi.berlin.de/services/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:25833&typename=fis:schulen']
 
     def parse(self, response):
         tree = ET.fromstring(response.body)

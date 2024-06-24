@@ -1,7 +1,9 @@
-# -*- coding: utf-8 -*-
+import csv
+import json
+
 import scrapy
+import scrapy.http
 from scrapy import Item
-from scrapy.shell import inspect_response
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
@@ -9,65 +11,37 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class SchleswigHolsteinSpider(SchoolSpider):
     name = "schleswig-holstein"
-    base_url = 'https://www.secure-lernnetz.de/schuldatenbank/'
+    base_url = 'https://opendata.schleswig-holstein.de/collection/schulen/aktuell'
     start_urls = [base_url]
 
     def parse(self, response):
-        url = self.base_url + response.css('form::attr(action)').extract_first()
-        pages = response.css('#searchResultIndexTop li')
-        for page in pages:
-            formdata = self.parse_formdata(response)
-            key = page.css('input::attr(name)').extract_first()
-            formdata[key] = page.css('input::attr(value)').extract_first()
-            if formdata[key] == ">":
-                yield scrapy.FormRequest(url=url, formdata=formdata, callback=self.parse)
-            if formdata[key].isdigit():
-                yield scrapy.FormRequest(url=url, formdata=formdata, callback=self.parse_overview_table)
+        url = response.css('link[rel="alternate"][type="application/ld+json"]::attr(href)').get()
+        yield scrapy.Request(url, callback=self.parse_dataset_metadata)
 
-    def parse_formdata(self, response):
-        formdata = {}
-        for form in response.css('#myContent > input'):
-            key = form.css('::attr(name)').extract_first()
-            formdata[key] = form.css('::attr(value)').extract_first()
+    def parse_dataset_metadata(self, response):
+        parsed = json.loads(response.text)
+        csv_url = next(node['dcat:accessURL']['@id'] for node in parsed['@graph'] if
+                       node['dcat:mediaType']['@id'] == 'https://www.iana.org/assignments/media-types/text/csv')
+        # TODO: Remove this temporary replacement
+        #  It is only here because the API seems to return wrong data currently
+        csv_url = csv_url.replace("zitsh.de", "schleswig-holstein.de")
+        yield scrapy.Request(csv_url, callback=self.parse_csv)
 
-        formdata['filter[name1]'] = ''
-        formdata['filter[dnr]'] = ''
-        formdata['filter[schulart]'] = ''
-        formdata['filter[kreis]'] = ''
-        formdata['filter[ort]'] = ''
-        formdata['filter[strasse]'] = ''
-
-        return formdata
-
-    def parse_overview_table(self, response):
-        rows = response.css('table tbody tr')
-        # use the second href element as it is only available for schools which are not "aufgeloest"
-        for row in rows:
-            if len(row.css('a::attr(href)').extract()) > 1:
-                url = self.base_url + row.css('a::attr(href)').extract()[1]
-                yield scrapy.Request(url, callback=self.parse_school)
-
-    def parse_school(self, response):
-        item = {}
-        item['name'] = response.css('table thead th::text').extract_first().strip()
-        for row in response.css('table tbody tr'):
-            key = row.css('td.bezeichner::text').extract_first().strip()
-            value = row.css('td.dbwert label::text').extract_first().strip()
-            item[key] = value
-
-        item['data_url'] = response.url
-        yield item
+    def parse_csv(self, response: scrapy.http.Response):
+        reader = csv.DictReader(response.text.splitlines(), delimiter='\t')
+        for row in reader:
+            yield row
 
     @staticmethod
     def normalize(item: Item) -> School:
         return School(name=item.get('name'),
-                      id='SH-{}'.format(item.get('Dienststellennummer')),
-                      address=item.get('Strasse'),
-                      zip=item.get("Postleitzahl"),
-                      city=item.get("Ort"),
-                      email=item.get('E-Mail'),
-                      school_type=item.get('Schularten'),
-                      fax=item.get('Fax'),
-                      phone=item.get('Telefon'),
-                      director=item.get('Schulleitung'))
-
+                      id='SH-{}'.format(item.get('id')),
+                      address=" ".join([item.get('street'), item.get('houseNumber')]),
+                      zip=item.get("zipcode"),
+                      city=item.get("city"),
+                      email=item.get('email'),
+                      fax=item.get('fax'),
+                      phone=item.get('phone'),
+                      latitude=item.get('latitude') or None,
+                      longitude=item.get('longitude') or None,
+                      )

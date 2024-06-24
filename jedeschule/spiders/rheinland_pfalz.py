@@ -9,6 +9,8 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
     name = "rheinland-pfalz"
+    # Note, one could also use the geo portal:
+    # https://www.geoportal.rlp.de/spatial-objects/350/collections/schulstandorte/items?f=html&limit=4000
     start_urls = ["https://schulen.bildung-rp.de"]
     rules = [
         Rule(

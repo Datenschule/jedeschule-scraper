@@ -11,23 +11,10 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class SchleswigHolsteinSpider(SchoolSpider):
     name = "schleswig-holstein"
-    base_url = 'https://opendata.schleswig-holstein.de/collection/schulen/aktuell'
+    base_url = 'https://opendata.schleswig-holstein.de/collection/schulen/aktuell.csv'
     start_urls = [base_url]
 
     def parse(self, response):
-        url = response.css('link[rel="alternate"][type="application/ld+json"]::attr(href)').get()
-        yield scrapy.Request(url, callback=self.parse_dataset_metadata)
-
-    def parse_dataset_metadata(self, response):
-        parsed = json.loads(response.text)
-        csv_url = next(node['dcat:accessURL']['@id'] for node in parsed['@graph'] if
-                       node['dcat:mediaType']['@id'] == 'https://www.iana.org/assignments/media-types/text/csv')
-        # TODO: Remove this temporary replacement
-        #  It is only here because the API seems to return wrong data currently
-        csv_url = csv_url.replace("zitsh.de", "schleswig-holstein.de")
-        yield scrapy.Request(csv_url, callback=self.parse_csv)
-
-    def parse_csv(self, response: scrapy.http.Response):
         reader = csv.DictReader(response.text.splitlines(), delimiter='\t')
         for row in reader:
             yield row

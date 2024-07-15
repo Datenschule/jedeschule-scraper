@@ -1,11 +1,12 @@
 import xml.etree.ElementTree as ET
 
-import scrapy
 from jedeschule.items import School
 from scrapy import Item
 
+from jedeschule.spiders.school_spider import SchoolSpider
 
-class BerlinSpider(scrapy.Spider):
+
+class BerlinSpider(SchoolSpider):
     name = "berlin"
     start_urls = ['https://gdi.berlin.de/services/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:4326&typename=fis:schulen']
 

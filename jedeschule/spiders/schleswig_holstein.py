@@ -1,8 +1,5 @@
 import csv
-import json
 
-import scrapy
-import scrapy.http
 from scrapy import Item
 
 from jedeschule.items import School

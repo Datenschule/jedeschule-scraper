@@ -7,7 +7,7 @@ from scrapy import Item
 
 class BerlinSpider(scrapy.Spider):
     name = "berlin"
-    start_urls = ['https://gdi.berlin.de/services/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:25833&typename=fis:schulen']
+    start_urls = ['https://gdi.berlin.de/services/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:4326&typename=fis:schulen']
 
     def parse(self, response):
         tree = ET.fromstring(response.body)
@@ -23,7 +23,7 @@ class BerlinSpider(scrapy.Spider):
                     continue
                 if entry.tag == "{schulen}geom":
                     # This nested entry contains the coordinates that we would like to expand
-                    lat, lon = entry.findtext(
+                    lon, lat = entry.findtext(
                         "gml:Point/gml:pos", namespaces=namespaces
                     ).split(" ")
                     data_elem["lat"] = lat

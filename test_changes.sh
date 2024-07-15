@@ -1,23 +1,20 @@
 #!/usr/bin/env bash
 
-set -e
+set -euxo pipefail
 
-if [ $CI ]
-then
-  HEAD_REF=${GITHUB_REF}
-else
-  HEAD_REF="HEAD"
-fi
-
-echo "Using head reference: ${HEAD_REF}"
-
-CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..${HEAD_REF}  |
+CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..HEAD  |
                   grep spiders |
                   grep -v helper |
                   sed 's/jedeschule\/spiders\///' |
                   sed 's/\.py//' |
                   sed 's/_/\-/' |
-                  uniq)
+                  uniq || echo "")
+
+if [ -z "$CHANGED_SCRAPERS" ]
+then
+      echo "No scrapers changed. Exiting"
+      exit 0
+fi
 
 for SPIDER in $CHANGED_SCRAPERS
 do

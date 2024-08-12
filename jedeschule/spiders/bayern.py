@@ -3,9 +3,10 @@ import scrapy
 from scrapy import Item
 
 from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
 
-class BayernSpider(scrapy.Spider):
+class BayernSpider(SchoolSpider):
     name = "bayern"
     start_urls = ['https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities']
 

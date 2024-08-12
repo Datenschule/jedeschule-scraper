@@ -20,7 +20,7 @@ def sort_dict(data):
 
 
 def get_clean_item(data):
-    return set({key: value for key, value in data.items() if value is not None})
+    return set({key: value for key, value in data.items() if value is not None and key != "update_timestamp"})
 
 
 def compare_schools(new_school, old_school):

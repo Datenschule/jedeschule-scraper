@@ -22,7 +22,8 @@ class BayernSpider(scrapy.Spider):
             "gml": "http://www.opengis.net/gml/3.2",
             "schul": "http://gdi.bayern/brbschul"
         }
-        for school in tree.iter(feature.replace("schul:", "{http://gdi.bayern/brbschul}")):
+        key = "{http://gdi.bayern/brbschul}" + feature
+        for school in tree.iter(key):
             data_elem = {'id': school.attrib["{http://www.opengis.net/gml/3.2}id"]}
 
             for entry in school:

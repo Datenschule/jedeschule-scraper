@@ -22,7 +22,7 @@ class MecklenburgVorpommernSpider(SchoolSpider):
     #   https://www.statistischebibliothek.de/mir/receive/MVSerie_mods_00000396
     # Official documentation on all available data here:
     #   https://www.laiv-mv.de/Statistik/Veröffentlichungen/Verzeichnisse/
-    base_url = "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/MVHeft_derivate_00006849/V034%202022%2000.xlsx"
+    base_url = "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/MVHeft_derivate_00007470/V044%202023%2000.xlsx"
     start_urls = [base_url]
 
     def parse(self, response):

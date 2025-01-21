@@ -6,6 +6,13 @@ from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
 
 
+def as_string(value: str):
+    try:
+        return str(int(value))
+    except ValueError:
+        return value
+
+
 class MecklenburgVorpommernSpider(SchoolSpider):
     name = "mecklenburg-vorpommern"
     # The state provides the data as an Excel file. The current year's
@@ -32,10 +39,10 @@ class MecklenburgVorpommernSpider(SchoolSpider):
     def normalize(item: Item) -> School:
         return School(
             name=item.get("NAME1"),
-            id="MV-{}".format(item.get("DIENSTSTELLEN-NUMMER")),
+            id="MV-{}".format(as_string(item.get("DIENSTSTELLEN-NUMMER"))),
             address=item.get("STRASSE"),
             address2="",
-            zip=item.get("PLZ"),
+            zip=as_string(item.get("PLZ")).zfill(5),
             city=item.get("ORT"),
             website=item.get("INTERNET"),
             email=item.get("E-MAIL-ADRESSE"),

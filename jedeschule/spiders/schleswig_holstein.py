@@ -20,7 +20,7 @@ class SchleswigHolsteinSpider(SchoolSpider):
     def normalize(item: Item) -> School:
         return School(name=item.get('name'),
                       id='SH-{}'.format(item.get('id')),
-                      address=" ".join([item.get('street'), item.get('houseNumber')]),
+                      address=" ".join([item.get('street') or "", item.get('houseNumber') or ""]).strip(),
                       zip=item.get("zipcode"),
                       city=item.get("city"),
                       email=item.get('email'),

@@ -68,7 +68,7 @@ scrapy crawl <state_name>
 You can deploy the scrapers directly on a server or using Docker. The resulting Docker
 image needs to be run with the `DATABASE_URL` environment variable pointing to a Postgres
 instance. You can for example use docker-compose to achieve this. See the
-[docker-compose file at jedeschule-api](https://github.com/codeforberlin/jedeschule-api/blob/master/docker-compose.yml)
+[docker-compose file at jedeschule-api](https://github.com/codeforberlin/jedeschule-api/blob/main/docker-compose.yml)
 for inspiration.
 
 ## Updating data on jedeschule.codefor.de

@@ -11,7 +11,7 @@ fi
 
 echo "Using head reference: ${HEAD_REF}"
 
-CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/master..${HEAD_REF}  |
+CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/main..${HEAD_REF}  |
                   grep spiders |
                   grep -v helper |
                   sed 's/jedeschule\/spiders\///' |

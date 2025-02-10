@@ -41,7 +41,7 @@ class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
         yield item
 
     def normalize(self, item: Item) -> School:
-        zip, city = item.get("Anschrift")[-1].rsplit(" ")
+        zip, city = item.get("Anschrift")[-1].split(" ", 1)
         email = item.get("E-Mail", "").replace("(at)", "@")
         return School(
             name=item.get("name"),

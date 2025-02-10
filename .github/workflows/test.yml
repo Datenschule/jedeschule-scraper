@@ -5,6 +5,8 @@ on:
 
 jobs:
   build:
+    env:
+      UV_SYSTEM_PYTHON: 1
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,13 +31,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
       - name: Setup python
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - run: sudo apt-get install libxml2-dev libxslt1-dev
-      - run: pip install -r requirements.txt
+      - run: uv pip install -r requirements.txt
       - run: createdb jedeschule_test
         env:
           PGHOST: localhost

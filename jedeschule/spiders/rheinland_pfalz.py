@@ -1,5 +1,6 @@
 from scrapy import Item
 from scrapy.linkextractors import LinkExtractor
+import re
 
 from scrapy.spiders import CrawlSpider, Rule
 
@@ -11,10 +12,10 @@ class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
     name = "rheinland-pfalz"
     # Note, one could also use the geo portal:
     # https://www.geoportal.rlp.de/spatial-objects/350/collections/schulstandorte/items?f=html&limit=4000
-    start_urls = ["https://schulen.bildung-rp.de"]
+    start_urls = ["https://bildung.rlp.de/schulen"]
     rules = [
         Rule(
-            LinkExtractor(allow="https://schulen.bildung-rp.de/einzelanzeige.html?.*"),
+            LinkExtractor(allow="https://bildung.rlp.de/schulen/einzelanzeige.*"),
             callback="parse_school",
             follow=False,
         )
@@ -22,13 +23,14 @@ class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
 
     # get the information
     def parse_school(self, response):
-        container = response.css("#wfqbeResults")
+        container = response.css(".rlp-schooldatabase-detail")
         item = {"name": container.css("h1::text").get()}
         for row in container.css("tr"):
             key, value = row.css("td")
             value_parts = value.css("*::text").extract()
+            cleaned = [part.strip() for part in value_parts]
             item[key.css("::text").extract_first().replace(":", "")] = (
-                value_parts[0] if len(value_parts) == 1 else value_parts
+                cleaned[0] if len(cleaned) == 1 else cleaned
             )
         item["id"] = item["Schulnummer"]
 
@@ -39,9 +41,8 @@ class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
         yield item
 
     def normalize(self, item: Item) -> School:
-        zip, city = item.get("Anschrift")[-1].split("\xa0")
-        email_parts = item.get("E-Mail")
-        email = email_parts[0].replace("(at)", "@") + email_parts[2]
+        zip, city = item.get("Anschrift")[-1].rsplit(" ")
+        email = item.get("E-Mail", "").replace("(at)", "@")
         return School(
             name=item.get("name"),
             id="RP-{}".format(item.get("id")),

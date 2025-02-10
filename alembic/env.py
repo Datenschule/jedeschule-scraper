@@ -1,11 +1,12 @@
+# ruff: noqa
 import os
 import sys
 from logging.config import fileConfig
 
-parent_dir = os.path.abspath(os.path.join(os.path.abspath(__file__), '../..'))
+parent_dir = os.path.abspath(os.path.join(os.path.abspath(__file__), "../.."))
 sys.path.append(parent_dir)
 
-from sqlalchemy import engine_from_config, create_engine
+from sqlalchemy import create_engine
 from alembic import context
 
 from jedeschule.pipelines.db_pipeline import Base
@@ -41,7 +42,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = os.getenv('DATABASE_URL')
+    url = os.getenv("DATABASE_URL")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -60,13 +61,11 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    url = os.getenv('DATABASE_URL')
+    url = os.getenv("DATABASE_URL")
     connectable = create_engine(url)
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

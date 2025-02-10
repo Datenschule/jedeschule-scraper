@@ -42,7 +42,7 @@ class NordrheinWestfalenSpider(SchoolSpider):
         # column. All others have "EPSG:25832". It seems save enough to assume
         # that this is a mistake in the data and should also be "EPSG:25832".
         source_crs = item.get("EPSG")
-        if source_crs == 'null':
+        if source_crs == "null":
             source_crs = "EPSG:25832"
         transformer = Transformer.from_crs(source_crs, "EPSG:4326")
         lon, lat = transformer.transform(right, high)

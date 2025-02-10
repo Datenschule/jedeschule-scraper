@@ -16,8 +16,8 @@ class TestSchoolItem(Item):
 class TestSchool(unittest.TestCase):
     def test_import_new(self):
         # Arrange
-        info = School(name='Test Schule', id='NDS-1')
-        item = dict(name='Test Schule', nr=1)
+        info = School(name="Test Schule", id="NDS-1")
+        item = dict(name="Test Schule", nr=1)
         school_item: SchoolPipelineItem = SchoolPipelineItem(info=info, item=item)
         session = get_session()
         db_item = DBSchool.update_or_create(school_item, session)
@@ -34,8 +34,8 @@ class TestSchool(unittest.TestCase):
         # This test requires the previous one to have run already so that the item
         # exists in the database
         # Arrange
-        info = School(name='Test Schule (updated)', id='NDS-1')
-        item = dict(name='Test Schule', nr=1)
+        info = School(name="Test Schule (updated)", id="NDS-1")
+        item = dict(name="Test Schule", nr=1)
         school_item: SchoolPipelineItem = SchoolPipelineItem(info=info, item=item)
         session = get_session()
         db_item = DBSchool.update_or_create(school_item, session)
@@ -51,5 +51,5 @@ class TestSchool(unittest.TestCase):
         self.assertEqual(db_school.name, "Test Schule (updated)")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

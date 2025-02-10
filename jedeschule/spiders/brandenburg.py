@@ -48,7 +48,7 @@ class BrandenburgSpider(SchoolSpider):
             school_type=item.get("schulform"),
             fax=item.get("faxnummer"),
             phone=item.get("telefonnummer"),
-            provider=item.get('schulamtname'),
+            provider=item.get("schulamtname"),
             longitude=item.get("lon"),
             latitude=item.get("lat"),
         )

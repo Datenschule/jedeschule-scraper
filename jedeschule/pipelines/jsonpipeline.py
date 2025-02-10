@@ -1,12 +1,15 @@
 from scrapy.exporters import JsonItemExporter
 import os
 
+
 class JsonPipeline(object):
     def open_spider(self, spider):
         if not os.path.exists("data"):
             os.makedirs("data")
-        self.file = open("data/" + spider.name + ".json", 'wb')
-        self.exporter = JsonItemExporter(self.file, encoding='utf-8', ensure_ascii=False)
+        self.file = open(f"data/{spider.name}.json", "wb")
+        self.exporter = JsonItemExporter(
+            self.file, encoding="utf-8", ensure_ascii=False
+        )
         self.exporter.start_exporting()
 
     def close_spider(self, spider):

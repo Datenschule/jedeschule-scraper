@@ -5,7 +5,7 @@ from requests import HTTPError
 
 
 def load_data():
-    with open('/tmp/jedeschule-changes.json') as infile:
+    with open("/tmp/jedeschule-changes.json") as infile:
         return json.load(infile)
 
 
@@ -20,7 +20,13 @@ def sort_dict(data):
 
 
 def get_clean_item(data):
-    return set({key: value for key, value in data.items() if value is not None and key != "update_timestamp"})
+    return set(
+        {
+            key: value
+            for key, value in data.items()
+            if value is not None and key != "update_timestamp"
+        }
+    )
 
 
 def compare_schools(new_school, old_school):
@@ -32,7 +38,7 @@ def compare_schools(new_school, old_school):
 
     differences = new_values ^ old_values
     if not differences:
-        print(' no changes \n')
+        print(" no changes \n")
         return
 
     print(f"Difference: {differences}")
@@ -43,10 +49,10 @@ def compare_schools(new_school, old_school):
 def main():
     data = load_data()
     for school in data[:10]:
-        school_id = school.get('info').get('id')
+        school_id = school.get("info").get("id")
 
         print()
-        print('#'*10, f'Comparing {school_id}')
+        print("#" * 10, f"Comparing {school_id}")
 
         upstream_data = {}
         try:
@@ -55,7 +61,7 @@ def main():
             print(f"WARN: Could not fetch old data for school-id {school_id}: {e}")
             print()
 
-        compare_schools(school.get('info'), upstream_data)
+        compare_schools(school.get("info"), upstream_data)
 
 
 if __name__ == "__main__":

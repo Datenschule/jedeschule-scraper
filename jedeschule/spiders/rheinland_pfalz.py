@@ -67,8 +67,7 @@ class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
         zip, city = item.get("Anschrift")[-1].split(" ", 1)
         email = item.get("E-Mail", "").replace("(at)", "@")
 
-        kurzbezeichnung = item.get('Kurzbezeichnung')
-        if kurzbezeichnung:
+        if kurzbezeichnung := item.get('Kurzbezeichnung'):
             first_part = kurzbezeichnung.split(" ")[0]
             # special handling for special education schools
             if first_part.startswith('SF'):

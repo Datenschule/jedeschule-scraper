@@ -64,7 +64,7 @@ class BremenSpider(SchoolSpider):
             address=re.split("\d{5}", item.get("Anschrift:").strip())[0].strip(),
             zip=re.findall("\d{5}", item.get("Anschrift:").strip())[0],
             city=re.split("\d{5}", item.get("Anschrift:").strip())[1].strip(),
-            website=item.get("Internet"),
+            website=item.get("Internet").strip() if item.get("Internet") else None,
             email=item.get("E-Mail-Adresse").strip(),
             fax=BremenSpider.fix_number(item.get("Telefax")),
             phone=BremenSpider.fix_number(item.get("Telefon")),

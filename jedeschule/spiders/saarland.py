@@ -80,7 +80,7 @@ class SaarlandSpider(CrawlSpider, SchoolSpider):
     def get_id(item: Item) -> str:
         # There are no IDs on the page that we could use.
         # We will fall back to phone number, e-mail or name
-        # and fall back to e-mail in the worst case
+        # in the worst case
         if tel := item.get("telefon"):
             return tel.replace(" ", "-")
         if email := item.get("e-mail"):

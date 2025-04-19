@@ -11,6 +11,34 @@ You can use it one of three ways:
 2. Using the CSV dump provided at https://jedeschule.codefor.de/csv-data/
 3. Exploring the data using a small interactive dashboard at: https://knutator2.github.io/jedeschule-explore/#/dashboard
 
+## IDs
+We try to use stable IDs for the data we publish so that it is comparable
+across time. We do however have to rely on the data publishers providing
+IDs that we can re-use. To avoid collisions, we prefix the IDs with the state's
+ISO-3166-2 code (without the `DE-` prefix).
+
+In details, the IDs are sourced as follows:
+
+
+|State| ID-Source                                                                                                 | exmaple-id                                                                 |stable|
+|-----|-----------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
+|BW| Field `DISCH` (Dienststellenschüssel) in the JSON repsonse                                                   | `BW-04154817`                                                              |✅ likely|
+|BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
+|BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
+|BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|
+|HB| `id` URL query param on the school's detail page (identical to the SNR (Schulnummer) from the overview page) | `HB-937`                                                                   |✅ likely|
+|HH| Field `schul_id` From the WFS Service                                                                        | `HH-7910-0`                                                                |✅ likely|
+|HE| `school_no` URL query param of the schools's details page (identical to the Dienststellennummer)             | `HE-4024`                                                                  |✅ likely|
+|MV| Column `DIENSTSTELLEN-NUMMER` from the XLSX file                                                             | `MV-75130302`                                                              |✅ likely|
+|NI| Field `schulnr` from the JSON in the details payload                                                         | `NI-67763`                                                                 |✅ likely|
+|NW| Column `Schulnummer` from the CSV                                                                            | `NW-162437`                                                                |✅ likely|
+|RP| `Schulnummer` from the school's details page                                                                 | `RP-50720`                                                                 |✅ likely|
+|SL| Phone number, email or name from the item. Depending on what is available first                              | `SL-gem-kleinblittersdorfATschule.saarland`                                |❌ unlikely (e.g. if name was used before and now a phone number is added to the school, it will be used instead)|
+|SN| Field `id` from the API                                                                                      | `SN-4062`                                                                  |✅ likely|
+|ST| `ID` query param from the details page URL                                                                   | `ST-1001186`                                                               |❓ probably?|
+|TH| `Schulnumer` from school list                                                                                | `TH-10601`                                                                 |✅ likely|
+
+
 ## Installation
 Note that at least Python 3.7 is required.
 

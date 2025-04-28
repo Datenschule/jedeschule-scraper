@@ -38,6 +38,26 @@ In details, the IDs are sourced as follows:
 |ST| `ID` query param from the details page URL                                                                   | `ST-1001186`                                                               |❓ probably?|
 |TH| `Schulnumer` from school list                                                                                | `TH-10601`                                                                 |✅ likely|
 
+## Geolocations
+When available, we try to use the geolocations provided by the data publishers.
+
+| State | Geolcation available | Source                                       |
+|-------|----------------------|----------------------------------------------|
+| BW    | ❌ No                 | -                                            |
+| BY    | ✅ Yes                | WFS                                          |
+| BE    | ✅ Yes                | WFS                                          |
+| BB    | ✅ Yes                | WFS                                          |
+| HB    | ❌ No                 | -                                            |
+| HH    | ✅ Yes                | WFS                                          |
+| HE    | ❌ No                 | -                                            |
+| MV    | ❌ No                 | -                                            |
+| NI    | ❌ No                 | -                                            |
+| NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
+| RP    | ❌ No                 | -                                            |
+| SL    | ❌ No                 | -                                            |
+| SN    | ✅ Yes                | API                                          |
+| ST    | ❌ No                 | -                                            |
+| TH    | ❌ No                 | -                                            |
 
 ## Installation
 Note that at least Python 3.7 is required.

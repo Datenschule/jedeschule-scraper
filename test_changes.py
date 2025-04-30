@@ -15,35 +15,39 @@ def fetch_data(school_id):
     return response.json()
 
 
-def sort_dict(data):
-    return {key: value for key, value in sorted(data.items(), key=lambda k: k[0])}
-
-
 def get_clean_item(data):
-    return set(
-        {
+    return {
             key: value
             for key, value in data.items()
             if value is not None and key != "update_timestamp"
         }
-    )
+
+
+def dict_diff(dict1, dict2):
+    all_keys = set(dict1.keys()) | set(dict2.keys())
+
+    differences = {}
+    for key in all_keys:
+        val1 = dict1.get(key, None)
+        val2 = dict2.get(key, None)
+
+        if val1 != val2:
+            differences[key] = (val1, val2)
+
+    return differences
 
 
 def compare_schools(new_school, old_school):
-    new_school = sort_dict(new_school)
-    old_school = sort_dict(old_school)
-
     new_values = get_clean_item(new_school)
     old_values = get_clean_item(old_school)
 
-    differences = new_values ^ old_values
-    if not differences:
+    differences = dict_diff(new_values, old_values)
+    if len(differences) == 0:
         print(" no changes \n")
         return
 
-    print(f"Difference: {differences}")
-    print(f"Old: {old_school}")
-    print(f"New: {new_school}")
+    print(f"Difference found:")
+    print(json.dumps(differences, indent=2))
 
 
 def main():

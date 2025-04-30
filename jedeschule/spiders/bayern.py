@@ -35,7 +35,7 @@ class BayernSpider(SchoolSpider):
 
             for entry in school:
                 if entry.tag == "{http://gdi.bayern/brbschul}geometry":
-                    lat, lon = entry.findtext(
+                    lon, lat = entry.findtext(
                         "gml:Point/gml:pos", namespaces=namespaces
                     ).split(" ")
                     data_elem["lat"] = lat

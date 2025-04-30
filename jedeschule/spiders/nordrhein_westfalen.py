@@ -44,7 +44,7 @@ class NordrheinWestfalenSpider(SchoolSpider):
         source_crs = item.get("EPSG")
         if source_crs == "null":
             source_crs = "EPSG:25832"
-        transformer = Transformer.from_crs(source_crs, "EPSG:4326")
+        transformer = Transformer.from_crs(source_crs, "EPSG:4326", always_xy=True)
         lon, lat = transformer.transform(right, high)
 
         return School(

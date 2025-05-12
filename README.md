@@ -20,8 +20,8 @@ ISO-3166-2 code (without the `DE-` prefix).
 In details, the IDs are sourced as follows:
 
 
-|State| ID-Source                                                                                                 | exmaple-id                                                                 |stable|
-|-----|-----------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
+|State| ID-Source                                                                                                    | exmaple-id                                                                 |stable|
+|-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
 |BW| Field `DISCH` (Dienststellenschüssel) in the JSON repsonse                                                   | `BW-04154817`                                                              |✅ likely|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
@@ -33,7 +33,7 @@ In details, the IDs are sourced as follows:
 |NI| Field `schulnr` from the JSON in the details payload                                                         | `NI-67763`                                                                 |✅ likely|
 |NW| Column `Schulnummer` from the CSV                                                                            | `NW-162437`                                                                |✅ likely|
 |RP| `Schulnummer` from the school's details page                                                                 | `RP-50720`                                                                 |✅ likely|
-|SL| Phone number, email or name from the item. Depending on what is available first                              | `SL-gem-kleinblittersdorfATschule.saarland`                                |❌ unlikely (e.g. if name was used before and now a phone number is added to the school, it will be used instead)|
+|SL| `OBJECTID` from the WFS service                                                                              | `SL-255`                                                                   |❓ unlikely |
 |SN| Field `id` from the API                                                                                      | `SN-4062`                                                                  |✅ likely|
 |ST| `ID` query param from the details page URL                                                                   | `ST-1001186`                                                               |❓ probably?|
 |TH| `Schulnumer` from school list                                                                                | `TH-10601`                                                                 |✅ likely|
@@ -54,7 +54,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | NI    | ❌ No                 | -                                            |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ❌ No                 | -                                            |
-| SL    | ❌ No                 | -                                            |
+| SL    | ✅ Yes                | WFS                                          |
 | SN    | ✅ Yes                | API                                          |
 | ST    | ❌ No                 | -                                            |
 | TH    | ❌ No                 | -                                            |

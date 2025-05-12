@@ -1,104 +1,55 @@
-from scrapy.spiders import Rule, CrawlSpider
-from scrapy.linkextractors import LinkExtractor
-from scrapy import Item, FormRequest, Request
+from scrapy import Item
+import xml.etree.ElementTree as ET
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
 
-# School types: Berufliche Schule, Erweitere Realschule, Förderschule, Freie Waldorfschule,
-# Gemeinschatsschule, Grundschule, Gymnasium, Lyzeum, Realschule, Studienseminare
 
-
-class SaarlandSpider(CrawlSpider, SchoolSpider):
+class SaarlandSpider(SchoolSpider):
     name = "saarland"
     start_urls = [
-        "https://www.saarland.de/mbk/DE/portale/bildungsserver/schulen-und-bildungswege/schuldatenbank"
+        "https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer?SERVICE=WFS&REQUEST=GetFeature&typeName=Staatliche%5FDienste:Schulen%5FSL&srsname=EPSG:4326"
     ]
 
-    rules = (
-        Rule(
-            LinkExtractor(allow=(), restrict_xpaths=('//a[@class="forward button"]',)),
-            callback="parse_start_url",
-            follow=True,
-        ),
-    )
+    def parse(self, response):
+        tree = ET.fromstring(response.body)
 
-    def parse_start_url(self, response):
-        yield FormRequest.from_response(
-            response, formname="searchSchool", callback=self.parse_page
-        )
+        namespaces = {
+            "gml": "http://www.opengis.net/gml/3.2",
+            "SD": "https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer",
+        }
 
-    def parse_page(self, response):
-        for school in self.parse_schools(response):
-            yield school
-        next_button = response.xpath(
-            '//a[@class="forward button"]/@href'
-        ).extract_first()
-        if next_button:
-            yield Request(next_button, callback=self.parse_page)
-
-    def parse_schools(self, response):
-        cards = response.xpath('//div[@class="c-teaser-card"]')
-
-        for card in cards:
-            school = {}
-            school["name"] = card.xpath(".//h3/text()").extract_first().strip()
-
-            badges = card.css(".c-badge")
-            school["schultyp"] = badges[0].css("::text").extract_first()
-            school["ort"] = badges[1].css("::text").extract_first()
-
-            address = card.xpath(".//p/text()").extract_first().split(", ")
-
-            school["straße"] = address[0]
-            school["plz"] = address[1].strip(" " + school["ort"])
-
-            keys = card.xpath(".//dt/text()").extract()
-            info = card.xpath(".//dd/text()").extract()
-
-            for index in range(0, len(keys)):
-                key = keys[index].strip(":").lower()
-
-                if key == "homepage":
-                    school["homepage"] = card.xpath(
-                        './/a[@target="_blank"]/text()'
-                    ).extract_first()
-
-                if key == "e-mail":
-                    school["e-mail"] = (
-                        card.xpath('.//a[contains(@title, "E-Mail senden an:")]/@href')
-                        .extract_first()
-                        .strip("mailto:")
-                    )
-
-                if key != "homepage" and key != "e-mail":
-                    school[key] = info[index]
-
-            yield school
-
-    @staticmethod
-    def get_id(item: Item) -> str:
-        # There are no IDs on the page that we could use.
-        # We will fall back to phone number, e-mail or name
-        # in the worst case
-        if tel := item.get("telefon"):
-            return tel.replace(" ", "-")
-        if email := item.get("e-mail"):
-            return email.replace("@", "AT")
-        return item.get("name")
+        for school in tree.iter(
+            "{https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer}Schulen_SL"
+        ):
+            data_elem = {}
+            for entry in school:
+                if (
+                    entry.tag
+                    == "{https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer}Shape"
+                ):
+                    # This nested entry contains the coordinates that we would like to expand
+                    lat, lon = entry.findtext(
+                        "gml:Point/gml:pos", namespaces=namespaces
+                    ).split(" ")
+                    data_elem["lat"] = lat
+                    data_elem["lon"] = lon
+                    continue
+                # strip the namespace before returning
+                data_elem[entry.tag.split("}", 1)[1]] = entry.text
+            yield data_elem
 
     @staticmethod
     def normalize(item: Item) -> School:
+        # The data also contains a field called `SCHULKENNZ` which implies that it might be an id
+        # that could be used, but some schools share ids (especially `0` or `000000`) which makes for collisions
+        id = item.get("OBJECTID")
+
         return School(
-            name=item.get("name"),
-            phone=item.get("telefon"),
-            fax=item.get("telefax"),
-            website=item.get("homepage"),
-            email=item.get("e-mail"),
-            address=item.get("straße"),
-            city=item.get("ort"),
-            zip=item.get("plz"),
-            school_type=item.get("schultyp"),
-            director=item.get("schulleitung"),
-            id="SL-{}".format(SaarlandSpider.get_id(item)),
+            name=item.get("SCHULNAME"),
+            address=" ".join([item.get(part) for part in ["HNR", "STR_NAME"]]),
+            city=item.get("ORT_NAME"),
+            zip=item.get("PLZ"),
+            school_type=item.get("SCHULFORM"),
+            id=f"SL-{id}",
         )

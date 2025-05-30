@@ -5,14 +5,8 @@ on:
 
 jobs:
   build:
-    env:
-      UV_SYSTEM_PYTHON: 1
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [ '3.11', '3.12']
-      fail-fast: false
-    name: Tests with Python ${{ matrix.python-version }}
+    name: Run tests
     services:
       postgres:
         image: postgis/postgis:13-3.1-alpine
@@ -36,9 +30,8 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-      - run: uv pip install -r requirements.txt
+          python-version-file: ".python-version"
+      - run: uv sync --locked --all-extras
       - run: createdb jedeschule_test
         env:
           PGHOST: localhost
@@ -47,7 +40,7 @@ jobs:
           PGUSER: postgres
       - run: |
           set -e
-          alembic upgrade head
-          python test_models.py
+          uv run alembic upgrade head
+          uv run python test_models.py
         env:
          DATABASE_URL: postgresql://postgres:postgres@0.0.0.0:5432/jedeschule_test

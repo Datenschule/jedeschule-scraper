@@ -4,8 +4,6 @@ on: [push]
 
 jobs:
   build:
-    env:
-      UV_SYSTEM_PYTHON: 1
     runs-on: ubuntu-latest
     name: Show changes in scraper results
     steps:
@@ -17,7 +15,6 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.11
-          architecture: x64
-      - run: uv pip install -r requirements.txt
-      - run: ./test_changes.sh
+          python-version-file: ".python-version"
+      - run: uv sync --locked --all-extras
+      - run: uv run ./test_changes.sh

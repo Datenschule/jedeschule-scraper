@@ -8,5 +8,5 @@ do
   # cannot even use in the end.
   # This is why we set the maximum amount of items that are
   # allowed to crash to 3 here.
-  scrapy crawl $spider -s "CLOSESPIDER_ERRORCOUNT=3" --loglevel=INFO
+  uv run scrapy crawl $spider -s "CLOSESPIDER_ERRORCOUNT=3" --loglevel=INFO
 done

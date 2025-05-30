@@ -4,7 +4,7 @@ COPY . .
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN uv pip install -r requirements.txt
+RUN uv sync --locked --all-extras
 
 # Install pg_isready to await db start
 RUN apt-get update && \

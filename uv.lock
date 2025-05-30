@@ -270,7 +270,7 @@ requires-dist = [
     { name = "psycopg2", specifier = "==2.9.10" },
     { name = "pyproj", specifier = "==3.6.1" },
     { name = "requests", specifier = "==2.32.0" },
-    { name = "scrapy", specifier = "==2.11.2" },
+    { name = "scrapy", specifier = "==2.13.1" },
     { name = "sqlalchemy", specifier = "==1.3.10" },
     { name = "xlrd", specifier = "==1.1.0" },
 ]
@@ -555,7 +555,7 @@ wheels = [
 
 [[package]]
 name = "scrapy"
-version = "2.11.2"
+version = "2.13.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -572,15 +572,14 @@ dependencies = [
     { name = "pypydispatcher", marker = "platform_python_implementation == 'PyPy'" },
     { name = "queuelib" },
     { name = "service-identity" },
-    { name = "setuptools" },
     { name = "tldextract" },
     { name = "twisted" },
     { name = "w3lib" },
     { name = "zope-interface" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/1f/5524416a64c030fbe18caeba079e7176836b281bf9eb50b79efdf8015063/scrapy-2.11.2.tar.gz", hash = "sha256:dfbd565384fc3fffeba121f5a3a2d0899ac1f756d41432ca0879933fbfb3401d", size = 1187710, upload-time = "2024-05-14T12:00:40.403Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fa/d3/2ffbadcb08cc99102925cd056ba670215e5aff193686cf125b97ef77981d/scrapy-2.13.1.tar.gz", hash = "sha256:3d6ba72da3ba387290074a7aca305aad6dd261c98ed4f6dd35db632925ca56a1", size = 1214392, upload-time = "2025-05-28T08:13:53.632Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0d/4e/6c06a4cfbb9a1e243c975da6a09982f085b1a14939fb195ea9e3e2f2b206/Scrapy-2.11.2-py2.py3-none-any.whl", hash = "sha256:4be353d6abbb942a9f7e7614ca8b5f3d9037381176ac8d8859c8cac676e74fa0", size = 290065, upload-time = "2024-05-14T12:00:36.774Z" },
+    { url = "https://files.pythonhosted.org/packages/62/83/bada8e6e61b18cda43c78b3ab072692edf3daf6cbafdb7e4a1cefef1188c/scrapy-2.13.1-py3-none-any.whl", hash = "sha256:7cb118f2f878d7eb817010500e349be28755b1b4a6f19c7be27450db843e1efc", size = 321760, upload-time = "2025-05-28T08:13:51.3Z" },
 ]
 
 [[package]]

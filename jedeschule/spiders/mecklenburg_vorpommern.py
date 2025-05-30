@@ -1,5 +1,7 @@
 from scrapy import Item
-import xlrd
+from openpyxl import load_workbook
+from io import BytesIO
+
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
@@ -25,13 +27,16 @@ class MecklenburgVorpommernSpider(SchoolSpider):
     start_urls = [base_url]
 
     def parse(self, response):
-        workbook = xlrd.open_workbook(file_contents=response.body)
-        data_sheet = workbook.sheet_by_name("Verzeichnis allg bild Schulen")
-        headers = [data_sheet.cell(0, c).value for c in range(data_sheet.ncols)]
-        for row_number in range(1, data_sheet.nrows):
+        workbook = load_workbook(filename=BytesIO(response.body), data_only=True)
+        data_sheet = workbook["Verzeichnis allg bild Schulen"]
+
+        rows = list(data_sheet.iter_rows(values_only=True))
+        headers = rows[0]
+
+        for row in rows[1:]:
             yield {
-                headers[c]: data_sheet.cell(row_number, c).value
-                for c in range(data_sheet.ncols)
+                headers[i]: row[i]
+                for i in range(len(headers))
             }
 
     @staticmethod

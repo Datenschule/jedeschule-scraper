@@ -10,6 +10,7 @@ import geoalchemy2
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -21,7 +22,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+    conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
     op.add_column(
         "schools",
         sa.Column(
@@ -37,4 +38,4 @@ def upgrade():
 def downgrade():
     op.drop_column("schools", "location")
     conn = op.get_bind()
-    conn.execute("DROP EXTENSION IF EXISTS postgis;")
+    conn.execute(text("DROP EXTENSION IF EXISTS postgis;"))

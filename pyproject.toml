@@ -10,7 +10,7 @@ dependencies = [
     "psycopg2==2.9.10",
     "pyproj==3.6.1",
     "requests==2.32.0",
-    "scrapy==2.11.2",
+    "scrapy==2.13.1",
     "sqlalchemy==1.3.10",
     "xlrd==1.1.0",
 ]

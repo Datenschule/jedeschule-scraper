@@ -2,7 +2,9 @@ FROM scrapinghub/scrapinghub-stack-scrapy:2.11
 
 COPY . .
 
-RUN pip install -r requirements.txt
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+RUN uv sync --locked --all-extras
 
 # Install pg_isready to await db start
 RUN apt-get update && \

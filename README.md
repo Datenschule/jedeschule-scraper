@@ -60,21 +60,22 @@ When available, we try to use the geolocations provided by the data publishers.
 | TH    | ❌ No                 | -                                            |
 
 ## Installation
-Note that at least Python 3.7 is required.
+Dependency management is done using [uv](https://docs.astral.sh/uv/). Make sure
+to have it installed and then run the following command to install the dependencies:
 
 ```bash
-pip install -r requirements.txt
+uv sync --locked --all-extras
 ```
 
 Make your you have a postgres database with postgis support 
 running if you want to use the database pipeline and expor
 t an environment variable pointing to it like so:
 ```sh
-export DATABASE_URL=postgresql://postgres@0.0.0.0:5432/jedeschule
+export DATABASE_URL=postgres://postgres@0.0.0.0:5432/jedeschule
 ```
 Then, run the migrations to bring you database up to date
 ```sh
-alembic upgrade head
+uv run alembic upgrade head
 ```
 
 
@@ -83,9 +84,9 @@ To run some very basic integration tests, you will need another postgres
 database for test data. After creating it, run the following steps 
 (assuming you called your database `jedeschule_scraper_test`):
 ```
-export DATABASE_URL=postgresql://postgres@0.0.0.0:5432/jedeschule_scraper_test
-alembic upgrade head
-python test_models.py
+export DATABASE_URL=postgres://postgres@0.0.0.0:5432/jedeschule_scraper_test
+uv run alembic upgrade head
+uv run python test_models.py
 ```
 
 If you made changes to scrapers, you can also run a script to check the 
@@ -108,7 +109,7 @@ bash ./scrape_all.sh
 ### Updating data for a single state
 To get updates for a single state, run
 ```bash
-scrapy crawl <state_name>
+uv run scrapy crawl <state_name>
 # use `scrapy list` to get a list of all available states
 ```
 

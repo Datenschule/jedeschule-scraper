@@ -1,8 +1,0 @@
-GeoAlchemy2==0.17.1
-SQLAlchemy==2.0.41
-Scrapy==2.13.0
-alembic==1.16.1
-psycopg2==2.9.10
-pyproj==3.7.1
-requests==2.32.3
-xlrd==2.0.1

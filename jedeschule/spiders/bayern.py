@@ -5,6 +5,7 @@ from scrapy import Item
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
 
+
 class BayernSpider(SchoolSpider):
     name = "bayern"
     start_urls = [

@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
 
+
 class SaarlandSpider(SchoolSpider):
     name = "saarland"
     start_urls = [

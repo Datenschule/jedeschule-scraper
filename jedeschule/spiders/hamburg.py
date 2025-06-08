@@ -5,7 +5,6 @@ from scrapy import Item
 from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.items import School
 
-#here
 class HamburgSpider(SchoolSpider):
     name = "hamburg"
 

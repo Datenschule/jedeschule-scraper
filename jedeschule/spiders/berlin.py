@@ -10,7 +10,6 @@ class BerlinSpider(SchoolSpider):
     start_urls = [
         "https://gdi.berlin.de/services/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:4326&"
         "typename=fis:schulen&outputFormat=application/json"
-        # "&maxFeatures=1"
     ]
 
     def parse(self, response, **kwargs):

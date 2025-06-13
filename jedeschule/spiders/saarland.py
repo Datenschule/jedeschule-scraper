@@ -35,7 +35,6 @@ class SaarlandSpider(SchoolSpider):
                         data_elem["lat"] = lat
                         data_elem["lon"] = lon
                 else:
-                    # Strip the namespace prefix for cleaner field names
                     clean_key = key.split(":")[-1]
                     data_elem[clean_key] = value
 

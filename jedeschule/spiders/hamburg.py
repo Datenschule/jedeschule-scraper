@@ -11,6 +11,7 @@ class HamburgSpider(SchoolSpider):
     start_urls = [
         "https://geodienste.hamburg.de/HH_WFS_Schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature"
         "&typename=de.hh.up:nicht_staatliche_schulen,de.hh.up:staatliche_schulen&srsname=EPSG:4326"
+        # "&maxFeatures=1"
     ]
 
     def parse(self, response, **kwargs):
@@ -32,7 +33,7 @@ class HamburgSpider(SchoolSpider):
             for key, value in school_data.items():
                 if key == "de.hh.up:the_geom":
                     coords = value["gml:Point"]["gml:pos"]
-                    lon, lat = coords.split()
+                    lon, lat = map(float, coords.split())
                     result["lat"] = lat
                     result["lon"] = lon
                 else:

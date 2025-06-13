@@ -11,13 +11,14 @@ fi
 
 echo "Using head reference: ${HEAD_REF}"
 
-CHANGED_SCRAPERS=$(git whatchanged --name-only --pretty="" origin/main..${HEAD_REF}  |
+CHANGED_SCRAPERS=$(git diff --name-only origin/main...${HEAD_REF}  |
                   grep spiders  |
                   grep -v helper  |
-                  sed 's/jedeschule\/spiders\///' |
-                  sed 's/\.py//' |
-                  sed 's/_/\-/' | 
-		              uniq) || true
+                  sed 's|jedeschule/spiders/||' |
+                  sed 's|\.py||' |
+                  sed 's|_|-|' |
+                  sort -u) || true
+
 
 if [ -z "$CHANGED_SCRAPERS" ]; then
     echo "No scrapers were changed"

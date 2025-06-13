@@ -1,40 +1,44 @@
-import xml.etree.ElementTree as ET
-
+import xmltodict
 from scrapy import Item
 
-from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
 
 class HamburgSpider(SchoolSpider):
     name = "hamburg"
 
     start_urls = [
-        "https://geodienste.hamburg.de/HH_WFS_Schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&typename=de.hh.up:nicht_staatliche_schulen,de.hh.up:staatliche_schulen&srsname=EPSG:4326"
+        "https://geodienste.hamburg.de/HH_WFS_Schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature"
+        "&typename=de.hh.up:nicht_staatliche_schulen,de.hh.up:staatliche_schulen&srsname=EPSG:4326"
     ]
 
+    def parse(self, response, **kwargs):
+        data = xmltodict.parse(response.body)
 
-    def parse(self, response):
-        namespaces = {
-            "gml": "http://www.opengis.net/gml",
-        }
+        feature_collection = data.get("wfs:FeatureCollection", {})
+        members = feature_collection.get("gml:featureMember", [])
 
-        elem = ET.fromstring(response.body)
+        if not isinstance(members, list):
+            members = [members]
 
-        for member in elem:
-            data_elem = {}
-            for attr in member[0]:
-                if attr.tag == "{https://registry.gdi-de.org/id/de.hh.up}the_geom":
-                    # This nested entry contains the coordinates that we would like to expand
-                    lon, lat = attr.findtext(
-                        "gml:Point/gml:pos", namespaces=namespaces
-                    ).split(" ")
-                    data_elem["lat"] = lat
-                    data_elem["lon"] = lon
-                    continue
-                # strip the namespace before returning
-                data_elem[attr.tag.split("}", 1)[1]] = attr.text
-            yield data_elem
+        for member in members:
+            school_data = (member.get("de.hh.up:staatliche_schulen") or
+                           member.get("de.hh.up:nicht_staatliche_schulen"))
+            if not school_data:
+                continue
+
+            result = {}
+            for key, value in school_data.items():
+                if key == "de.hh.up:the_geom":
+                    coords = value["gml:Point"]["gml:pos"]
+                    lon, lat = coords.split()
+                    result["lat"] = lat
+                    result["lon"] = lon
+                else:
+                    result[key.split(":")[-1]] = value
+
+            yield result
 
     @staticmethod
     def normalize(item: Item) -> School:

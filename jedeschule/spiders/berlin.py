@@ -1,10 +1,8 @@
-import json
-import logging
-
 from scrapy import Item
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
+from jedeschule.utils.wfs_basic_parsers import parse_geojson_features
 
 
 class BerlinSpider(SchoolSpider):
@@ -16,19 +14,7 @@ class BerlinSpider(SchoolSpider):
     ]
 
     def parse(self, response, **kwargs):
-        geojson = json.loads(response.text)
-
-        for feature in geojson.get("features", []):
-            properties = feature.get("properties", {})
-            coords = feature.get("geometry", {}).get("coordinates", [])
-
-            try:
-                properties["lon"] = coords[0]
-                properties["lat"] = coords[1]
-            except (TypeError, IndexError):
-                logging.warning("Skipping feature with invalid geometry")
-
-            yield properties
+        yield from parse_geojson_features(response)
 
     @staticmethod
     def normalize(item: Item) -> School:

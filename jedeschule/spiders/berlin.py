@@ -1,42 +1,19 @@
-import xml.etree.ElementTree as ET
-
-from jedeschule.items import School
 from scrapy import Item
 
+from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
+from jedeschule.utils.wfs_basic_parsers import parse_geojson_features
 
 
 class BerlinSpider(SchoolSpider):
     name = "berlin"
     start_urls = [
-        "https://gdi.berlin.de/services/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:4326&typename=fis:schulen"
+        "https://gdi.berlin.de/services/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&srsname=EPSG:4326"
+        "&typename=fis:schulen&outputFormat=application/json"
     ]
 
-    def parse(self, response):
-        tree = ET.fromstring(response.body)
-
-        namespaces = {
-            "gml": "http://www.opengis.net/gml",
-            "fis": "http://www.berlin.de/broker",
-        }
-        for school in tree.find("gml:featureMembers", namespaces).findall(
-            "{schulen}schulen", namespaces
-        ):
-            data_elem = {}
-            for entry in school:
-                if entry.tag == "{http://www.opengis.net/gml}boundedBy":
-                    continue
-                if entry.tag == "{schulen}geom":
-                    # This nested entry contains the coordinates that we would like to expand
-                    lon, lat = entry.findtext(
-                        "gml:Point/gml:pos", namespaces=namespaces
-                    ).split(" ")
-                    data_elem["lat"] = lat
-                    data_elem["lon"] = lon
-                    continue
-                # strip the namespace before returning
-                data_elem[entry.tag.split("}", 1)[1]] = entry.text
-            yield data_elem
+    def parse(self, response, **kwargs):
+        yield from parse_geojson_features(response)
 
     @staticmethod
     def normalize(item: Item) -> School:

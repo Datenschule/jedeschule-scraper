@@ -2,7 +2,7 @@ from scrapy import Item
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
-from jedeschule.utils.wfs_basic_parsers import parse_geojson_features
+from jedeschule.wfs_basic_parsers import parse_geojson_features
 
 
 class BerlinSpider(SchoolSpider):

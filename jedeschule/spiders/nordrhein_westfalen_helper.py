@@ -2,7 +2,7 @@ import csv
 
 import requests
 
-from jedeschule.utils.utils import singleton
+from jedeschule.utils import singleton
 
 
 @singleton

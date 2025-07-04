@@ -42,5 +42,6 @@ jobs:
           set -e
           uv run alembic upgrade head
           uv run python test_models.py
+          uv run python -m unittest discover -s test -p "*.py" -v
         env:
          DATABASE_URL: postgresql://postgres:postgres@0.0.0.0:5432/jedeschule_test

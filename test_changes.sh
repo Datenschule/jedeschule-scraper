@@ -2,9 +2,10 @@
 
 set -euxo pipefail
 
-if [ $CI ]
-then
-  HEAD_REF=${GITHUB_REF}
+git fetch origin main
+
+if [ "${CI:-}" = "true" ]; then
+  HEAD_REF="${GITHUB_SHA}"
 else
   HEAD_REF="HEAD"
 fi

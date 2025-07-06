@@ -280,7 +280,7 @@ requires-dist = [
     { name = "psycopg2", specifier = "==2.9.10" },
     { name = "pyproj", specifier = "==3.7.1" },
     { name = "requests", specifier = "==2.32.4" },
-    { name = "scrapy", specifier = "==2.13.1" },
+    { name = "scrapy", specifier = "==2.13.3" },
     { name = "sqlalchemy", specifier = "==1.3.10" },
 ]
 
@@ -586,7 +586,7 @@ wheels = [
 
 [[package]]
 name = "scrapy"
-version = "2.13.1"
+version = "2.13.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -608,9 +608,9 @@ dependencies = [
     { name = "w3lib" },
     { name = "zope-interface" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fa/d3/2ffbadcb08cc99102925cd056ba670215e5aff193686cf125b97ef77981d/scrapy-2.13.1.tar.gz", hash = "sha256:3d6ba72da3ba387290074a7aca305aad6dd261c98ed4f6dd35db632925ca56a1", size = 1214392, upload-time = "2025-05-28T08:13:53.632Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/be/6c/bab0c01c5c50842548f0b5e936dfd2520a1ce84c171472c2cfe4d0599841/scrapy-2.13.3.tar.gz", hash = "sha256:bf17588c10e46a9d70c49a05380b749e3c7fba58204a367a5747ce6da2bd204d", size = 1220051, upload-time = "2025-07-02T15:41:15.776Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/83/bada8e6e61b18cda43c78b3ab072692edf3daf6cbafdb7e4a1cefef1188c/scrapy-2.13.1-py3-none-any.whl", hash = "sha256:7cb118f2f878d7eb817010500e349be28755b1b4a6f19c7be27450db843e1efc", size = 321760, upload-time = "2025-05-28T08:13:51.3Z" },
+    { url = "https://files.pythonhosted.org/packages/53/cb/474b56910b9fb823298008444790a6d5fb9c8dfb936101136932d586287a/scrapy-2.13.3-py3-none-any.whl", hash = "sha256:9c16a482e1474b501f7b7121a4071ddc5cec4c0c7c0320217ed678d4fb8a3e9e", size = 321805, upload-time = "2025-07-02T15:41:13.782Z" },
 ]
 
 [[package]]

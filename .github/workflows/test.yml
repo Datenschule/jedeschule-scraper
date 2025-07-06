@@ -40,7 +40,13 @@ jobs:
           PGUSER: postgres
       - run: |
           set -e
+          echo "🏗 Running alembic migrations..."
           uv run alembic upgrade head
+          
+          echo "🧪 Running test_models.py..."
           uv run python test_models.py
+          
+          echo "🔎 Discovering and running unit tests..."
+          uv run python -m unittest discover -s test -p "*.py" -v
         env:
          DATABASE_URL: postgresql://postgres:postgres@0.0.0.0:5432/jedeschule_test

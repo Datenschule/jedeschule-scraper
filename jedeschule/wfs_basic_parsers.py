@@ -13,5 +13,4 @@ def parse_geojson_features(response: Response):
         properties["lon"] = coords[0]
         properties["lat"] = coords[1]
 
-
         yield properties

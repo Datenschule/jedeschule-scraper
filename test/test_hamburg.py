@@ -12,16 +12,15 @@ class TestHamburgSpider(unittest.TestCase):
             "type": "FeatureCollection",
             "numberReturned": 1,
             "numberMatched": 453,
-            "timeStamp": "2025-07-13T16:55:57Z",
-            "crs": "http://www.opengis.net/def/crs/EPSG/0/4326",
+            "timeStamp": "2025-07-14T19:20:02Z",
             "features": [
                 {
                     "type": "Feature",
                     "geometry": {
                         "type": "Point",
                         "coordinates": [
-                            53.601522503676144,
-                            10.047106063058099
+                            10.047106063058099,
+                            53.601522503676144
                         ]
                     },
                     "properties": {
@@ -62,7 +61,7 @@ class TestHamburgSpider(unittest.TestCase):
                         "zuegigkeit_kl_5": "7",
                         "zustaendiges_rebbz": "ReBBZ Winterhude"
                     },
-                    "id": 874864
+                    "id": 875415
                 }
             ],
             "links": []

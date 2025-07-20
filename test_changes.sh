@@ -5,7 +5,7 @@ set -euxo pipefail
 git fetch origin main
 
 if [ "${CI:-}" = "true" ]; then
-  HEAD_REF="${GITHUB_SHA}"
+  HEAD_REF="${GITHUB_SHA:-$(git rev-parse HEAD)}"
 else
   HEAD_REF="HEAD"
 fi

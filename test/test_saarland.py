@@ -5,7 +5,7 @@ from scrapy.http import TextResponse
 from jedeschule.spiders.saarland import SaarlandSpider
 
 
-class TestHamburgSpider(unittest.TestCase):
+class TestSaarlandSpider(unittest.TestCase):
     def test_parse(self):
         xml_response = """<?xml version="1.0" encoding="utf-8" ?>
                 <wfs:FeatureCollection xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:Staatliche_Dienste="https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" timeStamp="2025-07-20T17:40:21Z" numberMatched="317" numberReturned="1" xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd http://www.opengis.net/gml/3.2 http://schemas.opengis.net/gml/3.2.1/gml.xsd https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer?service=wfs%26version=2.0.0%26request=DescribeFeatureType">
@@ -48,7 +48,7 @@ class TestHamburgSpider(unittest.TestCase):
         self.assertEqual(school["OBJECTID"], "1")
         self.assertEqual(school["fid"], "1.00000000")
         self.assertEqual(school["Gemeindenu"], "1100.00000000")
-        self.assertEqual(school["PLZ"], "66123.00000000")
+        self.assertEqual(school["PLZ"], "66123")
         self.assertEqual(school["Ort"], "Saarbrücken")
         self.assertEqual(school["Straße"], "Kohlweg 7")
         self.assertEqual(school["Bezeichnun"], "Deutsch-Französiche Hochschule, Université franco-allemande")

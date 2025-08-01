@@ -8,7 +8,8 @@ from jedeschule.spiders.school_spider import SchoolSpider
 class SaarlandSpider(SchoolSpider):
     name = "saarland"
     start_urls = [
-        "https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer?SERVICE=WFS&REQUEST=GetFeature&typeName=Staatliche%5FDienste:Schulen%5FSL&srsname=EPSG:4326"
+        "https://geoportal.saarland.de/arcgis/services/Internet/Staatliche_Dienste/MapServer/WFSServer?"
+        "SERVICE=WFS&REQUEST=GetFeature&typeName=Staatliche%5FDienste:Schulen%5FSL&srsname=EPSG:4326"
     ]
 
     def parse(self, response, **kwargs):
@@ -24,18 +25,21 @@ class SaarlandSpider(SchoolSpider):
 
             for key, value in school.items():
                 if key == "Staatliche_Dienste:SHAPE":
-                    pos = (
-                        value.get("gml:Point", {})
-                        .get("gml:pos", "")
-                        .strip()
-                    )
+                    pos = (value.get("gml:Point", {})
+                           .get("gml:pos", "")
+                           .strip())
                     if pos:
                         lat, lon = pos.split()
                         data_elem["lat"] = float(lat)
                         data_elem["lon"] = float(lon)
-                else:
-                    clean_key = key.split(":")[-1]
-                    data_elem[clean_key] = value
+
+                    continue
+
+                clean_key = key.split(":")[-1]
+                if clean_key == "PLZ":
+                    value = value.split(".")[0]
+
+                data_elem[clean_key] = value
 
             yield data_elem
 

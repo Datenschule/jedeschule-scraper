@@ -15,7 +15,7 @@ jobs:
       attestations: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Log in to Docker Hub
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
         with:

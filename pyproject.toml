@@ -12,6 +12,6 @@ dependencies = [
     "pyproj==3.7.1",
     "requests==2.32.4",
     "scrapy==2.13.3",
-    "sqlalchemy==1.3.10",
+    "sqlalchemy==2.0.43",
     "xmltodict==0.14.2",
 ]

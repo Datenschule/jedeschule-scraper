@@ -1,5 +1,4 @@
-import xml.etree.ElementTree as ET
-import scrapy
+import xmltodict
 from scrapy import Item
 
 from jedeschule.items import School
@@ -9,40 +8,44 @@ from jedeschule.spiders.school_spider import SchoolSpider
 class BayernSpider(SchoolSpider):
     name = "bayern"
     start_urls = [
-        "https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetCapabilities"
+        "https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?"
+        "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&srsname=EPSG:4326&typename="
+            "schul:SchulstandorteGrundschulen,"
+            "schul:SchulstandorteMittelschulen,"
+            "schul:SchulstandorteRealschulen,"
+            "schul:SchulstandorteGymnasien,"
+            "schul:SchulstandorteBeruflicheSchulen,"
+            "schul:SchulstandorteFoerderzentren,"
+            "schul:SchulstandorteWeitererSchulen"
     ]
 
     def parse(self, response, **kwargs):
-        tree = ET.fromstring(response.body)
-        base_url = "https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&srsname=EPSG:4326&typename="
-        for feature_type in tree.iter("{http://www.opengis.net/wfs/2.0}FeatureType"):
-            feature = feature_type.findtext("{http://www.opengis.net/wfs/2.0}Title")
-            yield scrapy.Request(
-                f"{base_url}{feature}",
-                callback=self.parse_resource,
-                cb_kwargs={"feature": feature},
-            )
+        data = xmltodict.parse(response.text)
+        members = data.get("wfs:FeatureCollection", {}).get("wfs:member", [])
 
-    def parse_resource(self, response, feature):
-        tree = ET.fromstring(response.body)
-        namespaces = {
-            "gml": "http://www.opengis.net/gml/3.2",
-            "schul": "http://gdi.bayern/brbschul",
-        }
-        key = "{http://gdi.bayern/brbschul}" + feature
-        for school in tree.iter(key):
-            data_elem = {"id": school.attrib["{http://www.opengis.net/gml/3.2}id"]}
+        if not isinstance(members, list):
+            members = [members]
 
-            for entry in school:
-                if entry.tag == "{http://gdi.bayern/brbschul}geometry":
-                    lon, lat = entry.findtext(
-                        "gml:Point/gml:pos", namespaces=namespaces
-                    ).split(" ")
-                    data_elem["lat"] = lat
-                    data_elem["lon"] = lon
-                    continue
-                # strip the namespace before returning
-                data_elem[entry.tag.split("}", 1)[1]] = entry.text
+        for member in members:
+            # Each member is a dict with one key = school tag, value = school data dict
+            school = next(iter(member.values()), {})
+
+            data_elem = {
+                "id": school.get("@gml:id")
+            }
+
+            for key, value in school.items():
+                if key == "schul:geometry":
+                    point = value.get("gml:Point", {})
+                    pos = point.get("gml:pos", "")
+                    if pos:
+                        lon, lat = pos.split()
+                        data_elem["lat"] = float(lat)
+                        data_elem["lon"] = float(lon)
+                elif not key.startswith("@"):
+                    clean_key = key.split(":", 1)[-1]
+                    data_elem[clean_key] = value
+
             yield data_elem
 
     @staticmethod

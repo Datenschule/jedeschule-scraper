@@ -44,8 +44,8 @@ class TestBayernSpider(unittest.TestCase):
         self.assertEqual(school["postleitzahl"], "81547")
         self.assertEqual(school["ort"], "München")
         self.assertEqual(school["schulart"], "Förderzentren")
-        self.assertEqual(school["lon"], "11.5686076923")
-        self.assertEqual(school["lat"], "48.1047906989")
+        self.assertEqual(school["lon"], 11.5686076923)
+        self.assertEqual(school["lat"], 48.1047906989)
 
 
 if __name__ == "__main__":

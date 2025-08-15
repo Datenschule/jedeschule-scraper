@@ -40,8 +40,8 @@ class BayernSpider(SchoolSpider):
                     pos = point.get("gml:pos", "")
                     if pos:
                         lon, lat = pos.split()
-                        data_elem["lat"] = lat
-                        data_elem["lon"] = lon
+                        data_elem["lat"] = float(lat)
+                        data_elem["lon"] = float(lon)
                 elif not key.startswith("@"):
                     clean_key = key.split(":", 1)[-1]
                     data_elem[clean_key] = value

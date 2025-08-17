@@ -7,6 +7,7 @@ Create Date: 2021-02-14 09:09:07.672138
 """
 
 import geoalchemy2
+from sqlalchemy import text
 
 from alembic import op
 import sqlalchemy as sa
@@ -21,7 +22,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    conn.execute("CREATE EXTENSION IF NOT EXISTS postgis;")
+    conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
     op.add_column(
         "schools",
         sa.Column(

@@ -54,10 +54,9 @@ class SachsenAnhaltSpider(SchoolSpider):
         return School(
             name=item.get("Name"),
             id="ST-{}".format(item.get("ID")),
-            address=re.split("\d{5}", item.get("Adresse").strip())[0].strip(),
-            zip=re.findall("\d{5}", item.get("Adresse").strip())[0],
-            city=re.split("\d{5}", item.get("Adresse").strip())[1].strip(),
-            # address=item.get('Adresse'),
+            address=re.split(r"\d{5}", item.get("Adresse").strip())[0].strip(),
+            zip=re.findall(r"\d{5}", item.get("Adresse").strip())[0],
+            city=re.split(r"\d{5}", item.get("Adresse").strip())[1].strip(),
             website=item.get("Homepage"),
             email=item.get("E-Mail"),
             fax=item.get("Telefax"),

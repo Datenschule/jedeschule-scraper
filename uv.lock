@@ -4,15 +4,17 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "alembic"
-version = "1.3.3"
+version = "1.16.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mako" },
-    { name = "python-dateutil" },
-    { name = "python-editor" },
     { name = "sqlalchemy" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/c9/d4aa3be3511dfd6d86f8f483ce0d9f120258be4aceadc17601843593e2ec/alembic-1.3.3.tar.gz", hash = "sha256:d412982920653db6e5a44bfd13b1d0db5685cbaaccaf226195749c706e1e862a", size = 1072775, upload-time = "2020-01-22T16:42:43.699Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/83/52/72e791b75c6b1efa803e491f7cbab78e963695e76d4ada05385252927e76/alembic-1.16.4.tar.gz", hash = "sha256:efab6ada0dd0fae2c92060800e0bf5c1dc26af15a10e02fb4babff164b4725e2", size = 1968161, upload-time = "2025-07-10T16:17:20.192Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c2/62/96b5217b742805236614f05904541000f55422a6060a90d7fd4ce26c172d/alembic-1.16.4-py3-none-any.whl", hash = "sha256:b05e51e8e82efc1abd14ba2af6392897e145930c3e0a2faf2b0da2f7f7fd660d", size = 247026, upload-time = "2025-07-10T16:17:21.845Z" },
+]
 
 [[package]]
 name = "attrs"
@@ -191,14 +193,15 @@ wheels = [
 
 [[package]]
 name = "geoalchemy2"
-version = "0.8.4"
+version = "0.18.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "packaging" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/51/47573b93570c2f3650814a720d9168ea471b80bbc4fb437f2b08e7d761e7/GeoAlchemy2-0.8.4.tar.gz", hash = "sha256:d9336f17df3e7a10f94d1ea2488dcfb97a8bc23fe7f5edea425ddab553534b0a", size = 122743, upload-time = "2020-06-11T19:36:34.701Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/15/88398e863a9e044e06957d0f214cc5f7ef3c1dee4c540d828bfa6c7d4535/geoalchemy2-0.18.0.tar.gz", hash = "sha256:9a04690cc33fbc580d15c7c028d9b1b1ea08271489730096c7092e1d486c2b7a", size = 239129, upload-time = "2025-07-21T10:51:47.52Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5e/5a/d09752518763988e8d00aaade2a34db4fa5f0079aa5fcb0ac0a7877b5f3c/GeoAlchemy2-0.8.4-py2.py3-none-any.whl", hash = "sha256:3b83654db15ed807a7bdb2e7dd1c787a47cfc3e4fb92a0558685001fbb7342da", size = 25784, upload-time = "2020-06-11T19:36:33.448Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/f5/1e36e49d4380d70d58c777953fd3c465b4fb242309b6bd6b88e45ef11bd7/geoalchemy2-0.18.0-py3-none-any.whl", hash = "sha256:ff0fe7339ba535c50845a2c7e8817a20c164364128991d795733b3c5904b1ee1", size = 81248, upload-time = "2025-07-21T10:51:46.291Z" },
 ]
 
 [[package]]
@@ -308,8 +311,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic", specifier = "==1.3.3" },
-    { name = "geoalchemy2", specifier = "==0.8.4" },
+    { name = "alembic", specifier = "==1.16.4" },
+    { name = "geoalchemy2", specifier = "==0.18.0" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "psycopg2", specifier = "==2.9.10" },
     { name = "pyproj", specifier = "==3.7.1" },
@@ -563,27 +566,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d5/7b/65f55513d3c769fd677f90032d8d8703e3dc17e88a41b6074d2177548bca/PyPyDispatcher-2.1.2.tar.gz", hash = "sha256:b6bec5dfcff9d2535bca2b23c80eae367b1ac250a645106948d315fcfa9130f2", size = 23224, upload-time = "2017-07-03T14:20:51.806Z" }
 
 [[package]]
-name = "python-dateutil"
-version = "2.9.0.post0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "six" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3", size = 342432, upload-time = "2024-03-01T18:36:20.211Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427", size = 229892, upload-time = "2024-03-01T18:36:18.57Z" },
-]
-
-[[package]]
-name = "python-editor"
-version = "1.0.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/0a/85/78f4a216d28343a67b7397c99825cff336330893f00601443f7c7b2f2234/python-editor-1.0.4.tar.gz", hash = "sha256:51fda6bcc5ddbbb7063b2af7509e43bd84bfc32a4ff71349ec7847713882327b", size = 7132, upload-time = "2019-02-01T07:33:13.653Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c6/d3/201fc3abe391bbae6606e6f1d598c15d367033332bd54352b12f35513717/python_editor-1.0.4-py3-none-any.whl", hash = "sha256:1bf6e860a8ad52a14c3ee1252d5dc25b2030618ed80c022598f00176adc8367d", size = 4877, upload-time = "2019-02-01T07:33:12.47Z" },
-]
-
-[[package]]
 name = "queuelib"
 version = "1.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -670,15 +652,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c", size = 1319958, upload-time = "2025-05-27T00:56:51.443Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922", size = 1201486, upload-time = "2025-05-27T00:56:49.664Z" },
-]
-
-[[package]]
-name = "six"
-version = "1.17.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
 ]
 
 [[package]]

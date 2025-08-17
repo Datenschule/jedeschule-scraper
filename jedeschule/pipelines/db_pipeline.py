@@ -51,7 +51,7 @@ class School(Base):
             session = get_session()
 
         school_data = {**item.info}
-        school = session.query(School).get(item.info["id"])
+        school = session.get(School, item.info["id"])
         latitude = school_data.pop("latitude", None)
         longitude = school_data.pop("longitude", None)
         if latitude is not None and longitude is not None:

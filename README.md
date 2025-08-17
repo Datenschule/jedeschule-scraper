@@ -71,7 +71,7 @@ Make your you have a postgres database with postgis support
 running if you want to use the database pipeline and expor
 t an environment variable pointing to it like so:
 ```sh
-export DATABASE_URL=postgres://postgres@0.0.0.0:5432/jedeschule
+export DATABASE_URL=postgresql://postgres@0.0.0.0:5432/jedeschule
 ```
 Then, run the migrations to bring you database up to date
 ```sh
@@ -84,7 +84,7 @@ To run some very basic integration tests, you will need another postgres
 database for test data. After creating it, run the following steps 
 (assuming you called your database `jedeschule_scraper_test`):
 ```
-export DATABASE_URL=postgres://postgres@0.0.0.0:5432/jedeschule_scraper_test
+export DATABASE_URL=postgresql://postgres@0.0.0.0:5432/jedeschule_scraper_test
 uv run alembic upgrade head
 uv run python test_models.py
 ```

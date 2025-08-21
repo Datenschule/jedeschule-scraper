@@ -20,7 +20,7 @@ ISO-3166-2 code (without the `DE-` prefix).
 In details, the IDs are sourced as follows:
 
 
-|State| ID-Source                                                                                                    | exmaple-id                                                                 |stable|
+|State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
 |BW| Field `DISCH` (Dienststellenschüssel) in the JSON repsonse                                                   | `BW-04154817`                                                              |✅ likely|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
@@ -33,7 +33,7 @@ In details, the IDs are sourced as follows:
 |NI| Field `schulnr` from the JSON in the details payload                                                         | `NI-67763`                                                                 |✅ likely|
 |NW| Column `Schulnummer` from the CSV                                                                            | `NW-162437`                                                                |✅ likely|
 |RP| `Schulnummer` from the school's details page                                                                 | `RP-50720`                                                                 |✅ likely|
-|SL| `OBJECTID` from the WFS service                                                                              | `SL-255`                                                                   |❓ unlikely |
+|SL| `OBJECTID` from the WFS service                                                                              | `SL-255`                                                                   |❌ no (confirmed with data provider but no alternative available) |
 |SN| Field `id` from the API                                                                                      | `SN-4062`                                                                  |✅ likely|
 |ST| `ID` query param from the details page URL                                                                   | `ST-1001186`                                                               |❓ probably?|
 |TH| `Schulnumer` from school list                                                                                | `TH-10601`                                                                 |✅ likely|

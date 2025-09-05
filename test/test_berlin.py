@@ -72,17 +72,19 @@ class TestBerlinSpider(unittest.TestCase):
         self.assertEqual(len(schools), 1)
 
         school = schools[0]
-        self.assertAlmostEqual(school["lon"], 13.33391576)
-        self.assertAlmostEqual(school["lat"], 52.52672359)
-        self.assertEqual(school["bsn"], "01A04")
-        self.assertEqual(school["schulname"], "Berlin-Kolleg")
-        self.assertEqual(school["plz"], "10551")
-        self.assertEqual(school["strasse"], "Turmstraße")
-        self.assertEqual(school["hausnr"], "75")
-        self.assertEqual(school["telefon"], "+49 30 901838210")
-        self.assertEqual(school["fax"], "+49 30 901838222")
-        self.assertEqual(school["email"], "sekretariat@berlin-kolleg.de")
-        self.assertEqual(school["internet"], "https://www.berlin-kolleg.de")
+        parsed_school = spider.normalize(school)
+
+        self.assertEqual(parsed_school["id"], "BE-01A04")
+        self.assertEqual(parsed_school["name"], "Berlin-Kolleg")
+        self.assertEqual(parsed_school["address"], "Turmstraße 75")
+        self.assertEqual(parsed_school["city"], "Berlin")
+        self.assertEqual(parsed_school["fax"], "+49 30 901838222")
+        self.assertEqual(parsed_school["phone"], "+49 30 901838210")
+        self.assertEqual(parsed_school["school_type"], "Kolleg")
+        self.assertEqual(parsed_school["website"], "https://www.berlin-kolleg.de")
+        self.assertEqual(parsed_school["zip"], "10551")
+        self.assertEqual(parsed_school["latitude"], 52.52672359)
+        self.assertEqual(parsed_school["longitude"], 13.33391576)
 
 
 if __name__ == "__main__":

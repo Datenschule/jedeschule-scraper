@@ -38,14 +38,16 @@ class TestBayernSpider(unittest.TestCase):
         self.assertEqual(len(schools), 1)
 
         school = schools[0]
+        parsed_school = spider.normalize(school)
 
-        self.assertEqual(school["schulname"], "Bayerische Landesschule")
-        self.assertEqual(school["strasse"], "Kurzstr. 2")
-        self.assertEqual(school["postleitzahl"], "81547")
-        self.assertEqual(school["ort"], "München")
-        self.assertEqual(school["schulart"], "Förderzentren")
-        self.assertEqual(school["lon"], 11.5686076923)
-        self.assertEqual(school["lat"], 48.1047906989)
+        self.assertEqual(parsed_school["id"], "BY-SCHUL_SCHULSTANDORTEFOERDERZENTREN_3721b800-751d-49a1-a6d2-19d237e7bcc8")
+        self.assertEqual(parsed_school["name"], "Bayerische Landesschule")
+        self.assertEqual(parsed_school["address"], "Kurzstr. 2")
+        self.assertEqual(parsed_school["city"], "München")
+        self.assertEqual(parsed_school["school_type"], "Förderzentren")
+        self.assertEqual(parsed_school["zip"], "81547")
+        self.assertEqual(parsed_school["latitude"], 48.1047906989)
+        self.assertEqual(parsed_school["longitude"], 11.5686076923)
 
 
 if __name__ == "__main__":

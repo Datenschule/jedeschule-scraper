@@ -79,16 +79,19 @@ class TestHamburgSpider(unittest.TestCase):
         self.assertEqual(len(schools), 1)
 
         school = schools[0]
-        self.assertAlmostEqual(school["lon"], 10.047106063058099)
-        self.assertAlmostEqual(school["lat"], 53.601522503676144)
-        self.assertEqual(school["schul_id"], "5043-0")
-        self.assertEqual(school["schulname"], "Stadtteilschule Helmuth Hübener")
-        self.assertEqual(school["adresse_ort"], "22307 Hamburg")
-        self.assertEqual(school["adresse_strasse_hausnr"], "Benzenbergweg 2")
-        self.assertEqual(school["schul_telefonnr"], "+49 40 428 88 15 0")
-        self.assertEqual(school["fax"], "+49 40 428 88 15 22")
-        self.assertEqual(school["schul_email"], "stadtteilschule-helmuth-huebener@bsb.hamburg.de")
-        self.assertEqual(school["schul_homepage"], "https://helmuthhuebener.de")
+        parsed_school = spider.normalize(school)
+
+        self.assertEqual(parsed_school["id"], "HH-5043-0")
+        self.assertEqual(parsed_school["name"], "Stadtteilschule Helmuth Hübener")
+        self.assertEqual(parsed_school["address"], "Benzenbergweg 2")
+        self.assertEqual(parsed_school["city"], "Hamburg")
+        self.assertEqual(parsed_school["fax"], "+49 40 428 88 15 22")
+        self.assertEqual(parsed_school["phone"], "+49 40 428 88 15 0")
+        self.assertEqual(parsed_school["school_type"], "Stadtteilschule")
+        self.assertEqual(parsed_school["website"], "https://helmuthhuebener.de")
+        self.assertEqual(parsed_school["zip"], "22307")
+        self.assertEqual(parsed_school["latitude"], 53.601522503676144)
+        self.assertEqual(parsed_school["longitude"], 10.047106063058099)
 
 
 if __name__ == "__main__":

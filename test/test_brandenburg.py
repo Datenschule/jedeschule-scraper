@@ -62,17 +62,19 @@ class TestBrandenburgSpider(unittest.TestCase):
 
         self.assertEqual(len(results), 1)
         school = results[0]
+        parsed_school = spider.normalize(school)
 
-        self.assertAlmostEqual(school["lat"], 51.74023651973522)
-        self.assertAlmostEqual(school["lon"], 14.651148207215728)
-
-        self.assertEqual(school["schul_nr"], "100020")
-        self.assertEqual(school["schulname"], "Grundschule Forst Mitte")
-        self.assertEqual(school["plz"], "03149")
-        self.assertEqual(school["ort"], "Forst (Lausitz)")
-        self.assertEqual(school["dienst_email"], "s100020@schulen.brandenburg.de")
-        self.assertEqual(school["schulform"], "Grundschule")
-        self.assertEqual(school["traeger"], "Gemeinde")
+        self.assertEqual(parsed_school["id"], "BB-100020")
+        self.assertEqual(parsed_school["name"], "Grundschule Forst Mitte")
+        self.assertEqual(parsed_school["address"], "Max-Fritz-Hammer-Straße 15")
+        self.assertEqual(parsed_school["city"], "Forst (Lausitz)")
+        self.assertEqual(parsed_school["fax"], "(03562) 691288")
+        self.assertEqual(parsed_school["phone"], "(03562) 7163")
+        self.assertEqual(parsed_school["school_type"], "Grundschule")
+        self.assertEqual(parsed_school["website"], "http://www.grundschule-forst-mitte.de")
+        self.assertEqual(parsed_school["zip"], "03149")
+        self.assertEqual(parsed_school["latitude"], 51.74023651973522)
+        self.assertEqual(parsed_school["longitude"], 14.651148207215728)
 
 
 if __name__ == '__main__':

@@ -69,7 +69,6 @@ class MecklenburgVorpommernSpider(SchoolSpider):
     @staticmethod
     def normalize(item: Item) -> School:
         def safe_strip(value):
-            """Safely strip a value, handling None values"""
             return value.strip() if value is not None else ""
         
         return School(

@@ -27,7 +27,6 @@ class BayernSpider(SchoolSpider):
             members = [members]
 
         for member in members:
-            # Each member is a dict with one key = school tag, value = school data dict
             school = next(iter(member.values()), {})
 
             data_elem = {

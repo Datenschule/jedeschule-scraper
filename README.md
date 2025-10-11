@@ -57,7 +57,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | SL    | ✅ Yes                | WFS                                          |
 | SN    | ✅ Yes                | API                                          |
 | ST    | ❌ No                 | -                                            |
-| TH    | ❌ No                 | -                                            |
+| TH    | ✅ Yes                | WFS                                          |
 
 ## Installation
 Dependency management is done using [uv](https://docs.astral.sh/uv/). Make sure

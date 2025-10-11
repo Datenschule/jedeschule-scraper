@@ -22,7 +22,7 @@ In details, the IDs are sourced as follows:
 
 |State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
-|BW| Field `DISCH` (Dienststellenschüssel) in the JSON repsonse                                                   | `BW-04154817`                                                              |✅ likely|
+|BW| WFS UUID                                                                                                     | `BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2`                             |✅ yes|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
 |BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|
@@ -43,7 +43,7 @@ When available, we try to use the geolocations provided by the data publishers.
 
 | State | Geolcation available | Source                                       |
 |-------|----------------------|----------------------------------------------|
-| BW    | ❌ No                 | -                                            |
+| BW    | ✅ Yes                | WFS                                          |
 | BY    | ✅ Yes                | WFS                                          |
 | BE    | ✅ Yes                | WFS                                          |
 | BB    | ✅ Yes                | WFS                                          |
@@ -58,6 +58,31 @@ When available, we try to use the geolocations provided by the data publishers.
 | SN    | ✅ Yes                | API                                          |
 | ST    | ❌ No                 | -                                            |
 | TH    | ❌ No                 | -                                            |
+
+## Additional Data Fields
+
+### Baden-Württemberg DISCH Alias
+For Baden-Württemberg schools, the 8-digit DISCH (Dienststellenschlüssel) is stored in the `raw` JSON field when available:
+- **Field**: `raw.derived.disch`
+- **Type**: String (8 digits) or `null`
+- **Source**: Extracted from email pattern `@{DISCH}.schule.bwl.de`
+- **Coverage**: ~80% of BW schools
+- **Usage**: Can be used for display, exports, or matching with other data sources
+
+Example:
+```json
+{
+  "id": "BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2",
+  "name": "Bästenhardt-Schule Belsen",
+  "raw": {
+    "source": "bw-wfs",
+    "derived": {
+      "disch": "04144952",
+      "disch_source": "email_domain"
+    }
+  }
+}
+```
 
 ## Installation
 Dependency management is done using [uv](https://docs.astral.sh/uv/). Make sure

@@ -1,6 +1,4 @@
-import time
-import json
-
+import re
 import scrapy
 from scrapy import Item
 
@@ -10,117 +8,122 @@ from jedeschule.items import School
 
 class BadenWuerttembergSpider(SchoolSpider):
     name = "baden-wuerttemberg"
-    url = "https://lobw.kultus-bw.de/didsuche/"
-    start_urls = [url]
 
-    # click the search button to return all results
+    start_urls = [
+        "https://gis.kultus-bw.de/geoserver/us-govserv/ows?"
+        "service=WFS&request=GetFeature&"
+        "typeNames=us-govserv%3AGovernmentalService&"
+        "outputFormat=application%2Fjson"
+    ]
+
     def parse(self, response):
-        links_url = "https://lobw.kultus-bw.de/didsuche/DienststellenSucheWebService.asmx/SearchDienststellen"
-        timestamp = str(int(time.time()))
-        body = {
-            "command": "QUICKSEARCH",
-            "data": {
-                "dscSearch": "",
-                "dscPlz": "",
-                "dscOrt": "",
-                "dscDienststellenname": "",
-                "dscSchulartenSelected": "",
-                "dscSchulstatusSelected": "",
-                "dscSchulaufsichtSelected": "",
-                "dscOrtSelected": "",
-                "dscEntfernung": "",
-                "dscAusbildungsSchulenSelected": "",
-                "dscAusbildungsSchulenSelectedSart": "",
-                "dscPageNumber": "1",
-                "dscPageSize": "10000",  # crawl at least the number of existing schools
-                "dscUnique": timestamp,
-            },
-        }
-        payload = json.dumps({"json": str(body)})
-        req = scrapy.Request(
-            links_url,
-            method="POST",
-            body=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Host": "lobw.kultus-bw.de",
-                "Connection": "keep-alive",
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "Origin": "https://lobw.kultus-bw.de",
-                "Referer": "https://lobw.kultus-bw.de/didsuche/",
-            },
-            callback=self.parse_schoolist,
-        )
-        yield req
+        """Parse WFS GeoJSON response"""
+        data = response.json()
 
-    # go on each schools details side
-    def parse_schoolist(self, response):
-        school_data_url = "https://lobw.kultus-bw.de/didsuche/DienststellenSucheWebService.asmx/GetDienststelle"
-        items = json.loads(json.loads(response.text)["d"])["Rows"]
-        for item in items:
-            disch = item["DISCH"][1:-1]  # remove ''
-            payload = json.dumps({"disch": disch})
-            req = scrapy.Request(
-                school_data_url,
-                method="POST",
-                body=payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "Host": "lobw.kultus-bw.de",
-                    "Connection": "keep-alive",
-                    "Accept": "application/json, text/javascript, */*; q=0.01",
-                    "Origin": "https://lobw.kultus-bw.de",
-                    "Referer": "https://lobw.kultus-bw.de/didsuche/",
-                },
-                callback=self.parse_school_data,
+        for feature in data.get("features", []):
+            uuid = feature.get("id")
+            props = feature["properties"]
+
+            # Extract coordinates
+            service_loc = props.get("serviceLocation", {})
+            geom = service_loc.get("serviceLocationByGeometry", {})
+            coords = geom.get("coordinates")
+
+            # Note: BW WFS returns [latitude, longitude] (non-standard!)
+            lat = coords[0] if coords and len(coords) >= 2 else None
+            lon = coords[1] if coords and len(coords) >= 2 else None
+
+            # Extract contact and address info
+            contact = props.get("pointOfContact", {}).get("Contact", {})
+            addr_repr = contact.get("address", {}).get("AddressRepresentation", {})
+
+            # School name
+            locator_name = addr_repr.get("locatorName", {})
+            name_spelling = locator_name.get("spelling", {})
+            name = (
+                name_spelling.get("text", "") if isinstance(name_spelling, dict) else ""
             )
-            yield req
 
-    # get the information
-    def parse_school_data(self, response):
-        item = json.loads(json.loads(response.text)["d"])
-        data = {
-            "name": self.fix_data(item["NAME"]),
-            "id": self.fix_data(item["DISCH"]),
-            "Strasse": self.fix_data(item["DISTR"]),
-            "PLZ": self.fix_data(item["PLZSTR"]),
-            "Ort": self.fix_data(item["DIORT"]),
-            "Telefon": self.fix_data(item["TELGANZ"]),
-            "Fax": self.fix_data(item["FAXGANZ"]),
-            "E-Mail": self.fix_data(item["VERWEMAIL"]),
-            "Internet": self.fix_data(item["INTERNET"]),
-            "Schulamt": self.fix_data(item["UEBERGEORDNET"]),
-            "Schulamt_Website": self.fix_data(item["UEBERGEORDNET_INTERNET"]),
-            "Kreis": self.fix_data(item["KREISBEZEICHNUNG"]),
-            "Schulleitung": self.fix_data(item["SLFAMVOR"]),
-            "Schulträger": self.fix_data(item["STR_KURZ_BEZEICHNUNG"]),
-            "Postfach": self.fix_data(item["PFACH"]),
-            "PLZ_Postfach": self.fix_data(item["PLZPFACH"]),
-            "Schueler": item["SCHUELER"],
-            "Klassen": item["KLASSEN"],
-            "Lehrer": item["LEHRER"],
-        }
-        yield data
+            # Street
+            thoroughfare = addr_repr.get("thoroughfare", {})
+            if isinstance(thoroughfare, dict):
+                street_obj = thoroughfare.get("GeographicalName", {}).get(
+                    "spelling", {}
+                )
+                street = (
+                    street_obj.get("text", "").strip()
+                    if isinstance(street_obj, dict)
+                    else ""
+                )
+            else:
+                street = ""
 
-    # fix wrong tabs, spaces and new lines
-    def fix_data(self, string):
-        if string:
-            string = " ".join(string.split())
-            string.replace("\n", "")
-        return string
+            # House number
+            locator = addr_repr.get("locatorDesignator", "").strip()
 
-    def normalize(self, item: Item) -> School:
+            # Full address
+            address = f"{street} {locator}".strip() if street else None
+
+            # ZIP code
+            zip_code = addr_repr.get("postCode", "").strip()
+
+            # City
+            post_name = addr_repr.get("postName", {})
+            city_obj = post_name.get("GeographicalName", {})
+            city_spelling = city_obj.get("spelling", {})
+            city = (
+                city_spelling.get("text", "").strip()
+                if isinstance(city_spelling, dict)
+                else ""
+            )
+
+            # Contact info
+            email = contact.get("electronicMailAddress", "")
+            phone = contact.get("telephoneVoice", "")
+            fax = contact.get("telephoneFacsimile", "")
+            website = contact.get("website", "")
+
+            # Extract DISCH from email (if available)
+            disch = None
+            if email:
+                match = re.search(r"@(\d{8})\.schule\.bwl\.de", email)
+                if match:
+                    disch = match.group(1)
+
+            # Service type (school type)
+            service_type = props.get("serviceType", {}).get("@href", "")
+
+            item = {
+                "uuid": uuid,
+                "disch": disch,  # Store in raw for reference
+                "name": name,
+                "address": address,
+                "zip": zip_code,
+                "city": city,
+                "email": email,
+                "phone": phone,
+                "fax": fax,
+                "website": website if website else None,
+                "school_type": service_type,
+                "lat": lat,
+                "lon": lon,
+            }
+
+            yield item
+
+    @staticmethod
+    def normalize(item: Item) -> School:
         return School(
+            id=f"BW-UUID-{item.get('uuid')}",
             name=item.get("name"),
-            id="BW-{}".format(item.get("id")),
-            address=item.get("Strasse"),
-            zip=item.get("PLZ"),
-            city=item.get("Ort"),
-            website=item.get("Internet"),
-            email=item.get("E-Mail"),
-            fax=item.get("Fax"),
-            phone=item.get("Telefon"),
-            provider=item.get("Schulamt"),
-            director=item.get("Schulleitung"),
-            school_type="",
+            address=item.get("address"),
+            zip=item.get("zip"),
+            city=item.get("city"),
+            email=item.get("email"),
+            phone=item.get("phone"),
+            fax=item.get("fax"),
+            website=item.get("website"),
+            school_type=item.get("school_type"),
+            latitude=item.get("lat"),
+            longitude=item.get("lon"),
         )

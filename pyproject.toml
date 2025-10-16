@@ -8,7 +8,7 @@ dependencies = [
     "alembic==1.17.0",
     "geoalchemy2==0.18.0",
     "openpyxl>=3.1.5",
-    "psycopg2==2.9.10",
+    "psycopg2==2.9.11",
     "pyproj==3.7.2",
     "requests==2.32.5",
     "scrapy==2.13.3",

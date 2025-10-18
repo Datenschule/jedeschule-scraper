@@ -49,7 +49,8 @@ class MecklenburgVorpommernSpider(SchoolSpider):
                 school_data = next(iter(member.values()), {})
                 yield self._extract_school_data(school_data)
 
-    def _extract_school_data(self, school):
+    @staticmethod
+    def _extract_school_data(school):
         data_elem = {}
 
         for key, value in school.items():

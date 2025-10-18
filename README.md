@@ -50,7 +50,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | HB    | ❌ No                 | -                                            |
 | HH    | ✅ Yes                | WFS                                          |
 | HE    | ❌ No                 | -                                            |
-| MV    | ❌ No                 | -                                            |
+| MV    | ✅ Yes                | WFS                                          |
 | NI    | ❌ No                 | -                                            |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ❌ No                 | -                                            |

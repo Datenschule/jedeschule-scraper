@@ -22,7 +22,7 @@ In details, the IDs are sourced as follows:
 
 |State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
-|BW| WFS UUID                                                                                                     | `BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2`                             |✅ yes|
+|BW| DISCH (Dienststellenschlüssel) extracted from email, fallback to WFS UUID when not available                | `BW-04154817` or `BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2`            |✅ likely (~80% with DISCH, ~20% UUID fallback)|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
 |BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|

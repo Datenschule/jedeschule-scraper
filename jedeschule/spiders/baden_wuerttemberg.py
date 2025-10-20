@@ -136,8 +136,13 @@ class BadenWuerttembergSpider(SchoolSpider):
 
     @staticmethod
     def normalize(item: Item) -> School:
+        # Prefer DISCH (stable government ID) over UUID when available
+        disch = item.get("disch")
+        uuid = item.get("uuid")
+        school_id = f"BW-{disch}" if disch else f"BW-UUID-{uuid}"
+
         return School(
-            id=f"BW-UUID-{item.get('uuid')}",
+            id=school_id,
             name=item.get("name"),
             address=item.get("address"),
             zip=item.get("zip"),

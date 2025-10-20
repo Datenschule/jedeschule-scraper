@@ -36,7 +36,7 @@ In details, the IDs are sourced as follows:
 |SL| `OBJECTID` from the WFS service                                                                              | `SL-255`                                                                   |❌ no (confirmed with data provider but no alternative available) |
 |SN| Field `id` from the API                                                                                      | `SN-4062`                                                                  |✅ likely|
 |ST| `ID` query param from the details page URL                                                                   | `ST-1001186`                                                               |❓ probably?|
-|TH| `Schulnumer` from school list                                                                                | `TH-10601`                                                                 |✅ likely|
+|TH| `Schulnummer` from the WFS service                                                                           | `TH-10601`                                                                 |✅ likely|
 
 ## Geolocations
 When available, we try to use the geolocations provided by the data publishers.

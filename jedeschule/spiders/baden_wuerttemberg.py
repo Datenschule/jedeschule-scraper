@@ -6,6 +6,33 @@ from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.items import School
 
 
+# Pattern to extract DISCH (8-digit school ID) from Baden-Württemberg email addresses
+DISCH_RE = re.compile(r'@(\d{8})\.schule\.bwl\.de', re.IGNORECASE)
+
+
+def extract_disch(email: str | None) -> str | None:
+    """
+    Extract 8-digit DISCH (Dienststellenschlüssel) from BW school email address.
+
+    Args:
+        email: Email address, typically in format poststelle@{DISCH}.schule.bwl.de
+
+    Returns:
+        8-digit DISCH string if found, None otherwise
+
+    Example:
+        >>> extract_disch("poststelle@04144952.schule.bwl.de")
+        '04144952'
+        >>> extract_disch("info@school.de")
+        None
+    """
+    if not email:
+        return None
+
+    match = DISCH_RE.search(email.strip())
+    return match.group(1) if match else None
+
+
 class BadenWuerttembergSpider(SchoolSpider):
     name = "baden-wuerttemberg"
 
@@ -84,11 +111,7 @@ class BadenWuerttembergSpider(SchoolSpider):
             website = contact.get("website", "")
 
             # Extract DISCH from email (if available)
-            disch = None
-            if email:
-                match = re.search(r"@(\d{8})\.schule\.bwl\.de", email)
-                if match:
-                    disch = match.group(1)
+            disch = extract_disch(email)
 
             # Service type (school type)
             service_type = props.get("serviceType", {}).get("@href", "")

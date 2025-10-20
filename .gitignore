@@ -23,3 +23,11 @@ mv.xls
 
 # Mecklenburg-Vorpommern XLSX download
 mv*.xlsx
+
+# Claude Code documentation (project-specific)
+CLAUDE.md
+
+# Docker development setup
+docker-compose.dev.yml
+init-test-db.sql
+setup-db.sh

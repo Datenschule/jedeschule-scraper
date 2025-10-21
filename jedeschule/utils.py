@@ -1,3 +1,8 @@
+"""
+Utility functions for jedeschule scrapers
+"""
+
+
 def cleanjoin(listlike, join_on=""):
     """returns string of joined items in list,
     removing whitespace"""

@@ -33,12 +33,7 @@ class SachsenAnhaltSpider(SchoolSpider):
             latitude = None
             longitude = None
             if geom and "x" in geom and "y" in geom:
-                try:
-                    longitude, latitude = transformer.transform(geom["x"], geom["y"])
-                except Exception as e:
-                    self.logger.warning(
-                        f"Failed to transform coordinates for {attrs.get('Name')}: {e}"
-                    )
+                longitude, latitude = transformer.transform(geom["x"], geom["y"])
 
             # Extract school information from ArcGIS attributes
             yield {

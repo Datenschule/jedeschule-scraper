@@ -42,11 +42,11 @@ class SachsenAnhaltSpider(SchoolSpider):
 
             # Extract school information from ArcGIS attributes
             yield {
-                "name": attrs.get("Name", ""),
-                "city": attrs.get("Ort", ""),
-                "school_type": attrs.get("Schulform", ""),
-                "category": attrs.get("Kategorie", ""),
-                "provider": attrs.get("Traeg_Anw", ""),
+                "name": attrs.get("Name"),
+                "city": attrs.get("Ort"),
+                "school_type": attrs.get("Schulform"),
+                "category": attrs.get("Kategorie"),
+                "provider": attrs.get("Traeg_Anw"),
                 "latitude": latitude,
                 "longitude": longitude,
                 "object_id": attrs.get("OBJECTID"),

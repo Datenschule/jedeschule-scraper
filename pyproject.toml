@@ -10,6 +10,7 @@ dependencies = [
     "openpyxl>=3.1.5",
     "psycopg2==2.9.10",
     "pyproj==3.7.2",
+    "pyshp>=3.0.2.post1",
     "requests==2.32.5",
     "scrapy==2.13.3",
     "sqlalchemy==2.0.43",

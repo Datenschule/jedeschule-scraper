@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import io
 import os
+import re
 import hashlib
 import zipfile
-import shapefile
 import scrapy
 from scrapy import Item
+import shapefile
 from pyproj import Transformer
 
 from jedeschule.items import School
@@ -13,81 +15,89 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class BremenSpider(SchoolSpider):
     name = "bremen"
-
-    # INSPIRE Download Service - Schulstandorte (Schools) for Bremen and Bremerhaven
-    # ZIP contains two shapefiles: gdi_schulen_hb.shp (Bremen) and gdi_schulen_bhv.shp (Bremerhaven)
     ZIP_URL = "https://gdi2.geo.bremen.de/inspire/download/Schulstandorte/data/Schulstandorte_HB_BHV.zip"
     CACHE_DIR = "cache"
-    CACHE_FILE = "cache/Schulstandorte_HB_BHV.zip"
+    CACHE_FILE = os.path.join(CACHE_DIR, "Schulstandorte_HB_BHV.zip")
 
-    # Required for Scrapy - we'll download the ZIP in parse()
     start_urls = [ZIP_URL]
 
     def parse(self, response):
-        """Download ZIP file with caching and read both shapefiles"""
-        # Create cache directory
         os.makedirs(self.CACHE_DIR, exist_ok=True)
 
-        # Download ZIP with SHA256 verification
-        hash_obj = hashlib.sha256()
+        # Save ZIP and compute checksum
+        sha256 = hashlib.sha256(response.body).hexdigest()
         with open(self.CACHE_FILE, "wb") as f:
             f.write(response.body)
-            hash_obj.update(response.body)
+        self.logger.info(f"Downloaded ZIP SHA256={sha256}")
 
-        self.logger.info(f"Downloaded ZIP with SHA256: {hash_obj.hexdigest()}")
+        # CRS: EPSG:25832 → EPSG:4326
+        transformer = Transformer.from_crs(25832, 4326, always_xy=True)
 
-        # Extract shapefiles
-        with zipfile.ZipFile(self.CACHE_FILE, 'r') as z:
-            z.extractall(self.CACHE_DIR)
+        # Read both shapefiles directly from ZIP (no extractall)
+        with zipfile.ZipFile(io.BytesIO(response.body), "r") as zf:
+            for stem, city_name in (("gdi_schulen_hb", "Bremen"),
+                                    ("gdi_schulen_bhv", "Bremerhaven")):
+                shp_bytes = io.BytesIO(zf.read(f"{stem}.shp"))
+                shx_bytes = io.BytesIO(zf.read(f"{stem}.shx"))
+                dbf_bytes = io.BytesIO(zf.read(f"{stem}.dbf"))
 
-        # EPSG:25832 (UTM zone 32N) to EPSG:4326 (WGS84) transformer
-        transformer = Transformer.from_crs("EPSG:25832", "EPSG:4326", always_xy=True)
+                # Detect encoding from .cpg if present
+                encoding = None
+                try:
+                    cpg = zf.read(f"{stem}.cpg").decode("ascii", "ignore").strip()
+                    encoding = cpg or None
+                except KeyError:
+                    pass
 
-        # Read both shapefiles
-        shapefiles = [
-            (f"{self.CACHE_DIR}/gdi_schulen_hb.shp", "Bremen"),
-            (f"{self.CACHE_DIR}/gdi_schulen_bhv.shp", "Bremerhaven")
-        ]
+                sf = shapefile.Reader(shp=shp_bytes, shx=shx_bytes, dbf=dbf_bytes, encoding=encoding)
 
-        for shapefile_path, city_name in shapefiles:
-            sf = shapefile.Reader(shapefile_path)
-            self.logger.info(f"Reading {len(sf.shapes())} schools from {city_name}")
-
-            for shape, record in zip(sf.shapes(), sf.records()):
-                rec = record.as_dict()
-
-                # Transform coordinates from EPSG:25832 to WGS84
-                latitude = None
-                longitude = None
-                if shape.points:
-                    x, y = shape.points[0]
-                    longitude, latitude = transformer.transform(x, y)
-
-                # Use snr_txt (zero-padded 3-digit Schulnummer) as official ID
-                snr_txt = rec.get("snr_txt")
-                if not snr_txt or len(snr_txt) != 3 or not snr_txt.isdigit():
-                    self.logger.warning(f"Invalid SNR format: {snr_txt} for {rec.get('nam')}")
+                # Build robust field-name map
+                # sf.fields: [("DeletionFlag","C",1,0), ("NAM","C",80,0), ...]
+                field_names = [f[0].lower() for f in sf.fields[1:]]  # skip DeletionFlag
+                required = {"snr_txt", "nam", "strasse", "plz", "ort"}
+                missing = required.difference(field_names)
+                if missing:
+                    self.logger.error(f"Missing expected fields in {stem}: {missing}. Found: {field_names}")
                     continue
 
-                yield {
-                    "snr": snr_txt,
-                    "name": rec.get("nam"),
-                    "address": rec.get("strasse"),
-                    "zip": rec.get("plz"),
-                    "city": rec.get("ort"),
-                    "district": rec.get("ortsteilna"),
-                    "school_type": rec.get("schulart_2"),
-                    "provider": rec.get("traegernam"),
-                    "latitude": latitude,
-                    "longitude": longitude,
-                }
+                # Iterate records
+                seen_ids = set()
+                for sr in sf.iterShapeRecords():
+                    rec = dict(zip(field_names, sr.record))
+
+                    snr_txt = (rec.get("snr_txt") or "").strip()
+                    if not re.fullmatch(r"\d{3}", snr_txt):
+                        self.logger.warning(f"[{city_name}] Invalid SNR '{snr_txt}' for {rec.get('nam')}")
+                        continue
+                    if snr_txt in seen_ids:
+                        self.logger.warning(f"[{city_name}] Duplicate SNR '{snr_txt}'")
+                        continue
+                    seen_ids.add(snr_txt)
+
+                    # geometry
+                    shp = sr.shape
+                    lat = lon = None
+                    if shp and shp.points:
+                        # Expect Point; take first coordinate defensively
+                        x, y = shp.points[0]
+                        lon, lat = transformer.transform(x, y)
+
+                    yield {
+                        "snr": snr_txt,
+                        "name": rec.get("nam"),
+                        "address": rec.get("strasse"),
+                        "zip": rec.get("plz"),
+                        "city": rec.get("ort"),
+                        "district": rec.get("ortsteilna"),
+                        "school_type": rec.get("schulart_2"),
+                        "provider": rec.get("traegernam"),
+                        "latitude": lat,
+                        "longitude": lon,
+                    }
 
     @staticmethod
     def normalize(item: Item) -> School:
-        """Normalize shapefile data to School item"""
-        # Use SNR (Schulnummer) as stable ID - zero-padded 3-digit format (e.g., "002", "117")
         school_id = f"HB-{item.get('snr')}"
-
         return School(
             name=item.get("name"),
             id=school_id,

@@ -348,6 +348,7 @@ dependencies = [
     { name = "openpyxl" },
     { name = "psycopg2" },
     { name = "pyproj" },
+    { name = "pyshp" },
     { name = "requests" },
     { name = "scrapy" },
     { name = "sqlalchemy" },
@@ -361,6 +362,7 @@ requires-dist = [
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "psycopg2", specifier = "==2.9.11" },
     { name = "pyproj", specifier = "==3.7.2" },
+    { name = "pyshp", specifier = ">=3.0.2.post1" },
     { name = "requests", specifier = "==2.33.0" },
     { name = "scrapy", specifier = "==2.14.2" },
     { name = "sqlalchemy", specifier = "==2.0.49" },
@@ -638,6 +640,15 @@ name = "pypydispatcher"
 version = "2.1.2"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d5/7b/65f55513d3c769fd677f90032d8d8703e3dc17e88a41b6074d2177548bca/PyPyDispatcher-2.1.2.tar.gz", hash = "sha256:b6bec5dfcff9d2535bca2b23c80eae367b1ac250a645106948d315fcfa9130f2", size = 23224, upload-time = "2017-07-03T14:20:51.806Z" }
+
+[[package]]
+name = "pyshp"
+version = "3.0.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8c/20/8b07bae73aaa0c3f5a2683ba6e23b46e977e2d33a88126d56bbcc2d135cd/pyshp-3.0.3.tar.gz", hash = "sha256:bf4678b13dd53578ed87669676a2fffeccbcded1ec8ff9cafb36d1b660f4b305", size = 2192568, upload-time = "2025-11-28T17:47:31.616Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/82/06/cad54e8ce758bd836ee5411691cbd49efeb9cc611b374670fce299519334/pyshp-3.0.3-py3-none-any.whl", hash = "sha256:28c8fac8c0c25bb0fecbbfd10ead7f319c2ff2f3b0b44a94f22bd2c93510ad42", size = 58465, upload-time = "2025-11-28T17:47:30.328Z" },
+]
 
 [[package]]
 name = "queuelib"

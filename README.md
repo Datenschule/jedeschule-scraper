@@ -49,7 +49,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | BB    | ✅ Yes                | WFS                                          |
 | HB    | ❌ No                 | -                                            |
 | HH    | ✅ Yes                | WFS                                          |
-| HE    | ❌ No                 | -                                            |
+| HE    | ⚠️  Partial (90.7%)    | Extracted from OSM iframes on detail pages   |
 | MV    | ❌ No                 | -                                            |
 | NI    | ❌ No                 | -                                            |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |

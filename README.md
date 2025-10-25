@@ -35,7 +35,7 @@ In details, the IDs are sourced as follows:
 |RP| `Schulnummer` from the school's details page                                                                 | `RP-50720`                                                                 |✅ likely|
 |SL| `OBJECTID` from the WFS service                                                                              | `SL-255`                                                                   |❌ no (confirmed with data provider but no alternative available) |
 |SN| Field `id` from the API                                                                                      | `SN-4062`                                                                  |✅ likely|
-|ST| `ID` query param from the details page URL                                                                   | `ST-1001186`                                                               |❓ probably?|
+|ST| `OBJECTID` from the ArcGIS FeatureServer API (prefixed with `ARC`)                                           | `ST-ARC00001`                                                              |❓ unlikely (OBJECTID may change on data reimport)|
 |TH| `Schulnummer` from the WFS service                                                                           | `TH-10601`                                                                 |✅ likely|
 
 ## Geolocations
@@ -56,7 +56,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | RP    | ❌ No                 | -                                            |
 | SL    | ✅ Yes                | WFS                                          |
 | SN    | ✅ Yes                | API                                          |
-| ST    | ❌ No                 | -                                            |
+| ST    | ✅ Yes                | ArcGIS (converted from EPSG:25832)           |
 | TH    | ✅ Yes                | WFS                                          |
 
 ## Additional Data Fields

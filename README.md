@@ -29,7 +29,7 @@ In details, the IDs are sourced as follows:
 |HB| `id` URL query param on the school's detail page (identical to the SNR (Schulnummer) from the overview page) | `HB-937`                                                                   |✅ likely|
 |HH| Field `schul_id` From the WFS Service                                                                        | `HH-7910-0`                                                                |✅ likely|
 |HE| `school_no` URL query param of the schools's details page (identical to the Dienststellennummer)             | `HE-4024`                                                                  |✅ likely|
-|MV| Column `DIENSTSTELLEN-NUMMER` from the XLSX file                                                             | `MV-75130302`                                                              |✅ likely|
+|MV| Field `dstnr` from the WFS                                                                                   | `MV-75130302`                                                              |✅ likely|
 |NI| Field `schulnr` from the JSON in the details payload                                                         | `NI-67763`                                                                 |✅ likely|
 |NW| Column `Schulnummer` from the CSV                                                                            | `NW-162437`                                                                |✅ likely|
 |RP| `Schulnummer` from the school's details page                                                                 | `RP-50720`                                                                 |✅ likely|

@@ -77,7 +77,7 @@ class TestMecklenburgVorpommernSpider(unittest.TestCase):
         self.assertEqual(parsed_school["director"], "Frau Beuster")
         self.assertEqual(parsed_school["phone"], "038461 - 52006")
         self.assertEqual(parsed_school["email"], "schulleitung1108@hotmail.de")
-        self.assertEqual(parsed_school["website"], "")
+        self.assertIsNone(parsed_school["website"])
 
 
 if __name__ == "__main__":

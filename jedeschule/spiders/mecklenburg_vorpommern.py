@@ -70,7 +70,9 @@ class MecklenburgVorpommernSpider(SchoolSpider):
     @staticmethod
     def normalize(item: Item) -> School:
         def safe_strip(value):
-            return value.strip() if value is not None else ""
+            if not value or not value.strip():
+                return None
+            return value.strip()
         
         return School(
             name=safe_strip(item.get("schulname")),

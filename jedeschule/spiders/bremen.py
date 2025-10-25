@@ -57,8 +57,7 @@ class BremenSpider(SchoolSpider):
                 required = {"snr_txt", "nam", "strasse", "plz", "ort"}
                 missing = required.difference(field_names)
                 if missing:
-                    self.logger.error(f"Missing expected fields in {stem}: {missing}. Found: {field_names}")
-                    continue
+                    raise ValueError(f"Missing required fields in {stem}: {missing}. Found: {field_names}")
 
                 # Iterate records
                 seen_ids = set()
@@ -67,12 +66,25 @@ class BremenSpider(SchoolSpider):
 
                     snr_txt = (rec.get("snr_txt") or "").strip()
                     if not re.fullmatch(r"\d{3}", snr_txt):
-                        self.logger.warning(f"[{city_name}] Invalid SNR '{snr_txt}' for {rec.get('nam')}")
-                        continue
+                        raise ValueError(f"[{city_name}] Invalid SNR format '{snr_txt}' for {rec.get('nam')} (expected 3 digits)")
                     if snr_txt in seen_ids:
-                        self.logger.warning(f"[{city_name}] Duplicate SNR '{snr_txt}'")
-                        continue
+                        raise ValueError(f"[{city_name}] Duplicate SNR '{snr_txt}'")
                     seen_ids.add(snr_txt)
+
+                    # Validate core data fields are not empty - fail hard if missing
+                    name = (rec.get("nam") or "").strip()
+                    address = (rec.get("strasse") or "").strip()
+                    zip_code = (rec.get("plz") or "").strip()
+                    city = (rec.get("ort") or "").strip()
+
+                    if not name:
+                        raise ValueError(f"[{city_name}] Missing required field 'name' for SNR '{snr_txt}'")
+                    if not address:
+                        raise ValueError(f"[{city_name}] Missing required field 'address' for '{name}' (SNR {snr_txt})")
+                    if not zip_code:
+                        raise ValueError(f"[{city_name}] Missing required field 'zip' for '{name}' (SNR {snr_txt})")
+                    if not city:
+                        raise ValueError(f"[{city_name}] Missing required field 'city' for '{name}' (SNR {snr_txt})")
 
                     # geometry
                     shp = sr.shape
@@ -84,10 +96,10 @@ class BremenSpider(SchoolSpider):
 
                     yield {
                         "snr": snr_txt,
-                        "name": rec.get("nam"),
-                        "address": rec.get("strasse"),
-                        "zip": rec.get("plz"),
-                        "city": rec.get("ort"),
+                        "name": name,
+                        "address": address,
+                        "zip": zip_code,
+                        "city": city,
                         "district": rec.get("ortsteilna"),
                         "school_type": rec.get("schulart_2"),
                         "provider": rec.get("traegernam"),

@@ -5,7 +5,7 @@ state publishes their data differently. The goal of this project is to scraper a
 under a common data format.
 
 ## Using the data
-A version of these scrapers is deployed at [https://jedeschule.codefor.de/](jedeschule.codefor.de).
+A version of these scrapers is deployed at [jedeschule.codefor.de](https://jedeschule.codefor.de/).
 You can use it one of three ways:
 1. Using the API. Documentation is available at https://jedeschule.codefor.de/docs
 2. Using the CSV dump provided at https://jedeschule.codefor.de/csv-data/

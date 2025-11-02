@@ -1,11 +1,9 @@
-from scrapy import Item
-from scrapy.linkextractors import LinkExtractor
-import re
-
-from scrapy.spiders import CrawlSpider, Rule
+from scrapy import Item, Request
+from scrapy.spiders import CrawlSpider
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
+from jedeschule.wfs_basic_parsers import parse_geojson_features
 
 school_types = {
     'BEA': 'BEA',  # I could not find the meaning of this abbreviation
@@ -33,62 +31,51 @@ school_types = {
 
 class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
     name = "rheinland-pfalz"
-    # Note, one could also use the geo portal:
-    # https://www.geoportal.rlp.de/spatial-objects/350/collections/schulstandorte/items?f=html&limit=4000
-    start_urls = ["https://bildung.rlp.de/schulen"]
-    rules = [
-        Rule(
-            LinkExtractor(allow="https://bildung.rlp.de/schulen/einzelanzeige.*"),
-            callback="parse_school",
-            follow=False,
-        )
+    start_urls = [
+        "https://www.geoportal.rlp.de/spatial-objects/350/collections/schulstandorte/items?&"
+        "limit=1&"
+        "f=html"
     ]
 
-    # get the information
-    def parse_school(self, response):
-        container = response.css(".rlp-schooldatabase-detail")
-        item = {"name": container.css("h1::text").get()}
-        for row in container.css("tr"):
-            key, value = row.css("td")
-            value_parts = value.css("*::text").extract()
-            cleaned = [part.strip() for part in value_parts]
-            item[key.css("::text").extract_first().replace(":", "")] = (
-                cleaned[0] if len(cleaned) == 1 else cleaned
-            )
-        item["id"] = item["Schulnummer"]
+    def parse_start_url(self, response, **kwargs):
+        json_url = (
+            "https://www.geoportal.rlp.de/spatial-objects/350/collections/schulstandorte/items?"
+            "limit=4000&"
+            "f=json"
+        )
 
-        osm_url = container.css('a[href*="openstreetmap"]::attr(href)').extract_first()
-        *rest, lat, lon = osm_url.split("/")
-        item["lat"] = lat
-        item["lon"] = lon
-        yield item
+        print("Requesting JSON after initial HTML load (cookies handled by Scrapy)")
+        yield Request(json_url, callback=self.parse_json)
+
+    @staticmethod
+    def parse_json(response):
+        yield from parse_geojson_features(response)
 
     def normalize(self, item: Item) -> School:
-        zip, city = item.get("Anschrift")[-1].split(" ", 1)
-        email = item.get("E-Mail", "").replace("(at)", "@")
+        email = item.get("mail", "").replace("(at)", "@").strip() or None
+        school_type_raw = item.get("schulart")
 
-        if kurzbezeichnung := item.get('Kurzbezeichnung'):
-            first_part = kurzbezeichnung.split(" ")[0]
+        if school_type_raw:
             # special handling for special education schools
-            if first_part.startswith('SF'):
-                school_type = 'Förderschule'
+            if school_type_raw.startswith("SF"):
+                school_type = "Förderschule"
             else:
-                school_type = school_types.get(first_part, None)
+                school_type = school_types.get(school_type_raw, school_type_raw)
         else:
             school_type = None
 
         return School(
             name=item.get("name"),
-            id="RP-{}".format(item.get("id")),
-            address=item.get("Anschrift")[1],
-            city=city,
-            zip=zip,
+            id=f"RP-{item.get('identifikator')}",
+            address=item.get("strasse"),
+            city=item.get("schulort"),
+            zip=item.get("plz"),
             latitude=item.get("lat"),
             longitude=item.get("lon"),
-            website=item.get("Internet"),
+            website=None,
             email=email,
-            provider=item.get("Träger"),
-            fax=item.get("Telefax"),
-            phone=item.get("Telefon"),
-            school_type=school_type
+            provider=None,
+            fax=None,
+            phone=item.get("telefon"),
+            school_type=school_type,
         )

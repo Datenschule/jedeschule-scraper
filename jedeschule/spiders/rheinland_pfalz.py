@@ -37,6 +37,7 @@ class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
         "f=html"
     ]
 
+    # We have to first try and get a PHPSESSID. Only after that we are able to request schools as json
     def parse_start_url(self, response, **kwargs):
         json_url = (
             "https://www.geoportal.rlp.de/spatial-objects/350/collections/schulstandorte/items?"

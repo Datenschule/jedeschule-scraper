@@ -5,7 +5,7 @@ state publishes their data differently. The goal of this project is to scraper a
 under a common data format.
 
 ## Using the data
-A version of these scrapers is deployed at [https://jedeschule.codefor.de/](jedeschule.codefor.de).
+A version of these scrapers is deployed at [jedeschule.codefor.de](https://jedeschule.codefor.de/).
 You can use it one of three ways:
 1. Using the API. Documentation is available at https://jedeschule.codefor.de/docs
 2. Using the CSV dump provided at https://jedeschule.codefor.de/csv-data/
@@ -22,42 +22,67 @@ In details, the IDs are sourced as follows:
 
 |State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
-|BW| Field `DISCH` (Dienststellenschüssel) in the JSON repsonse                                                   | `BW-04154817`                                                              |✅ likely|
+|BW| DISCH (Dienststellenschlüssel) extracted from email, fallback to WFS UUID when not available                | `BW-04154817` or `BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2`            |✅ likely (~80% with DISCH, ~20% UUID fallback)|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
 |BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|
 |HB| Field `snr_txt` (Schulnummer) from the INSPIRE shapefile - official 3-digit ID used in Bremen materials  | `HB-002`                                                                   |✅ likely|
 |HH| Field `schul_id` From the WFS Service                                                                        | `HH-7910-0`                                                                |✅ likely|
 |HE| `school_no` URL query param of the schools's details page (identical to the Dienststellennummer)             | `HE-4024`                                                                  |✅ likely|
-|MV| Column `DIENSTSTELLEN-NUMMER` from the XLSX file                                                             | `MV-75130302`                                                              |✅ likely|
+|MV| Field `dstnr` from the WFS                                                                                   | `MV-75130302`                                                              |✅ likely|
 |NI| Field `schulnr` from the JSON in the details payload                                                         | `NI-67763`                                                                 |✅ likely|
 |NW| Column `Schulnummer` from the CSV                                                                            | `NW-162437`                                                                |✅ likely|
 |RP| `Schulnummer` from the school's details page                                                                 | `RP-50720`                                                                 |✅ likely|
 |SL| `OBJECTID` from the WFS service                                                                              | `SL-255`                                                                   |❌ no (confirmed with data provider but no alternative available) |
 |SN| Field `id` from the API                                                                                      | `SN-4062`                                                                  |✅ likely|
-|ST| `ID` query param from the details page URL                                                                   | `ST-1001186`                                                               |❓ probably?|
-|TH| `Schulnumer` from school list                                                                                | `TH-10601`                                                                 |✅ likely|
+|ST| `OBJECTID` from the ArcGIS FeatureServer API (prefixed with `ARC`)                                           | `ST-ARC00001`                                                              |❓ unlikely (OBJECTID may change on data reimport)|
+|TH| `Schulnummer` from the WFS service                                                                           | `TH-10601`                                                                 |✅ likely|
 
 ## Geolocations
 When available, we try to use the geolocations provided by the data publishers.
 
 | State | Geolcation available | Source                                       |
 |-------|----------------------|----------------------------------------------|
-| BW    | ❌ No                 | -                                            |
+| BW    | ✅ Yes                | WFS                                          |
 | BY    | ✅ Yes                | WFS                                          |
 | BE    | ✅ Yes                | WFS                                          |
 | BB    | ✅ Yes                | WFS                                          |
 | HB    | ✅ Yes                | INSPIRE shapefile (converted from EPSG:25832)|
 | HH    | ✅ Yes                | WFS                                          |
 | HE    | ❌ No                 | -                                            |
-| MV    | ❌ No                 | -                                            |
+| MV    | ✅ Yes                | WFS                                          |
 | NI    | ❌ No                 | -                                            |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ❌ No                 | -                                            |
 | SL    | ✅ Yes                | WFS                                          |
 | SN    | ✅ Yes                | API                                          |
-| ST    | ❌ No                 | -                                            |
-| TH    | ❌ No                 | -                                            |
+| ST    | ✅ Yes                | ArcGIS (converted from EPSG:25832)           |
+| TH    | ✅ Yes                | WFS                                          |
+
+## Additional Data Fields
+
+### Baden-Württemberg DISCH Alias
+For Baden-Württemberg schools, the 8-digit DISCH (Dienststellenschlüssel) is stored in the `raw` JSON field when available:
+- **Field**: `raw.derived.disch`
+- **Type**: String (8 digits) or `null`
+- **Source**: Extracted from email pattern `@{DISCH}.schule.bwl.de`
+- **Coverage**: ~80% of BW schools
+- **Usage**: Can be used for display, exports, or matching with other data sources
+
+Example:
+```json
+{
+  "id": "BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2",
+  "name": "Bästenhardt-Schule Belsen",
+  "raw": {
+    "source": "bw-wfs",
+    "derived": {
+      "disch": "04144952",
+      "disch_source": "email_domain"
+    }
+  }
+}
+```
 
 ## Installation
 Dependency management is done using [uv](https://docs.astral.sh/uv/). Make sure

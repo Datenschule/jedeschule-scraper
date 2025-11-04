@@ -1,7 +1,5 @@
+import xmltodict
 from scrapy import Item
-from openpyxl import load_workbook
-from io import BytesIO
-
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
@@ -16,40 +14,80 @@ def as_string(value: str):
 
 class MecklenburgVorpommernSpider(SchoolSpider):
     name = "mecklenburg-vorpommern"
-    # The state provides the data as an Excel file. The current year's
-    # data is for sale, all older version are free to download.
-    # We use the free data from 2022/2023
-    # An overview of all available files can be found here:
-    #   https://www.statistischebibliothek.de/mir/receive/MVSerie_mods_00000396
-    # Official documentation on all available data here:
-    #   https://www.laiv-mv.de/Statistik/Veröffentlichungen/Verzeichnisse/
-    base_url = "https://www.statistischebibliothek.de/mir/servlets/MCRFileNodeServlet/MVHeft_derivate_00007470/V044%202023%2000.xlsx"
-    start_urls = [base_url]
+    start_urls = [
+        "https://www.geodaten-mv.de/dienste/schulstandorte_wfs?"
+        "SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&srsname=EPSG%3A4326&typeNames="
+        "ms:schultyp_grund,"
+        "ms:schultyp_regional,"
+        "ms:schultyp_gymnasium,"
+        "ms:schultyp_gesamt,"
+        "ms:schultyp_waldorf,"
+        "ms:schultyp_foerder,"
+        "ms:schultyp_abendgym,"
+        "ms:schultyp_berufs"
+    ]
 
-    def parse(self, response):
-        workbook = load_workbook(filename=BytesIO(response.body), data_only=True)
-        data_sheet = workbook["Verzeichnis allg bild Schulen"]
+    def parse(self, response, **kwargs):
+        data = xmltodict.parse(response.text)
 
-        rows = list(data_sheet.iter_rows(values_only=True))
-        headers = rows[0]
+        feature_collection = data.get("wfs:FeatureCollection", {})
+        members = feature_collection.get("wfs:member", [])
 
-        for row in rows[1:]:
-            yield {
-                headers[i]: row[i]
-                for i in range(len(headers))
-            }
+        if not isinstance(members, list):
+            members = [members]
+
+        for member in members:
+            if "wfs:FeatureCollection" in member:
+                inner_members = member["wfs:FeatureCollection"].get("wfs:member", [])
+                if not isinstance(inner_members, list):
+                    inner_members = [inner_members]
+                
+                for inner_member in inner_members:
+                    school_data = next(iter(inner_member.values()), {})
+                    yield self._extract_school_data(school_data)
+            else:
+                school_data = next(iter(member.values()), {})
+                yield self._extract_school_data(school_data)
+
+    @staticmethod
+    def _extract_school_data(school):
+        data_elem = {}
+
+        for key, value in school.items():
+            if key == "ms:msGeometry":
+                point = value.get("gml:Point", {})
+                pos = point.get("gml:pos", "")
+                if pos:
+                    lat, lon = pos.split()
+                    data_elem["lat"] = float(lat)
+                    data_elem["lon"] = float(lon)
+            elif not key.startswith("@"):
+                clean_key = key.split(":", 1)[-1] if ":" in key else key
+                data_elem[clean_key] = value
+
+        return data_elem
 
     @staticmethod
     def normalize(item: Item) -> School:
+        def safe_strip(value):
+            if not value or not value.strip():
+                return None
+            return value.strip()
+        
         return School(
-            name=item.get("NAME1"),
-            id="MV-{}".format(as_string(item.get("DIENSTSTELLEN-NUMMER"))),
-            address=item.get("STRASSE"),
+            name=safe_strip(item.get("schulname")),
+            id="MV-{}".format(as_string(item.get("dstnr", ""))),
+            address=safe_strip(item.get("strassehnr")),
             address2="",
-            zip=as_string(item.get("PLZ")).zfill(5),
-            city=item.get("ORT"),
-            website=item.get("INTERNET"),
-            email=item.get("E-MAIL-ADRESSE"),
-            phone=item.get("TELEFON"),
-            director=item.get("SCHULLEITER/-IN"),
+            zip=as_string(item.get("plz", "")).zfill(5),
+            city=safe_strip(item.get("ort")),
+            website=safe_strip(item.get("internet")),
+            email=safe_strip(item.get("emailadresse")),
+            phone=safe_strip(item.get("telefon")),
+            director=safe_strip(item.get("schulleiter")),
+            school_type=safe_strip(item.get("orgform")),
+            legal_status=safe_strip(item.get("rechtsstatus")),
+            provider=safe_strip(item.get("schultraeger")),
+            latitude=item.get("lat"),
+            longitude=item.get("lon"),
         )

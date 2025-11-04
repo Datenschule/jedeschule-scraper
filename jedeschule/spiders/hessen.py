@@ -53,34 +53,16 @@ class HessenSpider(SchoolSpider):
         for school in schools:
             yield scrapy.Request(school, callback=self.parse_details)
 
-    def _extract_coords_from_osm_url(self, url):
-        """Extract coordinates from OpenStreetMap URL query parameters"""
-        if not url or "openstreetmap.org" not in url:
-            return None, None
-
+    def _extract_coords_from_osm_url(self, url: str) -> tuple[float | None, float | None]:
+        """Extract coordinates from OpenStreetMap iframe URL marker parameter"""
         qs = parse_qs(urlparse(url).query)
 
-        # Try marker parameter first (most precise)
+        # Extract marker parameter (format: "latitude,longitude")
         if "marker" in qs and qs["marker"]:
             try:
                 lat_str, lon_str = qs["marker"][0].split(",", 1)
                 return float(lat_str), float(lon_str)
-            except Exception:
-                pass
-
-        # Try mlat/mlon parameters
-        if "mlat" in qs and "mlon" in qs:
-            try:
-                return float(qs["mlat"][0]), float(qs["mlon"][0])
-            except Exception:
-                pass
-
-        # Fallback: bbox center
-        if "bbox" in qs and qs["bbox"]:
-            try:
-                west, south, east, north = map(float, qs["bbox"][0].split(",", 3))
-                return (south + north) / 2.0, (west + east) / 2.0
-            except Exception:
+            except (ValueError, IndexError):
                 pass
 
         return None, None
@@ -125,21 +107,14 @@ class HessenSpider(SchoolSpider):
         # Extract school ID from URL query parameter
         school["id"] = response.request.url.split("=")[-1]
 
-        # Extract coordinates from OpenStreetMap iframe or link
+        # Extract coordinates from OpenStreetMap iframe
         latitude, longitude = None, None
-
-        # Try iframe first
         iframe_src = response.xpath('//iframe[contains(@src, "openstreetmap.org")]/@src').get()
         if iframe_src:
             latitude, longitude = self._extract_coords_from_osm_url(iframe_src)
 
-        # Fallback: try "Größere Karte" link
-        if latitude is None:
-            osm_link = response.xpath('//a[contains(@href, "openstreetmap.org")]/@href').get()
-            if osm_link:
-                latitude, longitude = self._extract_coords_from_osm_url(osm_link)
-
         # Filter out placeholder coordinates (-1.0, -1.0) used by Hessen DB for missing data
+        # Example: https://schul-db.bildung.hessen.de/schul_db.html/details/?school_no=9642
         if latitude == -1.0 and longitude == -1.0:
             latitude = None
             longitude = None

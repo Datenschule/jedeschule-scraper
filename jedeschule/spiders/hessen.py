@@ -53,7 +53,7 @@ class HessenSpider(SchoolSpider):
         for school in schools:
             yield scrapy.Request(school, callback=self.parse_details)
 
-    def _extract_coords_from_osm_url(self, url: str) -> tuple[float | None, float | None]:
+    def _extract_coords_from_osm_url(self, url: str) -> tuple[float, float] | tuple[None, None]:
         """Extract coordinates from OpenStreetMap iframe URL marker parameter"""
         qs = parse_qs(urlparse(url).query)
 
@@ -128,15 +128,15 @@ class HessenSpider(SchoolSpider):
     def normalize(item: Item) -> School:
         """Transform raw scraped data into standardized School model"""
         return School(
-            name=item.get("name") or None,
-            phone=item.get("telefon") or None,
-            fax=item.get("fax") or None,
-            website=item.get("homepage") or None,
-            address=item.get("straße") or None,
-            city=item.get("ort") or None,
-            zip=item.get("plz") or None,
-            school_type=item.get("schultyp") or None,
+            name=item.get("name"),
+            phone=item.get("telefon"),
+            fax=item.get("fax"),
+            website=item.get("homepage"),
+            address=item.get("straße"),
+            city=item.get("ort"),
+            zip=item.get("plz"),
+            school_type=item.get("schultyp"),
             id="HE-{}".format(item.get("id")),  # Prefix with state code
-            latitude=item.get("latitude") or None,
-            longitude=item.get("longitude") or None,
+            latitude=item.get("latitude"),
+            longitude=item.get("longitude"),
         )

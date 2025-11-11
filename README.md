@@ -49,9 +49,9 @@ When available, we try to use the geolocations provided by the data publishers.
 | BB    | ✅ Yes                | WFS                                          |
 | HB    | ❌ No                 | -                                            |
 | HH    | ✅ Yes                | WFS                                          |
-| HE    | ❌ No                 | -                                            |
+| HE    | ⚠️  Partial (90.7%)   | Extracted from OSM on detail pages (1,863/2,054 schools). The 191 schools without coordinates include both schools with placeholder coordinates (-1.0, -1.0) that are filtered to null and schools with no map data at all. |
 | MV    | ✅ Yes                | WFS                                          |
-| NI    | ❌ No                 | -                                            |
+| NI    | ✅ Yes (4,250 schools) | Shapefile-first approach: all 4,250 LSN schools have geodata. ~75% enriched with API data (phone, email, etc.), ~25% basic shapefile data only. Requires manual shapefile setup in cache/niedersachsen_shapefiles/. |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ❌ No                 | -                                            |
 | SL    | ✅ Yes                | WFS                                          |

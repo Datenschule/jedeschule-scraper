@@ -49,7 +49,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | BB    | ✅ Yes                | WFS                                          |
 | HB    | ❌ No                 | -                                            |
 | HH    | ✅ Yes                | WFS                                          |
-| HE    | ❌ No                 | -                                            |
+| HE    | ⚠️  Partial (~90%)    | Extracted from OSM on detail pages. The schools without coordinates are schools with placeholder coordinates that are filtered out and schools with no map data at all. |
 | MV    | ✅ Yes                | WFS                                          |
 | NI    | ❌ No                 | -                                            |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |

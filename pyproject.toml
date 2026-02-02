@@ -5,7 +5,7 @@ description = "Web scrapers for the jedeschule.codefor.de project"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "alembic==1.18.1",
+    "alembic==1.18.3",
     "geoalchemy2==0.18.1",
     "openpyxl>=3.1.5",
     "psycopg2==2.9.11",

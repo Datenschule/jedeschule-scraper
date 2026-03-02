@@ -235,15 +235,15 @@ wheels = [
 
 [[package]]
 name = "geoalchemy2"
-version = "0.18.1"
+version = "0.18.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
     { name = "sqlalchemy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/05/df/f6d689120a15a2287794e16696c3bdb4cf2e53038255d288b61a4d59e1fa/geoalchemy2-0.18.1.tar.gz", hash = "sha256:4bdc7daf659e36f6456e2f2c3bcce222b879584921a4f50a803ab05fa2bb3124", size = 239302, upload-time = "2025-11-18T15:12:05.296Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b6/93/d791a26d582bf1eca8c376d6c8e63877a951d4de6fbdc3e5e294cd385047/geoalchemy2-0.18.3.tar.gz", hash = "sha256:9e84e6b1394d10c035c3105125171e7002d1debf93ba4ad99851862f495dd39e", size = 239714, upload-time = "2026-02-24T08:54:16.627Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/25/b3d6fc757d8d909e0e666ec6fbf1b7914e9ad18d6e1b08994cd9d2e63330/geoalchemy2-0.18.1-py3-none-any.whl", hash = "sha256:a49d9559bf7acbb69129a01c6e1861657c15db420886ad0a09b1871fb0ff4bdb", size = 81261, upload-time = "2025-11-18T15:12:03.985Z" },
+    { url = "https://files.pythonhosted.org/packages/69/ae/b5e75df6f8976d9d588d5e8df1bba28f2bc90227363d5366729eba06b6d3/geoalchemy2-0.18.3-py3-none-any.whl", hash = "sha256:3b6ffe3753c2c1657174ed2decbc21da8ab25c68898e81dd603e7255c2823dc6", size = 81105, upload-time = "2026-02-24T08:54:15.161Z" },
 ]
 
 [[package]]
@@ -360,7 +360,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = "==1.18.4" },
-    { name = "geoalchemy2", specifier = "==0.18.1" },
+    { name = "geoalchemy2", specifier = "==0.18.3" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "psycopg2", specifier = "==2.9.11" },
     { name = "pyproj", specifier = "==3.7.2" },

@@ -53,7 +53,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | MV    | ✅ Yes                | WFS                                          |
 | NI    | ❌ No                 | -                                            |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
-| RP    | ❌ No                 | -                                            |
+| RP    | ✅ Yes                | Extracted from map links on the school detail pages                                            |
 | SL    | ✅ Yes                | WFS                                          |
 | SN    | ✅ Yes                | API                                          |
 | ST    | ✅ Yes                | ArcGIS (converted from EPSG:25832)           |

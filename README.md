@@ -51,7 +51,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | HH    | ✅ Yes                | WFS                                          |
 | HE    | ⚠️  Partial (90.7%)   | Extracted from OSM on detail pages (1,863/2,054 schools). The 191 schools without coordinates include both schools with placeholder coordinates (-1.0, -1.0) that are filtered to null and schools with no map data at all. |
 | MV    | ✅ Yes                | WFS                                          |
-| NI    | ✅ Yes (4,250 schools) | Shapefile-first approach: all 4,250 LSN schools have geodata. ~75% enriched with API data (phone, email, etc.), ~25% basic shapefile data only. Requires manual shapefile setup in cache/niedersachsen_shapefiles/. |
+| NI    | ⚠️  Partial            | Local ABS/Förder/BBS shapefiles (manual setup in `cache/niedersachsen_shapefiles/`). Exact, unambiguous `name + kreis + form` matches enrich API schools with geodata; unmatched schools stay API-only. |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ❌ No                 | -                                            |
 | SL    | ✅ Yes                | WFS                                          |
@@ -153,4 +153,3 @@ The deployment uses docker-compose. To update the data there, login as the
 `jedeschule` user and run the commands mentioned int the previous section
 prefixed with `sudo docker-compose run scrapers`. This means that if you
 want to for example get the newest data for Berlin you would run `sudo docker-compose run scrapers scrapy crawl berlin`
-

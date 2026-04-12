@@ -126,6 +126,8 @@ def normalize_form(form: str) -> str:
 
 
 def build_match_key(name: str, area: str, form: str) -> str:
+    # Keep the join key intentionally small and deterministic for the POC:
+    # only schools with an exact normalized name + area + form match get geodata.
     normalized_name = normalize_name(name)
     normalized_area = normalize_area(area)
     normalized_form = normalize_form(form)
@@ -150,11 +152,7 @@ class NiedersachsenSpider(SchoolSpider):
     SHAPEFILE_BASE = os.path.join(
         os.path.dirname(__file__), "..", "..", "cache", "niedersachsen_shapefiles"
     )
-    LOCAL_SHAPEFILE_PATHS = {
-        "allgemein": os.path.join(SHAPEFILE_BASE, "ABS_Shape2024"),
-        "foerder": os.path.join(SHAPEFILE_BASE, "Foerder2024"),
-        "berufs": os.path.join(SHAPEFILE_BASE, "BBS2024"),
-    }
+    LOCAL_SHAPEFILE_PATH = os.path.join(SHAPEFILE_BASE, "ABS_Shape2024")
 
     def _load_local_geodata_index(self):
         if getattr(self, "_local_geodata_loaded", False):
@@ -165,50 +163,47 @@ class NiedersachsenSpider(SchoolSpider):
         self._local_geodata_index = {}
         duplicate_keys = set()
 
-        missing = [
-            category
-            for category, path in self.LOCAL_SHAPEFILE_PATHS.items()
-            if not os.path.exists(f"{path}.shp")
-        ]
-        if missing:
+        if not os.path.exists(f"{self.LOCAL_SHAPEFILE_PATH}.shp"):
+            # Missing local shapefiles should not break the spider; we just keep
+            # the existing API-only behavior until the manual files are present.
             self.logger.warning(
-                "Missing local Niedersachsen shapefiles for %s; falling back to API-only mode",
-                ", ".join(missing),
+                "Missing local Niedersachsen shapefile ABS_Shape2024; falling back to API-only mode"
             )
             return
 
-        for category, path in self.LOCAL_SHAPEFILE_PATHS.items():
-            reader = shapefile.Reader(path, encoding="iso-8859-1")
-            field_names = [field[0] for field in reader.fields[1:]]
+        reader = shapefile.Reader(self.LOCAL_SHAPEFILE_PATH, encoding="iso-8859-1")
+        field_names = [field[0] for field in reader.fields[1:]]
 
-            for shape_record in reader.iterShapeRecords():
-                if not shape_record.shape.points:
-                    continue
+        for shape_record in reader.iterShapeRecords():
+            if not shape_record.shape.points:
+                continue
 
-                record = dict(zip(field_names, shape_record.record))
-                match_key = build_match_key(
-                    first_present(record, "Schulname", "Name"),
-                    first_present(record, "KomName"),
-                    first_present(record, "Schulform", "Beruf"),
-                )
-                if not match_key:
-                    continue
+            record = dict(zip(field_names, shape_record.record))
+            match_key = build_match_key(
+                first_present(record, "Schulname"),
+                first_present(record, "KomName"),
+                first_present(record, "Schulform"),
+            )
+            if not match_key:
+                continue
 
-                longitude, latitude = shape_record.shape.points[0]
-                geodata = {
-                    "latitude": latitude,
-                    "longitude": longitude,
-                    "_geodata_category": category,
-                }
+            longitude, latitude = shape_record.shape.points[0]
+            geodata = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "_geodata_category": "allgemein",
+            }
 
-                if match_key in duplicate_keys:
-                    continue
-                if match_key in self._local_geodata_index:
-                    duplicate_keys.add(match_key)
-                    self._local_geodata_index.pop(match_key, None)
-                    continue
+            # Ambiguous keys are dropped entirely so we do not attach the
+            # wrong point to an API school.
+            if match_key in duplicate_keys:
+                continue
+            if match_key in self._local_geodata_index:
+                duplicate_keys.add(match_key)
+                self._local_geodata_index.pop(match_key, None)
+                continue
 
-                self._local_geodata_index[match_key] = geodata
+            self._local_geodata_index[match_key] = geodata
 
         if duplicate_keys:
             self.logger.info(
@@ -282,13 +277,11 @@ class NiedersachsenSpider(SchoolSpider):
             item.update(geodata)
             item["_source"] = "api_geodata_exact"
         else:
+            # Unmatched schools stay API-only; this POC never invents schools
+            # or IDs from shapefile rows alone.
             item["_source"] = "api_only"
 
         yield item
-
-    @staticmethod
-    def _get(dict_like, key, default):
-        return dict_like.get(key) or default
 
     @staticmethod
     def normalize(item: Item) -> School:
@@ -297,8 +290,8 @@ class NiedersachsenSpider(SchoolSpider):
 
         address = item.get("hauptsitz") or item.get("sdb_adressen", [{}])[0]
         ort = address.get("sdb_ort", {})
-        school_type = NiedersachsenSpider._get(item, "sdb_art", {}).get("art")
-        provider = NiedersachsenSpider._get(item, "sdb_traeger", {}).get("name")
+        school_type = (item.get("sdb_art") or {}).get("art")
+        provider = (item.get("sdb_traeger") or {}).get("name")
 
         return School(
             name=name,

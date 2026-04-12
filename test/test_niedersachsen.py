@@ -27,8 +27,6 @@ class TestNiedersachsenSpider(unittest.TestCase):
                     }
                 ],
             )
-            self._write_foerder_shapefile(Path(tmpdir) / "Foerder2024", [])
-            self._write_bbs_shapefile(Path(tmpdir) / "BBS2024", [])
 
             spider._load_local_geodata_index()
             response = self._detail_response(
@@ -77,8 +75,6 @@ class TestNiedersachsenSpider(unittest.TestCase):
                     },
                 ],
             )
-            self._write_foerder_shapefile(Path(tmpdir) / "Foerder2024", [])
-            self._write_bbs_shapefile(Path(tmpdir) / "BBS2024", [])
 
             spider._load_local_geodata_index()
             geodata = spider._find_local_geodata(
@@ -121,38 +117,6 @@ class TestNiedersachsenSpider(unittest.TestCase):
         self.assertNotIn("latitude", items[0])
         self.assertNotIn("longitude", items[0])
 
-    def test_loader_matches_bbs_name_field(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            spider = NiedersachsenSpider()
-            self._configure_local_shapefiles(spider, Path(tmpdir))
-            self._write_bbs_shapefile(
-                Path(tmpdir) / "BBS2024",
-                [
-                    {
-                        "Name": "Johannes-Selenka-Schule",
-                        "KomTyp": "Kreisfreie Stadt",
-                        "KomName": "Braunschweig",
-                        "Schulform": "Berufsschule",
-                        "coords": (10.52, 52.27),
-                    }
-                ],
-            )
-            self._write_abs_shapefile(Path(tmpdir) / "ABS_Shape2024", [])
-            self._write_foerder_shapefile(Path(tmpdir) / "Foerder2024", [])
-
-            spider._load_local_geodata_index()
-            geodata = spider._find_local_geodata(
-                {
-                    "schulname": "Johannes-Selenka-Schule",
-                    "namensZusatz": "",
-                    "sdb_art": {"art": "Berufsschule"},
-                    "ag": {"sdb_kreis": {"kreis": "Braunschweig"}},
-                }
-            )
-
-        self.assertEqual(geodata["latitude"], 52.27)
-        self.assertEqual(geodata["longitude"], 10.52)
-
     def test_normalize_uses_namens_zusatz_and_coordinates(self):
         parsed_school = NiedersachsenSpider.normalize(
             {
@@ -184,11 +148,7 @@ class TestNiedersachsenSpider(unittest.TestCase):
         self.assertEqual(parsed_school["longitude"], 9.73)
 
     def _configure_local_shapefiles(self, spider: NiedersachsenSpider, tmp_path: Path):
-        spider.LOCAL_SHAPEFILE_PATHS = {
-            "allgemein": str(tmp_path / "ABS_Shape2024"),
-            "foerder": str(tmp_path / "Foerder2024"),
-            "berufs": str(tmp_path / "BBS2024"),
-        }
+        spider.LOCAL_SHAPEFILE_PATH = str(tmp_path / "ABS_Shape2024")
 
     def _detail_response(self, schulnr: int, payload: dict) -> TextResponse:
         payload = {
@@ -223,27 +183,6 @@ class TestNiedersachsenSpider(unittest.TestCase):
                 row["Schulform"],
                 row["KomTyp"],
                 row["KomName"],
-            ),
-        )
-
-    def _write_foerder_shapefile(self, base_path: Path, rows: list[dict]):
-        self._write_abs_shapefile(base_path, rows)
-
-    def _write_bbs_shapefile(self, base_path: Path, rows: list[dict]):
-        self._write_shapefile(
-            base_path,
-            [
-                ("Name", "C"),
-                ("KomTyp", "C"),
-                ("KomName", "C"),
-                ("Schulform", "C"),
-            ],
-            rows,
-            lambda writer, row: writer.record(
-                row["Name"],
-                row["KomTyp"],
-                row["KomName"],
-                row["Schulform"],
             ),
         )
 

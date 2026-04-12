@@ -51,7 +51,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | HH    | ✅ Yes                | WFS                                          |
 | HE    | ⚠️  Partial (90.7%)   | Extracted from OSM on detail pages (1,863/2,054 schools). The 191 schools without coordinates include both schools with placeholder coordinates (-1.0, -1.0) that are filtered to null and schools with no map data at all. |
 | MV    | ✅ Yes                | WFS                                          |
-| NI    | ⚠️  Partial            | Local ABS/Förder/BBS shapefiles (manual setup in `cache/niedersachsen_shapefiles/`). Exact, unambiguous `name + kreis + form` matches enrich API schools with geodata; unmatched schools stay API-only. |
+| NI    | ⚠️  Partial            | Local `ABS_Shape2024` shapefile (manual setup in `cache/niedersachsen_shapefiles/`). Exact, unambiguous `name + kreis + form` matches enrich API schools with geodata; unmatched schools stay API-only. |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ❌ No                 | -                                            |
 | SL    | ✅ Yes                | WFS                                          |

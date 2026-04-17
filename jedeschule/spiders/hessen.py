@@ -17,6 +17,7 @@ class HessenSpider(SchoolSpider):
     3. Extracting contact info and coordinates from detail pages
     """
     name = "hessen"
+    state_key = "HE"
 
     start_urls = ["https://schul-db.bildung.hessen.de/schul_db.html"]
 
@@ -124,8 +125,7 @@ class HessenSpider(SchoolSpider):
 
         yield school
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         """Transform raw scraped data into standardized School model"""
         return School(
             name=item.get("name"),
@@ -136,7 +136,7 @@ class HessenSpider(SchoolSpider):
             city=item.get("ort"),
             zip=item.get("plz"),
             school_type=item.get("schultyp"),
-            id="HE-{}".format(item.get("id")),  # Prefix with state code
+            id=self.make_school_id("{}".format(item.get("id"))),
             latitude=item.get("latitude"),
             longitude=item.get("longitude"),
         )

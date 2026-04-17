@@ -11,6 +11,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class NiedersachsenSpider(SchoolSpider):
     name = "niedersachsen"
+    state_key = "NI"
     start_urls = ["https://schulen.nibis.de/search/advanced"]
 
     def parse(self, response: Response):
@@ -54,8 +55,7 @@ class NiedersachsenSpider(SchoolSpider):
         # at all.
         return dict_like.get(key) or default
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         name = " ".join(
             [item.get("schulname", ""), item.get("namenszuatz", "")]
         ).strip()
@@ -75,5 +75,5 @@ class NiedersachsenSpider(SchoolSpider):
             school_type=school_type,
             provider=provider,
             legal_status=item.get("sdb_traegerschaft", {}).get("bezeichnung"),
-            id="NI-{}".format(item.get("schulnr")),
+            id=self.make_school_id("{}".format(item.get("schulnr"))),
         )

@@ -33,6 +33,7 @@ school_types = {
 
 class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
     name = "rheinland-pfalz"
+    state_key = "RP"
     # Note, one could also use the geo portal:
     # https://www.geoportal.rlp.de/spatial-objects/350/collections/schulstandorte/items?f=html&limit=4000
     start_urls = ["https://bildung.rlp.de/schulen"]
@@ -79,7 +80,7 @@ class RheinlandPfalzSpider(CrawlSpider, SchoolSpider):
 
         return School(
             name=item.get("name"),
-            id="RP-{}".format(item.get("id")),
+            id=self.make_school_id("{}".format(item.get("id"))),
             address=item.get("Anschrift")[1],
             city=city,
             zip=zip,

@@ -7,6 +7,7 @@ from jedeschule.wfs_basic_parsers import parse_geojson_features
 
 class HamburgSpider(SchoolSpider):
     name = "hamburg"
+    state_key = "HH"
 
     start_urls = [
         "https://api.hamburg.de/datasets/v1/schulen/collections/staatliche_schulen/items"
@@ -24,13 +25,12 @@ class HamburgSpider(SchoolSpider):
     def parse(self, response, **kwargs):
         yield from parse_geojson_features(response)
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         city_parts = item.get("adresse_ort").split()
         zip_code, city = city_parts[0], city_parts[1:]
         return School(
             name=item.get("schulname"),
-            id="HH-{}".format(item.get("schul_id")),
+            id=self.make_school_id("{}".format(item.get("schul_id"))),
             address=item.get("adresse_strasse_hausnr"),
             address2="",
             zip=zip_code,

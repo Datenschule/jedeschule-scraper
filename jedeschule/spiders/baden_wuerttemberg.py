@@ -2,8 +2,8 @@ import re
 import scrapy
 from scrapy import Item
 
-from jedeschule.spiders.school_spider import SchoolSpider
 from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
 
 # Pattern to extract DISCH (8-digit school ID) from Baden-Württemberg email addresses
@@ -35,6 +35,7 @@ def extract_disch(email: str | None) -> str | None:
 
 class BadenWuerttembergSpider(SchoolSpider):
     name = "baden-wuerttemberg"
+    state_key = "BW"
 
     start_urls = [
         "https://gis.kultus-bw.de/geoserver/us-govserv/ows?"
@@ -134,12 +135,12 @@ class BadenWuerttembergSpider(SchoolSpider):
 
             yield item
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         # Prefer DISCH (stable government ID) over UUID when available
         disch = item.get("disch")
         uuid = item.get("uuid")
-        school_id = f"BW-{disch}" if disch else f"BW-UUID-{uuid}"
+        sk = self.state_key
+        school_id = f"{sk}-{disch}" if disch else f"{sk}-UUID-{uuid}"
 
         return School(
             id=school_id,

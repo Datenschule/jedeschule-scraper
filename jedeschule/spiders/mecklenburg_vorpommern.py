@@ -14,6 +14,7 @@ def as_string(value: str):
 
 class MecklenburgVorpommernSpider(SchoolSpider):
     name = "mecklenburg-vorpommern"
+    state_key = "MV"
     start_urls = [
         "https://www.geodaten-mv.de/dienste/schulstandorte_wfs?"
         "SERVICE=WFS&REQUEST=GetFeature&VERSION=2.0.0&srsname=EPSG%3A4326&typeNames="
@@ -67,8 +68,7 @@ class MecklenburgVorpommernSpider(SchoolSpider):
 
         return data_elem
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         def safe_strip(value):
             if not value or not value.strip():
                 return None
@@ -76,7 +76,7 @@ class MecklenburgVorpommernSpider(SchoolSpider):
         
         return School(
             name=safe_strip(item.get("schulname")),
-            id="MV-{}".format(as_string(item.get("dstnr", ""))),
+            id=self.make_school_id(as_string(item.get("dstnr", ""))),
             address=safe_strip(item.get("strassehnr")),
             address2="",
             zip=as_string(item.get("plz", "")).zfill(5),

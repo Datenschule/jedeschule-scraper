@@ -8,6 +8,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class SchleswigHolsteinSpider(SchoolSpider):
     name = "schleswig-holstein"
+    state_key = "SH"
     base_url = "https://opendata.schleswig-holstein.de/collection/schulen/aktuell.csv"
     start_urls = [base_url]
 
@@ -16,11 +17,10 @@ class SchleswigHolsteinSpider(SchoolSpider):
         for row in reader:
             yield row
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         return School(
             name=item.get("name"),
-            id="SH-{}".format(item.get("id")),
+            id=self.make_school_id("{}".format(item.get("id"))),
             address=" ".join(
                 [item.get("street", ""), item.get("houseNumber", "")]
             ).strip(),

@@ -9,6 +9,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class BremenSpider(SchoolSpider):
     name = "bremen"
+    state_key = "HB"
     start_urls = [
         "http://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d"
     ]
@@ -46,8 +47,7 @@ class BremenSpider(SchoolSpider):
                 new += letter
         return new
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         if "Ansprechperson" in item:
             ansprechpersonen = (
                 item["Ansprechperson"]
@@ -60,7 +60,7 @@ class BremenSpider(SchoolSpider):
             director = None
         return School(
             name=item.get("name").strip(),
-            id="HB-{}".format(item.get("id")),
+            id=self.make_school_id("{}".format(item.get("id"))),
             address=re.split(r"\d{5}", item.get("Anschrift:").strip())[0].strip(),
             zip=re.findall(r"\d{5}", item.get("Anschrift:").strip())[0],
             city=re.split(r"\d{5}", item.get("Anschrift:").strip())[1].strip(),

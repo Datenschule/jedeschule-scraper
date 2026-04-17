@@ -7,6 +7,7 @@ from jedeschule.wfs_basic_parsers import parse_geojson_features
 
 class BrandenburgSpider(SchoolSpider):
     name = "brandenburg"
+    state_key = "BB"
 
     start_urls = [
         "https://schullandschaft.brandenburg.de/edugis/wfs/schulen?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature&typename=ms:Schul_Standorte"
@@ -16,11 +17,10 @@ class BrandenburgSpider(SchoolSpider):
     def parse(self, response, **kwargs):
         yield from parse_geojson_features(response)
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         return School(
             name=item.get("schulname"),
-            id="BB-{}".format(item.get("schul_nr")),
+            id=self.make_school_id("{}".format(item.get("schul_nr"))),
             address=item.get("strasse_hausnr"),
             zip=item.get("plz"),
             city=item.get("ort"),

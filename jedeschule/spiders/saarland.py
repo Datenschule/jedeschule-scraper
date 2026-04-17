@@ -7,6 +7,7 @@ from jedeschule.wfs_basic_parsers import parse_geojson_features
 
 class SaarlandSpider(SchoolSpider):
     name = "saarland"
+    state_key = "SL"
     start_urls = [
         "https://geoportal.saarland.de/spatial-objects/257/collections/Staatliche_Dienste:Schulen_SL/items?f=json&limit=2500"
     ]
@@ -14,8 +15,7 @@ class SaarlandSpider(SchoolSpider):
     def parse(self, response, **kwargs):
         yield from parse_geojson_features(response)
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         # The data also contains a field called `Schulkennz` which implies that it might be an id
         # that could be used, but some schools share ids (especially `0` or `000000`) or
         # do not have any set at all which makes for collisions
@@ -25,7 +25,7 @@ class SaarlandSpider(SchoolSpider):
             address=item.get("Straße", "").strip(),
             city=item.get("Ort"),
             fax=item.get("Fax"),
-            id=f"SL-{school_id}",
+            id=self.make_school_id("{}".format(school_id)),
             latitude=item.get("lat"),
             longitude=item.get("lon"),
             name=item.get("Bezeichnung"),

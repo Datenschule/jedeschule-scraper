@@ -28,6 +28,7 @@ def get_session():
 class School(Base):
     __tablename__ = "schools"
     id = Column(String, primary_key=True)
+    state_key = Column(String, nullable=True)
     name = Column(String)
     address = Column(String)
     address2 = Column(String)

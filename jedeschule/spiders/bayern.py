@@ -7,6 +7,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class BayernSpider(SchoolSpider):
     name = "bayern"
+    state_key = "BY"
     start_urls = [
         "https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?"
         "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&srsname=EPSG:4326&typename="
@@ -47,15 +48,14 @@ class BayernSpider(SchoolSpider):
 
             yield data_elem
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         return School(
             name=item.get("schulname"),
             address=item.get("strasse"),
             city=item.get("ort"),
             school_type=item.get("schulart"),
             zip=item.get("postleitzahl"),
-            id="BY-{}".format(item.get("id")),
+            id=self.make_school_id("{}".format(item.get("id"))),
             latitude=item.get("lat"),
             longitude=item.get("lon"),
         )

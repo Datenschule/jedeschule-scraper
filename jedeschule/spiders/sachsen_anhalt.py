@@ -8,6 +8,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class SachsenAnhaltSpider(SchoolSpider):
     name = "sachsen-anhalt"
+    state_key = "ST"
 
     # ArcGIS FeatureServer API - contains 857 schools with coordinates
     # Note: This dataset excludes vocational schools (Berufsbildende Schulen)
@@ -47,11 +48,10 @@ class SachsenAnhaltSpider(SchoolSpider):
                 "object_id": attrs.get("OBJECTID"),
             }
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         """Normalize ArcGIS data to School item"""
         # Generate ID from OBJECTID
-        school_id = f"ST-ARC{item.get('object_id', 0):05d}"
+        school_id = self.make_school_id(f"ARC{item.get('object_id', 0):05d}")
 
         return School(
             name=item.get("name"),

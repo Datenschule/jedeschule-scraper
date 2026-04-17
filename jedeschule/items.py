@@ -11,6 +11,7 @@ import scrapy
 class School(scrapy.Item):
     name = scrapy.Field()
     id = scrapy.Field()
+    state_key = scrapy.Field()
     address = scrapy.Field()
     address2 = scrapy.Field()
     zip = scrapy.Field()

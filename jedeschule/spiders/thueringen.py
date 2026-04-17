@@ -7,6 +7,7 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class ThueringenSpider(SchoolSpider):
     name = "thueringen"
+    state_key = "TH"
     start_urls = [
         "https://www.geoproxy.geoportal-th.de/geoproxy/services/kommunal/komm_wfs?"
         "SERVICE=WFS&REQUEST=GetFeature&typeNames=kommunal:komm_schul&"
@@ -43,11 +44,10 @@ class ThueringenSpider(SchoolSpider):
 
             yield data_elem
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         return School(
             name=item.get("Name"),
-            id="TH-{}".format(item.get("Schulnummer")),
+            id=self.make_school_id("{}".format(item.get("Schulnummer"))),
             address=" ".join(
                 filter(None, [item.get("Strasse"), item.get("Hausnummer")])
             ),

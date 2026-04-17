@@ -15,6 +15,7 @@ from jedeschule.items import School
 
 class NordrheinWestfalenSpider(SchoolSpider):
     name = "nordrhein-westfalen"
+    state_key = "NW"
 
     start_urls = [
         "https://www.schulministerium.nrw.de/BiPo/OpenData/Schuldaten/schuldaten.csv",
@@ -27,8 +28,7 @@ class NordrheinWestfalenSpider(SchoolSpider):
         for line in reader:
             yield line
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         name = " ".join(
             [
                 item.get("Schulbezeichnung_1", ""),
@@ -49,7 +49,7 @@ class NordrheinWestfalenSpider(SchoolSpider):
 
         return School(
             name=name,
-            id="NW-{}".format(item.get("Schulnummer")),
+            id=self.make_school_id("{}".format(item.get("Schulnummer"))),
             address=item.get("Strasse"),
             zip=item.get("PLZ"),
             city=item.get("Ort"),

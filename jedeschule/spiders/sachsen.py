@@ -9,6 +9,7 @@ from jedeschule.items import School
 
 class SachsenSpider(SchoolSpider):
     name = "sachsen"
+    state_key = "SN"
 
     # URL was created via https://schuldatenbank.sachsen.de/index.php?id=30
     start_urls = [
@@ -19,11 +20,13 @@ class SachsenSpider(SchoolSpider):
         for school in json.loads(response.text):
             yield school
 
-    @staticmethod
-    def normalize(item: Item) -> School:
+    def normalize(self, item: Item) -> School:
         helper = SachsenHelper()
         building = item.get("buildings", [None])[0]
-        school = School(name=item.get("name"), id="SN-{}".format(item.get("id")))
+        school = School(
+            name=item.get("name"),
+            id=self.make_school_id("{}".format(item.get("id"))),
+        )
         if building is None:
             return school
         school["address"] = building.get("street")

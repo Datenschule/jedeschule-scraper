@@ -182,6 +182,8 @@ class BadenWuerttembergSpider(SchoolSpider):
             item.get("lon"),
             item.get("name"),
             item.get("school_type"),
+            item.get("address"),
+            item.get("zip"),
             str(uuid) if uuid is not None else None,
         )
 

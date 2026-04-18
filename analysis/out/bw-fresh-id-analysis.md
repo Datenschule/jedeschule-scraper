@@ -26,7 +26,7 @@ The crawl script runs:
 - `item_scraped_count`: **5727** (from Scrapy stats at end of run)
 - one WFS request, finished successfully
 
-### Stored BW rows (clean DB)
+### Stored BW rows (clean DB, after adding no-coordinate `BW-FBA`)
 
 ```sql
 SELECT count(*) AS bw_total FROM schools WHERE id LIKE 'BW-%';
@@ -38,6 +38,7 @@ SELECT count(*) AS bw_total FROM schools WHERE id LIKE 'BW-%';
 SELECT
   CASE
     WHEN id LIKE 'BW-UUID-%' THEN 'BW-UUID'
+    WHEN id LIKE 'BW-FBA-%' THEN 'BW-FBA'
     WHEN id LIKE 'BW-FB-%' THEN 'BW-FB'
     WHEN id ~ '^BW-[0-9]{8}$' THEN 'BW-DISCH'
     ELSE 'BW-OTHER'
@@ -51,17 +52,13 @@ ORDER BY 2 DESC;
 
 - `BW-DISCH`: **4421**
 - `BW-FB`: **1089**
-- `BW-UUID`: **2**
+- `BW-FBA`: **2**
+- `BW-UUID`: **0**
 - `BW-OTHER`: **0**
 
-## UUID fallback residues
+## UUID fallback residues (after FBA)
 
-Residual UUID rows:
-
-1. `BW-UUID-2e4484b3-aae9-471f-a0a7-4d2d834717ab`  
-   `Zentrum für Schulqualität und Lehrerbildung (ZSL) Außenstelle Ludwigsburg`
-2. `BW-UUID-6dfe1ac8-8b25-442a-ab15-e938288d0def`  
-   `InzTanz Internationales Zentrum für Tanz`
+Residual UUID rows: **none**
 
 Signal profile:
 
@@ -78,9 +75,7 @@ FROM schools
 WHERE id LIKE 'BW-UUID-%';
 ```
 
-- `uuid_rows`: 2
-- both have `location IS NULL`
-- both still have non-empty `name`, `school_type`, `address`, `zip`, `city`
+- `uuid_rows`: 0
 
 ### Why UUID is still used
 
@@ -88,9 +83,11 @@ Current fallback path in `baden_wuerttemberg`:
 
 - DISCH from email -> `BW-{disch}`
 - else if coordinates available -> `BW-FB-{hash}`
+- else if enough no-coordinate address signal -> `BW-FBA-{hash(name,type,address,zip)}`
 - else -> `BW-UUID-{feature_uuid}`
 
-So these 2 rows use UUID only because coordinates were missing in source.
+The two former UUID cases were converted to `BW-FBA-*` because they had missing coordinates but
+still had stable address/zip + name/type signals.
 
 ## ID conflicts / overwrite behavior in a clean run
 
@@ -110,21 +107,16 @@ Duplicate events by ID family:
 Observed duplicates had the same ID and same school name in log parsing (no mixed-name duplicate IDs found).  
 This points to repeated source records for the same school ID/signature, not hash collisions with different school cores.
 
-## Suggested next stable fallback for no-coordinate residues
+## Implemented no-coordinate fallback
 
-For rows without DISCH and without coordinates, use deterministic secondary fallback before UUID:
+For rows without DISCH and without coordinates, deterministic secondary fallback is now:
 
 1. `BW-FBA-{hash}` from normalized:
    - `name`
    - `school_type`
    - `address`
    - `zip`
-   - `city`
 2. if these are insufficient / empty, then `BW-UUID-{feature_uuid}`
-
-Why this is feasible here:
-
-- in this fresh run, all residual UUID rows had all five address/name/type signals present.
 
 Risk notes:
 
@@ -136,7 +128,7 @@ Risk notes:
 
 Stable fallback significantly reduced unstable UUID ids:
 
-- from 1105 UUID rows in a stale/image-mismatch run to **2 UUID rows** in a clean rebuilt run.
-- remaining UUIDs are explainable by missing coordinates only.
+- from 1105 UUID rows in a stale/image-mismatch run to **0 UUID rows** in a clean rebuilt run.
+- the two no-coordinate former UUID records now use deterministic `BW-FBA-*`.
 
 The branch goal (stable-ID-only) is met; timestamp/`last_seen` changes are excluded.

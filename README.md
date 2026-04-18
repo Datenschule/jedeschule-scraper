@@ -22,7 +22,7 @@ In details, the IDs are sourced as follows:
 
 |State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
-|BW| DISCH from email; else deterministic `BW-FB-{hash}` (~1 km grid + normalized name + type); else WFS feature UUID | `BW-04154817`, `BW-FB-a1b2c3d4e5f67890`, or `BW-UUID-…` if coords missing |✅ DISCH stable; FB stable unless name/type/location cell changes|
+|BW| DISCH from email; else deterministic `BW-FB-{hash}` (~1 km grid + normalized name + type); else `BW-FBA-{hash}` (name + type + address + zip without coords); else WFS feature UUID | `BW-04154817`, `BW-FB-a1b2c3d4e5f67890`, `BW-FBA-77a3e2ac0d68dc1b`, or `BW-UUID-…` |✅ DISCH stable; FB/FBA stable unless core signals change|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
 |BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|
@@ -73,7 +73,7 @@ Quick check against the publisher:
 
 ### Baden-Württemberg deterministic fallback id (`BW-FB-…`)
 
-When DISCH cannot be parsed from the email domain, the spider no longer relies only on the WFS feature UUID (which can change when the provider re-imports data). It builds **`BW-FB-{16 hex}`** from a ~1 km coordinate grid, normalized school name, and normalized `school_type` (`jedeschule/fallback_school_id.py`). If coordinates are missing, it still falls back to **`BW-UUID-{uuid}`**.
+When DISCH cannot be parsed from the email domain, the spider no longer relies only on the WFS feature UUID (which can change when the provider re-imports data). It builds **`BW-FB-{16 hex}`** from a ~1 km coordinate grid, normalized school name, and normalized `school_type` (`jedeschule/fallback_school_id.py`). If coordinates are missing, it tries **`BW-FBA-{16 hex}`** from normalized `name + school_type + address + zip` before falling back to **`BW-UUID-{uuid}`**.
 
 ### Baden-Württemberg DISCH Alias
 For Baden-Württemberg schools, the 8-digit DISCH (Dienststellenschlüssel) is stored in the `raw` JSON field when available:

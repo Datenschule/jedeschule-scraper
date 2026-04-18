@@ -22,7 +22,7 @@ In details, the IDs are sourced as follows:
 
 |State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
-|BW| DISCH (Dienststellenschlüssel) extracted from email, fallback to WFS UUID when not available                | `BW-04154817` or `BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2`            |✅ likely (~80% with DISCH, ~20% UUID fallback)|
+|BW| DISCH from email; else deterministic `BW-FB-{hash}` (~1 km grid + normalized name + type); else WFS feature UUID | `BW-04154817`, `BW-FB-a1b2c3d4e5f67890`, or `BW-UUID-…` if coords missing |✅ DISCH stable; FB stable unless name/type/location cell changes|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
 |BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|
@@ -61,6 +61,20 @@ When available, we try to use the geolocations provided by the data publishers.
 
 ## Additional Data Fields
 
+### Baden-Württemberg WFS size vs jedeschule.codefor.de
+
+The spider reads a single `GetFeature` response from layer `us-govserv:GovernmentalService`. GeoServer reports how many features exist via WFS 2.0 fields on that JSON (`numberMatched`, `numberReturned`, `totalFeatures`). As of early 2026, **`resultType=hits` on the same endpoint reports `numberMatched` ≈ 5.7k**, while **jedeschule.codefor.de** (`/stats` for `BW`, `csv-data/latest.csv`) can still list **tens of thousands** of `BW-*` rows.
+
+That gap is **not** introduced by the osm-schul-abgleich pipeline (it consumes the same CSV/API as jedeschule). It means the **deployed JedeSchule database** likely still holds **older BW rows** (or rows from a previous WFS snapshot) because imports use `update_or_create` by id and **do not delete** schools that disappear from the source. After verifying with Kultus-BW which count is authoritative, operators may need a **BW-only resync** (remove `BW-*` not present in a fresh spider run) or a full BW table rebuild.
+
+Quick check against the publisher:
+
+`https://gis.kultus-bw.de/geoserver/us-govserv/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=us-govserv:GovernmentalService&resultType=hits`
+
+### Baden-Württemberg deterministic fallback id (`BW-FB-…`)
+
+When DISCH cannot be parsed from the email domain, the spider no longer relies only on the WFS feature UUID (which can change when the provider re-imports data). It builds **`BW-FB-{16 hex}`** from a ~1 km coordinate grid, normalized school name, and normalized `school_type` (`jedeschule/fallback_school_id.py`). If coordinates are missing, it still falls back to **`BW-UUID-{uuid}`**.
+
 ### Baden-Württemberg DISCH Alias
 For Baden-Württemberg schools, the 8-digit DISCH (Dienststellenschlüssel) is stored in the `raw` JSON field when available:
 - **Field**: `raw.derived.disch`
@@ -72,7 +86,7 @@ For Baden-Württemberg schools, the 8-digit DISCH (Dienststellenschlüssel) is s
 Example:
 ```json
 {
-  "id": "BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2",
+  "id": "BW-FB-a1b2c3d4e5f67890",
   "name": "Bästenhardt-Schule Belsen",
   "raw": {
     "source": "bw-wfs",

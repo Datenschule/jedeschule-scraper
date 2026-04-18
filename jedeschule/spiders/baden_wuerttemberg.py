@@ -2,8 +2,9 @@ import re
 import scrapy
 from scrapy import Item
 
-from jedeschule.spiders.school_spider import SchoolSpider
+from jedeschule.fallback_school_id import baden_wuerttemberg_school_id
 from jedeschule.items import School
+from jedeschule.spiders.school_spider import SchoolSpider
 
 
 # Pattern to extract DISCH (8-digit school ID) from Baden-Württemberg email addresses
@@ -46,8 +47,45 @@ class BadenWuerttembergSpider(SchoolSpider):
     def parse(self, response):
         """Parse WFS GeoJSON response"""
         data = response.json()
+        features = data.get("features") or []
 
-        for feature in data.get("features", []):
+        # GeoServer includes WFS 2.0 counters; use them to detect truncation or paging gaps.
+        def _as_int(v):
+            if v is None:
+                return None
+            try:
+                return int(v)
+            except (TypeError, ValueError):
+                return None
+
+        nm = _as_int(data.get("numberMatched"))
+        nr = _as_int(data.get("numberReturned"))
+        tf = _as_int(data.get("totalFeatures"))
+        if nm is not None and nm != len(features):
+            self.logger.error(
+                "BW WFS: numberMatched (%s) != len(features) (%s) — response may be truncated",
+                nm,
+                len(features),
+            )
+        if (
+            nm is not None
+            and nr is not None
+            and nr != nm
+            and nr != 0
+        ):
+            self.logger.error(
+                "BW WFS: numberReturned (%s) != numberMatched (%s) — implement paging (STARTINDEX) or raise",
+                nr,
+                nm,
+            )
+        if tf is not None and nm is not None and tf != nm:
+            self.logger.warning(
+                "BW WFS: totalFeatures (%s) != numberMatched (%s)",
+                tf,
+                nm,
+            )
+
+        for feature in features:
             uuid = feature.get("id")
             props = feature["properties"]
 
@@ -136,10 +174,16 @@ class BadenWuerttembergSpider(SchoolSpider):
 
     @staticmethod
     def normalize(item: Item) -> School:
-        # Prefer DISCH (stable government ID) over UUID when available
         disch = item.get("disch")
         uuid = item.get("uuid")
-        school_id = f"BW-{disch}" if disch else f"BW-UUID-{uuid}"
+        school_id = baden_wuerttemberg_school_id(
+            disch,
+            item.get("lat"),
+            item.get("lon"),
+            item.get("name"),
+            item.get("school_type"),
+            str(uuid) if uuid is not None else None,
+        )
 
         return School(
             id=school_id,

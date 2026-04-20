@@ -1,3 +1,5 @@
+import hashlib
+
 import re
 import scrapy
 from scrapy import Item
@@ -32,6 +34,8 @@ def extract_disch(email: str | None) -> str | None:
     match = DISCH_RE.search(email.strip())
     return match.group(1) if match else None
 
+def create_address_based_fallback(address, city, zip):
+    return hashlib.sha256(f"{address} {zip} {city}").hexdigest()
 
 class BadenWuerttembergSpider(SchoolSpider):
     name = "baden-wuerttemberg"
@@ -136,13 +140,16 @@ class BadenWuerttembergSpider(SchoolSpider):
 
     @staticmethod
     def normalize(item: Item) -> School:
-        # Prefer DISCH (stable government ID) over UUID when available
-        disch = item.get("disch")
-        uuid = item.get("uuid")
-        school_id = f"BW-{disch}" if disch else f"BW-UUID-{uuid}"
+        def id():
+            # Prefer DISCH (stable government ID) when available
+            if disch := item.get('disch'):
+                return f'{disch}'
+            key = " ".join([item.get(key) or "" for key in ['name', 'address', 'zip', 'city']])
+            key_hash = hashlib.sha256(key.encode('utf-8')).hexdigest()
+            return f'FB-{key_hash}'
 
         return School(
-            id=school_id,
+            id=f"BW-{id()}",
             name=item.get("name"),
             address=item.get("address"),
             zip=item.get("zip"),

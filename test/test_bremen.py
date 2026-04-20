@@ -89,6 +89,8 @@ class TestBremenSpider(unittest.TestCase):
             writer.field("ORTSTEILNA", "C")
             writer.field("TRAEGERNAM", "C")
             writer.field("SCHULART_2", "C")
+            writer.field("x_etrs", "C")
+            writer.field("y_etrs", "C")
 
             for row in rows:
                 x, y = row["coords"]
@@ -102,6 +104,8 @@ class TestBremenSpider(unittest.TestCase):
                     row["ORTSTEILNA"],
                     row["TRAEGERNAM"],
                     row["SCHULART_2"],
+                    x,
+                    y,
                 )
 
         (base_path.with_suffix(".cpg")).write_text("UTF-8", encoding="ascii")

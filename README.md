@@ -22,11 +22,11 @@ In details, the IDs are sourced as follows:
 
 |State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
-|BW| DISCH (Dienststellenschlüssel) extracted from email, fallback to WFS UUID when not available                | `BW-04154817` or `BW-UUID-00000a15-a965-4999-b9ad-05895eb0fad2`            |✅ likely (~80% with DISCH, ~20% UUID fallback)|
+|BW| DISCH (Dienststellenschlüssel) extracted from email, fallback to address hash when not available (see below) | `BW-04154817` or `BW-FB-e5c29cbf7215726b4f3515cfad6bee63e2a0bb8ded432a34e9e51c4324ec52ea`            |✅ likely (~80% with DISCH, ~20% fallback)|
 |BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
 |BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|
-|HB| Field `snr_txt` (Schulnummer) from the INSPIRE shapefile - official 3-digit ID used in Bremen materials  | `HB-002`                                                                   |✅ likely|
+|HB| Field `snr_txt` (Schulnummer) from the INSPIRE shapefile - official 3-digit ID used in Bremen materials      | `HB-002`                                                                   |✅ likely|
 |HH| Field `schul_id` From the WFS Service                                                                        | `HH-7910-0`                                                                |✅ likely|
 |HE| `school_no` URL query param of the schools's details page (identical to the Dienststellennummer)             | `HE-4024`                                                                  |✅ likely|
 |MV| Field `dstnr` from the WFS                                                                                   | `MV-75130302`                                                              |✅ likely|
@@ -37,6 +37,9 @@ In details, the IDs are sourced as follows:
 |SN| Field `id` from the API                                                                                      | `SN-4062`                                                                  |✅ likely|
 |ST| `OBJECTID` from the ArcGIS FeatureServer API (prefixed with `ARC`)                                           | `ST-ARC00001`                                                              |❓ unlikely (OBJECTID may change on data reimport)|
 |TH| `Schulnummer` from the WFS service                                                                           | `TH-10601`                                                                 |✅ likely|
+
+For Baden-Württemberg, not all schools have a Dienststellenschlüssel that we can extract. For those who don't,
+we join name, address, zip and city with a " " between each part and generate the SHA256 hash.
 
 ## Geolocations
 When available, we try to use the geolocations provided by the data publishers.

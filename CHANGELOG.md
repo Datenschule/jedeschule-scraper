@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-25
+- [BW]: Schools that do not have a Dienststellennummer change their ID
+  from an unstable UUID to a more stable hash of name, address, zip and city.
+  (that is schools that were `BW-UUID-<something>` become `BW-FB-<something>`)
+  ⚠️ This breaks existing ids.
+  Schools that are in the dataset right now with UUID ids will be dropped
+  from the data that is published through the API and CSV-export.
+
 ## 2025-05-12
 - [SL]: Switch to data from Geoportal instead of web scraping. We do not get 
   contact details such as email and phone anymore but we (might) get more

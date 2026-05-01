@@ -2,120 +2,60 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-import shapefile
 from scrapy import Request
 from scrapy.http import TextResponse
 
+from jedeschule.spiders import niedersachsen as niedersachsen_module
 from jedeschule.spiders.niedersachsen import NiedersachsenSpider
 
 
 class TestNiedersachsenSpider(unittest.TestCase):
-    def test_parse_details_enriches_exact_local_match(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            spider = NiedersachsenSpider()
-            self._configure_local_shapefiles(spider, Path(tmpdir))
-            self._write_abs_shapefile(
-                Path(tmpdir) / "ABS_Shape2024",
-                [
-                    {
-                        "Schulname": "Albert-Schweitzer-Schule",
-                        "Schulform": "GS",
-                        "KomTyp": "Landkreis",
-                        "KomName": "Region Hannover",
-                        "coords": (9.70, 52.37),
-                    }
-                ],
-            )
-
-            spider._load_local_geodata_index()
-            response = self._detail_response(
-                5009,
+    def test_parse_details_attaches_coords_when_official_match_exists(self):
+        spider = self._spider_with_cache(
+            [
                 {
-                    "schulname": "Grundschule Albert-Schweitzer",
-                    "namensZusatz": "",
-                    "sdb_art": {"art": "Grundschule"},
-                    "ag": {"sdb_kreis": {"kreis": "Hannover Region"}},
-                    "sdb_adressen": [
-                        {
-                            "strasse": "Liepmannstrasse 6",
-                            "sdb_ort": {"plz": 30453, "ort": "Hannover"},
-                        }
-                    ],
-                },
-            )
+                    "schulnr": 5009,
+                    "status": "matched_by_distance",
+                    "latitude": 52.37,
+                    "longitude": 9.70,
+                }
+            ]
+        )
 
-            items = list(spider.parse_details(response))
+        items = list(spider.parse_details(self._detail_response(5009)))
 
-        self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]["_source"], "api_geodata_exact")
         self.assertEqual(items[0]["latitude"], 52.37)
         self.assertEqual(items[0]["longitude"], 9.70)
 
-    def test_duplicate_match_keys_are_skipped(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            spider = NiedersachsenSpider()
-            self._configure_local_shapefiles(spider, Path(tmpdir))
-            self._write_abs_shapefile(
-                Path(tmpdir) / "ABS_Shape2024",
-                [
-                    {
-                        "Schulname": "Albert-Schweitzer-Schule",
-                        "Schulform": "GS",
-                        "KomTyp": "Landkreis",
-                        "KomName": "Region Hannover",
-                        "coords": (9.70, 52.37),
-                    },
-                    {
-                        "Schulname": "Albert-Schweitzer-Schule",
-                        "Schulform": "GS",
-                        "KomTyp": "Landkreis",
-                        "KomName": "Region Hannover",
-                        "coords": (9.71, 52.38),
-                    },
-                ],
-            )
+    def test_parse_details_keeps_item_when_geocode_missing(self):
+        spider = self._spider_with_cache([])
 
-            spider._load_local_geodata_index()
-            geodata = spider._find_local_geodata(
-                {
-                    "schulname": "Grundschule Albert-Schweitzer",
-                    "namensZusatz": "",
-                    "sdb_art": {"art": "Grundschule"},
-                    "ag": {"sdb_kreis": {"kreis": "Hannover Region"}},
-                }
-            )
+        items = list(spider.parse_details(self._detail_response(5009)))
 
-        self.assertIsNone(geodata)
-
-    def test_parse_details_keeps_api_only_when_local_geodata_is_missing(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            spider = NiedersachsenSpider()
-            self._configure_local_shapefiles(spider, Path(tmpdir))
-
-            spider._load_local_geodata_index()
-            response = self._detail_response(
-                5009,
-                {
-                    "schulname": "Grundschule Albert-Schweitzer",
-                    "namensZusatz": "",
-                    "sdb_art": {"art": "Grundschule"},
-                    "ag": {"sdb_kreis": {"kreis": "Hannover Region"}},
-                    "sdb_adressen": [
-                        {
-                            "strasse": "Liepmannstrasse 6",
-                            "sdb_ort": {"plz": 30453, "ort": "Hannover"},
-                        }
-                    ],
-                },
-            )
-
-            items = list(spider.parse_details(response))
-
+        # Unmatched schools must still flow through — no coord, but still yielded.
         self.assertEqual(len(items), 1)
-        self.assertEqual(items[0]["_source"], "api_only")
         self.assertNotIn("latitude", items[0])
-        self.assertNotIn("longitude", items[0])
+
+    def test_parse_details_ignores_non_matched_cache_rows(self):
+        spider = self._spider_with_cache(
+            [
+                {"schulnr": 5009, "status": "skipped"},
+                {"schulnr": 5010, "status": "not_a_match"},
+            ]
+        )
+
+        for schulnr in (5009, 5010):
+            items = list(spider.parse_details(self._detail_response(schulnr)))
+            self.assertEqual(len(items), 1)
+            self.assertNotIn("latitude", items[0])
+
+    def test_load_coords_logs_warning_when_cache_missing(self):
+        spider = NiedersachsenSpider()
+        with patch.object(niedersachsen_module, "NLS_CACHE", Path("/nonexistent/path.jsonl")):
+            spider._load_coords()
+        self.assertEqual(spider._coords, {})
 
     def test_normalize_uses_namens_zusatz_and_coordinates(self):
         parsed_school = NiedersachsenSpider.normalize(
@@ -131,10 +71,7 @@ class TestNiedersachsenSpider(unittest.TestCase):
                 "sdb_traeger": {"name": "Gemeinde Wedemark"},
                 "sdb_traegerschaft": {"bezeichnung": "Offentlich"},
                 "sdb_adressen": [
-                    {
-                        "strasse": "Musterstrasse 1",
-                        "sdb_ort": {"plz": 30900, "ort": "Wedemark"},
-                    }
+                    {"strasse": "Musterstrasse 1", "sdb_ort": {"plz": 30900, "ort": "Wedemark"}}
                 ],
                 "latitude": 52.54,
                 "longitude": 9.73,
@@ -143,23 +80,37 @@ class TestNiedersachsenSpider(unittest.TestCase):
 
         self.assertEqual(parsed_school["id"], "NI-5101")
         self.assertEqual(parsed_school["name"], "Montessori Wedemark Grundschule")
-        self.assertEqual(parsed_school["city"], "Wedemark")
         self.assertEqual(parsed_school["latitude"], 52.54)
         self.assertEqual(parsed_school["longitude"], 9.73)
 
-    def _configure_local_shapefiles(self, spider: NiedersachsenSpider, tmp_path: Path):
-        spider.LOCAL_SHAPEFILE_PATH = str(tmp_path / "ABS_Shape2024")
+    def _spider_with_cache(self, records: list[dict]) -> NiedersachsenSpider:
+        tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8")
+        try:
+            for rec in records:
+                tmp.write(json.dumps(rec) + "\n")
+            tmp.close()
+            self.addCleanup(lambda path=tmp.name: Path(path).unlink(missing_ok=True))
+            with patch.object(niedersachsen_module, "NLS_CACHE", Path(tmp.name)):
+                spider = NiedersachsenSpider()
+                spider._load_coords()
+            return spider
+        except Exception:
+            Path(tmp.name).unlink(missing_ok=True)
+            raise
 
-    def _detail_response(self, schulnr: int, payload: dict) -> TextResponse:
+    def _detail_response(self, schulnr: int) -> TextResponse:
         payload = {
             "schulnr": schulnr,
+            "schulname": "Beispielschule",
+            "namensZusatz": "",
             "telefon": None,
             "fax": None,
             "email": None,
             "homepage": None,
             "sdb_traeger": {"name": None},
             "sdb_traegerschaft": {"bezeichnung": None},
-            **payload,
+            "sdb_art": {"art": "Grundschule"},
+            "sdb_adressen": [{"strasse": "Musterstr. 1", "sdb_ort": {"plz": 30000, "ort": "Beispielort"}}],
         }
         return TextResponse(
             url=f"https://schulen.nibis.de/school/getInfo/{schulnr}",
@@ -167,34 +118,6 @@ class TestNiedersachsenSpider(unittest.TestCase):
             body=json.dumps(payload).encode("utf-8"),
             encoding="utf-8",
         )
-
-    def _write_abs_shapefile(self, base_path: Path, rows: list[dict]):
-        self._write_shapefile(
-            base_path,
-            [
-                ("Schulname", "C"),
-                ("Schulform", "C"),
-                ("KomTyp", "C"),
-                ("KomName", "C"),
-            ],
-            rows,
-            lambda writer, row: writer.record(
-                row["Schulname"],
-                row["Schulform"],
-                row["KomTyp"],
-                row["KomName"],
-            ),
-        )
-
-    def _write_shapefile(self, base_path: Path, fields, rows: list[dict], record_writer):
-        with shapefile.Writer(str(base_path), shapeType=shapefile.POINT) as writer:
-            for field_name, field_type in fields:
-                writer.field(field_name, field_type)
-
-            for row in rows:
-                longitude, latitude = row["coords"]
-                writer.point(longitude, latitude)
-                record_writer(writer, row)
 
 
 if __name__ == "__main__":

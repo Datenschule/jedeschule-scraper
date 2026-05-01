@@ -1,7 +1,9 @@
-# -*- coding: utf-8 -*-
-import scrapy
+import io
 import re
+import zipfile
 from scrapy import Item
+import shapefile
+from pyproj import Transformer
 
 from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
@@ -9,64 +11,52 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class BremenSpider(SchoolSpider):
     name = "bremen"
-    start_urls = [
-        "http://www.bildung.bremen.de/detail.php?template=35_schulsuche_stufe2_d"
-    ]
+    ZIP_URL = "https://gdi2.geo.bremen.de/inspire/download/Schulstandorte/data/Schulstandorte_HB_BHV.zip"
+
+    start_urls = [ZIP_URL]
 
     def parse(self, response):
-        for link in response.css(".table_daten_container a ::attr(href)").extract():
-            request = scrapy.Request(response.urljoin(link), callback=self.parse_detail)
-            request.meta["id"] = link.split("de&Sid=", 1)[1]
-            yield request
+        # Read both shapefiles directly from ZIP (no extractall)
+        with zipfile.ZipFile(io.BytesIO(response.body), "r") as zf:
+            for stem in ("gdi_schulen_hb", "gdi_schulen_bhv"):
+                shp_bytes = io.BytesIO(zf.read(f"{stem}.shp"))
+                shx_bytes = io.BytesIO(zf.read(f"{stem}.shx"))
+                dbf_bytes = io.BytesIO(zf.read(f"{stem}.dbf"))
 
-    def parse_detail(self, response):
-        lis = response.css(".kogis_main_visitenkarte ul li")
+                # Detect encoding from .cpg if present
+                encoding = None
+                try:
+                    cpg = zf.read(f"{stem}.cpg").decode("ascii", "ignore").strip()
+                    encoding = cpg or None
+                except KeyError:
+                    pass
 
-        if len(lis) == 0:
-            # Detail page contains no info, see https://github.com/Datenschule/jedeschule-scraper/issues/54
-            return
+                sf = shapefile.Reader(
+                    shp=shp_bytes, shx=shx_bytes, dbf=dbf_bytes, encoding=encoding
+                )
 
-        collection = {}
-        collection["id"] = response.meta["id"].zfill(3)
-        collection["name"] = response.css(".main_article h3 ::text").extract_first()
-        for li in lis:
-            key = li.css("span ::attr(title)").extract_first()
-            value = " ".join([part.strip() for part in li.css("::text").extract()])
-            # Filter out this pointless entry
-            if key is not None:
-                collection[key] = value
-            collection["data_url"] = response.url
-        if collection["name"]:
-            yield collection
-
-    def fix_number(number):
-        new = ""
-        for letter in number:
-            if letter.isdigit():
-                new += letter
-        return new
+                for record in sf.records():
+                    yield record.as_dict()
 
     @staticmethod
     def normalize(item: Item) -> School:
-        if "Ansprechperson" in item:
-            ansprechpersonen = (
-                item["Ansprechperson"]
-                .replace("Schulleitung:", "")
-                .replace("Vertretung:", ",")
-                .split(",")
-            )
-            director = ansprechpersonen[0].replace("\n", "").strip()
-        else:
-            director = None
+        item_lower = {k.lower(): v for k, v in item.items()}
+        snr_txt = (item_lower.get("snr_txt") or "").strip()
+        if not snr_txt or not re.fullmatch(r"\d{3}", snr_txt):
+            raise ValueError(f"Invalid or missing SNR_TXT: '{snr_txt}'")
+
+        transformer = Transformer.from_crs(25832, 4326, always_xy=True)
+        lon, lat = transformer.transform(item.get('x_etrs'), item.get('y_etrs'))
+
+
         return School(
-            name=item.get("name").strip(),
-            id="HB-{}".format(item.get("id")),
-            address=re.split(r"\d{5}", item.get("Anschrift:").strip())[0].strip(),
-            zip=re.findall(r"\d{5}", item.get("Anschrift:").strip())[0],
-            city=re.split(r"\d{5}", item.get("Anschrift:").strip())[1].strip(),
-            website=item.get("Internet").strip() if item.get("Internet") else None,
-            email=item.get("E-Mail-Adresse").strip(),
-            fax=BremenSpider.fix_number(item.get("Telefax")),
-            phone=BremenSpider.fix_number(item.get("Telefon")),
-            director=director,
+            id=f"HB-{snr_txt}",
+            name=(item_lower.get("nam") or "").strip(),
+            address=(item_lower.get("strasse") or "").strip(),
+            zip=(item_lower.get("plz") or "").strip(),
+            city=(item_lower.get("ort") or "").strip(),
+            school_type=(item_lower.get("schulart_2") or "").strip(),
+            provider=(item_lower.get("traegernam") or "").strip(),
+            latitude=lat,
+            longitude=lon,
         )

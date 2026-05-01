@@ -52,9 +52,9 @@ When available, we try to use the geolocations provided by the data publishers.
 | BB    | ✅ Yes                | WFS                                          |
 | HB    | ✅ Yes                | INSPIRE shapefile (converted from EPSG:25832)|
 | HH    | ✅ Yes                | WFS                                          |
-| HE    | ⚠️  Partial (~90%)    | Extracted from OSM on detail pages. The schools without coordinates are schools with placeholder coordinates that are filtered out and schools with no map data at all. |
+| HE    | ⚠️  Partial (90.7%)   | Extracted from OSM on detail pages (1,863/2,054 schools). The 191 schools without coordinates include both schools with placeholder coordinates (-1.0, -1.0) that are filtered to null and schools with no map data at all. |
 | MV    | ✅ Yes                | WFS                                          |
-| NI    | ❌ No                 | -                                            |
+| NI    | ⚠️  Partial            | Official NLS shapefile coordinates, matched from geocoded NiBiS addresses. Build `cache/niedersachsen_nibis_geocoded.jsonl` via `geocode_all_schools()` and then `cache/niedersachsen_nls_coords.jsonl` via `build_official_coords_cache()`. Only schools with a successful official match get coordinates; unmatched schools stay in the output without coordinates. |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ✅ Yes                | Extracted from map links on the school detail pages                                            |
 | SL    | ✅ Yes                | WFS                                          |
@@ -156,4 +156,3 @@ The deployment uses docker-compose. To update the data there, login as the
 `jedeschule` user and run the commands mentioned int the previous section
 prefixed with `sudo docker-compose run scrapers`. This means that if you
 want to for example get the newest data for Berlin you would run `sudo docker-compose run scrapers scrapy crawl berlin`
-

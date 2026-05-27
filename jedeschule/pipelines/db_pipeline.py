@@ -73,7 +73,7 @@ class DatabasePipeline:
     def __init__(self):
         self.session = get_session()
 
-    def process_item(self, item: SchoolPipelineItem, spider):
+    def process_item(self, item: SchoolPipelineItem):
         school = School.update_or_create(item, session=self.session)
         try:
             self.session.add(school)

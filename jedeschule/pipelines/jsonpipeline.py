@@ -16,6 +16,6 @@ class JsonPipeline(object):
         self.exporter.finish_exporting()
         self.file.close()
 
-    def process_item(self, item, spider):
+    def process_item(self, item):
         self.exporter.export_item(item)
         return item

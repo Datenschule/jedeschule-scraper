@@ -362,7 +362,7 @@ requires-dist = [
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "psycopg2", specifier = "==2.9.12" },
     { name = "pyproj", specifier = "==3.7.2" },
-    { name = "pyshp", specifier = ">=3.0.12" },
+    { name = "pyshp", specifier = ">=3.1.3" },
     { name = "requests", specifier = "==2.34.2" },
     { name = "scrapy", specifier = "==2.16.0" },
     { name = "sqlalchemy", specifier = "==2.0.50" },
@@ -681,11 +681,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/d5/7b/65f55513d3c769fd6
 
 [[package]]
 name = "pyshp"
-version = "3.0.12"
+version = "3.1.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ad/09/0ee60f56e34c6df34e30d302c29ca67b115a7a76ce1acf21f67924aec9a3/pyshp-3.0.12.tar.gz", hash = "sha256:517f6d80be444f3e85ed3f08b004108845f535dee3efffc2fbca1ba93d22151d", size = 2209829, upload-time = "2026-06-05T18:56:03.08Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1b/6c/8d26c816089dd8837793217834899e2986166d7aa294ca70ab46a97151cf/pyshp-3.1.3.tar.gz", hash = "sha256:c61c4c1d4163c159661f6e8a86e73cb4ce9879ee2e7b74b3a91ccb7aac7f52f0", size = 2222010, upload-time = "2026-06-25T16:46:46.884Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/09/e27388e25d5ba562b19b3893140469355150cfa9d49a4184e5033d7464c9/pyshp-3.0.12-py3-none-any.whl", hash = "sha256:f5f55548700e775e09479781a03a0b82aa46bef0270aa2980f86212565ce9092", size = 65235, upload-time = "2026-06-05T18:56:01.876Z" },
+    { url = "https://files.pythonhosted.org/packages/56/ad/714a4aad316ea5ac7dd81d9f48ffb56dd678427fd7f96d131a1901bd20a8/pyshp-3.1.3-py3-none-any.whl", hash = "sha256:17465d433f9b8a2479851e8d379ee5adcb1f95e6a79cef5b82912c4dc812dfc3", size = 72498, upload-time = "2026-06-25T16:46:45.752Z" },
 ]
 
 [[package]]

@@ -1,5 +1,6 @@
 import json
 import urllib
+from pathlib import Path
 
 import scrapy
 from scrapy import Item
@@ -9,9 +10,42 @@ from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
 
 
+NLS_CACHE = Path("cache/niedersachsen_nls_coords.jsonl")
+
+
 class NiedersachsenSpider(SchoolSpider):
     name = "niedersachsen"
+    allowed_domains = ["schulen.nibis.de"]
     start_urls = ["https://schulen.nibis.de/search/advanced"]
+
+    def _load_coords(self) -> None:
+        if getattr(self, "_coords_loaded", False):
+            return
+        self._coords_loaded = True
+        self._coords: dict[str, tuple[float, float]] = {}
+
+        if not NLS_CACHE.exists():
+            self.logger.warning(
+                "official Niedersachsen coords cache missing at %s; running API-only. "
+                "Generate it via `niedersachsen_helper.geocode_all_schools()` and "
+                "`niedersachsen_helper.build_official_coords_cache()`.",
+                NLS_CACHE,
+            )
+            return
+
+        with NLS_CACHE.open("r", encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                rec = json.loads(line)
+                if not str(rec.get("status", "")).startswith("matched_"):
+                    continue
+                schulnr = rec.get("schulnr")
+                if schulnr is None or "latitude" not in rec or "longitude" not in rec:
+                    continue
+                self._coords[str(schulnr)] = (rec["latitude"], rec["longitude"])
+        self.logger.info("Loaded %d Schulnummer -> coord entries", len(self._coords))
 
     def parse(self, response: Response):
         parts = [
@@ -29,10 +63,12 @@ class NiedersachsenSpider(SchoolSpider):
                 "X-Inertia": "true",
                 "Content-Type": "application/json;charset=utf-8",
             },
-            callback=self.parse_list,
+            callback=self.parse_api_search,
         )
 
-    def parse_list(self, response: Response):
+    def parse_api_search(self, response: Response):
+        self._load_coords()
+
         json_response = json.loads(response.body.decode("utf-8"))
         for school in json_response["props"]["schools"]:
             yield scrapy.Request(
@@ -41,28 +77,28 @@ class NiedersachsenSpider(SchoolSpider):
             )
 
     def parse_details(self, response: Response):
-        json_response = json.loads(response.body.decode("utf-8"))
-        yield json_response
+        try:
+            item = json.loads(response.body.decode("utf-8"))
+        except json.JSONDecodeError as exc:
+            self.logger.error("Could not parse Niedersachsen detail JSON from %s: %s", response.url, exc)
+            return
 
-    @staticmethod
-    def _get(dict_like, key, default):
-        # This is almost like dict_like.get(key, default)
-        # but it also returns default if the dictionary's
-        # value for the key is `None`.
-        # A regular `.get` would just return `None` there
-        # as it only fills in if the key is not defined
-        # at all.
-        return dict_like.get(key) or default
+        coord = getattr(self, "_coords", {}).get(str(item.get("schulnr")))
+        if coord is not None:
+            item["latitude"], item["longitude"] = coord
+
+        yield item
 
     @staticmethod
     def normalize(item: Item) -> School:
-        name = " ".join(
-            [item.get("schulname", ""), item.get("namenszuatz", "")]
-        ).strip()
-        address = item.get("sdb_adressen", [{}])[0]
+        suffix = item.get("namensZusatz") or item.get("namenszusatz") or ""
+        name = " ".join(part for part in [item.get("schulname", ""), suffix] if part).strip()
+
+        address = item.get("hauptsitz") or item.get("sdb_adressen", [{}])[0]
         ort = address.get("sdb_ort", {})
-        school_type = NiedersachsenSpider._get(item, "sdb_art", {}).get("art")
-        provider = NiedersachsenSpider._get(item, "sdb_traeger", {}).get("name")
+        school_type = (item.get("sdb_art") or {}).get("art")
+        provider = (item.get("sdb_traeger") or {}).get("name")
+
         return School(
             name=name,
             phone=item.get("telefon"),
@@ -75,5 +111,7 @@ class NiedersachsenSpider(SchoolSpider):
             school_type=school_type,
             provider=provider,
             legal_status=item.get("sdb_traegerschaft", {}).get("bezeichnung"),
+            latitude=item.get("latitude"),
+            longitude=item.get("longitude"),
             id="NI-{}".format(item.get("schulnr")),
         )

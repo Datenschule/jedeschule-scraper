@@ -17,7 +17,7 @@ class TestBremenSpider(unittest.TestCase):
             transformer = Transformer.from_crs(4326, 25832, always_xy=True)
 
             self._write_shapefile(
-                tmp_path / "gdi_schulen_hb",
+                tmp_path / "gdi_schulen_bh",
                 [
                     {
                         "SNR_TXT": "002",
@@ -113,7 +113,7 @@ class TestBremenSpider(unittest.TestCase):
     def _build_zip(self, tmp_path: Path) -> bytes:
         zip_path = tmp_path / "bremen.zip"
         with zipfile.ZipFile(zip_path, "w") as zf:
-            for stem in ("gdi_schulen_hb", "gdi_schulen_bhv"):
+            for stem in ("gdi_schulen_bh", "gdi_schulen_bhv"):
                 for suffix in (".shp", ".shx", ".dbf", ".cpg"):
                     path = tmp_path / f"{stem}{suffix}"
                     zf.write(path, arcname=path.name)

@@ -18,7 +18,7 @@ class BremenSpider(SchoolSpider):
     def parse(self, response):
         # Read both shapefiles directly from ZIP (no extractall)
         with zipfile.ZipFile(io.BytesIO(response.body), "r") as zf:
-            for stem in ("gdi_schulen_hb", "gdi_schulen_bhv"):
+            for stem in ("gdi_schulen_bh", "gdi_schulen_bhv"):
                 shp_bytes = io.BytesIO(zf.read(f"{stem}.shp"))
                 shx_bytes = io.BytesIO(zf.read(f"{stem}.shx"))
                 dbf_bytes = io.BytesIO(zf.read(f"{stem}.dbf"))

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from scrapy import Item
 
 from jedeschule.items import School
-from jedeschule.spiders.school_spider import SchoolSpider
 
 
 @dataclass
@@ -12,7 +11,14 @@ class SchoolPipelineItem:
     item: Item
 
 
-class SchoolPipeline(object):
-    def process_item(self, item, spider: SchoolSpider) -> SchoolPipelineItem:
-        school = spider.normalize(item)
+class SchoolPipeline:
+    def __init__(self, crawler):
+        self.crawler = crawler
+
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler)
+
+    def process_item(self, item) -> SchoolPipelineItem:
+        school = self.crawler.spider.normalize(item)
         return SchoolPipelineItem(info=school, item=item)

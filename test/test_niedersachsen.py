@@ -1,61 +1,90 @@
 import json
-import tempfile
+import math
 import unittest
+import urllib.parse
 from pathlib import Path
-from unittest.mock import patch
 
 from scrapy import Request
 from scrapy.http import TextResponse
 
-from jedeschule.spiders import niedersachsen as niedersachsen_module
-from jedeschule.spiders.niedersachsen import NiedersachsenSpider
+from jedeschule.spiders.niedersachsen import NiedersachsenSpider, load_coordinate_overrides
 
 
 class TestNiedersachsenSpider(unittest.TestCase):
-    def test_parse_details_attaches_coords_when_official_match_exists(self):
-        spider = self._spider_with_cache(
-            [
-                {
-                    "schulnr": 5009,
-                    "status": "matched_by_distance",
-                    "latitude": 52.37,
-                    "longitude": 9.70,
-                }
-            ]
+    def test_parse_api_search_requests_map_coordinates_by_school_number(self):
+        spider = NiedersachsenSpider()
+        response = TextResponse(
+            url="https://schulen.nibis.de/school/search",
+            request=Request(url="https://schulen.nibis.de/school/search"),
+            body=json.dumps({"props": {"schools": [{"schulnr": 5009}]}}).encode(),
+            encoding="utf-8",
         )
+
+        requests = list(spider.parse_api_search(response))
+
+        self.assertEqual(len(requests), 1)
+        self.assertEqual(requests[0].url, "https://karten.nibis.de/fetchAddresses.ajax.php")
+        form = urllib.parse.parse_qs(requests[0].body.decode())
+        self.assertEqual(json.loads(form["input"][0])["aSNo"], ["5009"])
+
+    def test_parse_map_coords_joins_coordinates_by_school_number(self):
+        spider = NiedersachsenSpider()
+        response = TextResponse(
+            url="https://karten.nibis.de/fetchAddresses.ajax.php",
+            request=Request(url="https://karten.nibis.de/fetchAddresses.ajax.php"),
+            body=json.dumps(
+                [
+                    ["5009", "52.37", "9.70"],
+                    ["5010", None, None],
+                    ["bad", "not-a-number", "9.0"],
+                    ["outside", "91", "9.0"],
+                ]
+            ).encode(),
+            encoding="utf-8",
+        )
+
+        requests = list(spider.parse_map_coords(response, [{"schulnr": 5009}, {"schulnr": 5010}]))
+
+        self.assertEqual(spider._coords, {"5009": (52.37, 9.70)})
+        self.assertEqual(len(requests), 2)
+        self.assertTrue(requests[0].url.endswith("/5009"))
+
+    def test_parse_map_coords_failure_still_requests_school_details(self):
+        spider = NiedersachsenSpider()
+        failure = type("Failure", (), {"getErrorMessage": lambda self: "503"})()
+
+        requests = list(spider.parse_map_coords_failure(failure, [{"schulnr": 5009}]))
+
+        self.assertEqual(len(requests), 1)
+        self.assertTrue(requests[0].url.endswith("/5009"))
+
+    def test_parse_details_attaches_nibis_coordinates(self):
+        spider = NiedersachsenSpider()
+        spider._coords = {"5009": (52.37, 9.70)}
 
         items = list(spider.parse_details(self._detail_response(5009)))
 
         self.assertEqual(items[0]["latitude"], 52.37)
         self.assertEqual(items[0]["longitude"], 9.70)
 
-    def test_parse_details_keeps_item_when_geocode_missing(self):
-        spider = self._spider_with_cache([])
+    def test_explicit_override_wins_over_nibis_coordinate(self):
+        spider = NiedersachsenSpider()
+        spider._coords = {"5009": (52.37, 9.70)}
+        spider._coordinate_overrides = {"NI-5009": (52.38, 9.71)}
 
         items = list(spider.parse_details(self._detail_response(5009)))
 
-        # Unmatched schools must still flow through — no coord, but still yielded.
+        self.assertEqual(items[0]["latitude"], 52.38)
+        self.assertEqual(items[0]["longitude"], 9.71)
+
+    def test_parse_details_keeps_item_when_coordinate_is_missing(self):
+        spider = NiedersachsenSpider()
+        spider._coords = {}
+
+        items = list(spider.parse_details(self._detail_response(5009)))
+
         self.assertEqual(len(items), 1)
         self.assertNotIn("latitude", items[0])
-
-    def test_parse_details_ignores_non_matched_cache_rows(self):
-        spider = self._spider_with_cache(
-            [
-                {"schulnr": 5009, "status": "skipped"},
-                {"schulnr": 5010, "status": "not_a_match"},
-            ]
-        )
-
-        for schulnr in (5009, 5010):
-            items = list(spider.parse_details(self._detail_response(schulnr)))
-            self.assertEqual(len(items), 1)
-            self.assertNotIn("latitude", items[0])
-
-    def test_load_coords_logs_warning_when_cache_missing(self):
-        spider = NiedersachsenSpider()
-        with patch.object(niedersachsen_module, "NLS_CACHE", Path("/nonexistent/path.jsonl")):
-            spider._load_coords()
-        self.assertEqual(spider._coords, {})
 
     def test_normalize_uses_namens_zusatz_and_coordinates(self):
         parsed_school = NiedersachsenSpider.normalize(
@@ -83,20 +112,23 @@ class TestNiedersachsenSpider(unittest.TestCase):
         self.assertEqual(parsed_school["latitude"], 52.54)
         self.assertEqual(parsed_school["longitude"], 9.73)
 
-    def _spider_with_cache(self, records: list[dict]) -> NiedersachsenSpider:
-        tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False, encoding="utf-8")
-        try:
-            for rec in records:
-                tmp.write(json.dumps(rec) + "\n")
-            tmp.close()
-            self.addCleanup(lambda path=tmp.name: Path(path).unlink(missing_ok=True))
-            with patch.object(niedersachsen_module, "NLS_CACHE", Path(tmp.name)):
-                spider = NiedersachsenSpider()
-                spider._load_coords()
-            return spider
-        except Exception:
-            Path(tmp.name).unlink(missing_ok=True)
-            raise
+    def test_normalize_handles_missing_addresses(self):
+        school = NiedersachsenSpider.normalize({"schulnr": 5102, "schulname": "Ohne Adresse"})
+
+        self.assertEqual(school["id"], "NI-5102")
+        self.assertIsNone(school["address"])
+        self.assertIsNone(school["city"])
+
+    def test_coordinate_override_file_is_valid(self):
+        self.assertEqual(load_coordinate_overrides(Path("jedeschule/spiders/niedersachsen_coordinate_overrides.json")), {})
+
+    def test_coordinate_override_validation_rejects_invalid_values(self):
+        path = Path(self.id().replace(".", "_") + ".json")
+        self.addCleanup(path.unlink, missing_ok=True)
+        path.write_text(json.dumps({"overrides": {"NI-1": {"latitude": math.nan, "longitude": 9}}}))
+
+        with self.assertRaises(ValueError):
+            load_coordinate_overrides(path)
 
     def _detail_response(self, schulnr: int) -> TextResponse:
         payload = {
@@ -115,7 +147,7 @@ class TestNiedersachsenSpider(unittest.TestCase):
         return TextResponse(
             url=f"https://schulen.nibis.de/school/getInfo/{schulnr}",
             request=Request(url=f"https://schulen.nibis.de/school/getInfo/{schulnr}"),
-            body=json.dumps(payload).encode("utf-8"),
+            body=json.dumps(payload).encode(),
             encoding="utf-8",
         )
 

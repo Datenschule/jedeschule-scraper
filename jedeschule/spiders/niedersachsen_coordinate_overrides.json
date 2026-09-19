@@ -1,0 +1,5 @@
+{
+  "schema": "jedeschule-niedersachsen-coordinate-overrides/v1",
+  "description": "Explicitly approved Niedersachsen coordinate corrections. Keep empty until a location has been manually verified.",
+  "overrides": {}
+}

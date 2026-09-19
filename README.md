@@ -62,8 +62,6 @@ When available, we try to use the geolocations provided by the data publishers.
 | ST    | ✅ Yes                | ArcGIS (converted from EPSG:25832)           |
 | TH    | ✅ Yes                | WFS                                          |
 
-For Niedersachsen, the scraper requests coordinates from the NiBiS map service and joins them directly by `Schulnummer`. Schools without map coordinates are retained. If the map request fails, school details are still collected without coordinates. NLS/OSM comparisons are offline validation work and are not a scraper dependency.
-
 ## Additional Data Fields
 
 ### Baden-Württemberg DISCH Alias

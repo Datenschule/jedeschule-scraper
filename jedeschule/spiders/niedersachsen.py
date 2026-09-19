@@ -1,6 +1,5 @@
 import json
 import math
-from pathlib import Path
 import urllib
 
 import scrapy
@@ -13,7 +12,6 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 MAP_COORDS_URL = "https://karten.nibis.de/fetchAddresses.ajax.php"
 SCHOOL_DETAILS_URL = "https://schulen.nibis.de/school/getInfo/{schulnr}"
-OVERRIDES_PATH = Path(__file__).with_name("niedersachsen_coordinate_overrides.json")
 SEARCH_PAYLOAD = {
     "type": "Advanced",
     "eingabe": None,
@@ -48,32 +46,6 @@ def _valid_coordinates(latitude, longitude) -> bool:
         and -90 <= latitude <= 90
         and -180 <= longitude <= 180
     )
-
-
-def load_coordinate_overrides(path: Path = OVERRIDES_PATH) -> dict[str, tuple[float, float]]:
-    """Load explicit, human-approved coordinate corrections keyed by NI ID."""
-    if not path.exists():
-        return {}
-
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("Niedersachsen coordinate overrides must be a JSON object")
-    overrides = payload.get("overrides", {})
-    if not isinstance(overrides, dict):
-        raise ValueError("Niedersachsen coordinate overrides must contain an object")
-
-    result = {}
-    for school_id, value in overrides.items():
-        if not isinstance(school_id, str) or not school_id.startswith("NI-"):
-            raise ValueError(f"Invalid Niedersachsen override ID: {school_id!r}")
-        if not isinstance(value, dict) or not _valid_coordinates(
-            value.get("latitude"), value.get("longitude")
-        ):
-            raise ValueError(f"Invalid coordinates for Niedersachsen override {school_id}")
-        result[school_id] = (float(value["latitude"]), float(value["longitude"]))
-    return result
-
-
 class NiedersachsenSpider(SchoolSpider):
     name = "niedersachsen"
     allowed_domains = ["schulen.nibis.de", "karten.nibis.de"]
@@ -82,8 +54,6 @@ class NiedersachsenSpider(SchoolSpider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._coords: dict[str, tuple[float, float]] = {}
-        self._coordinate_overrides = load_coordinate_overrides()
-        self.logger.info("Loaded %d Niedersachsen coordinate overrides", len(self._coordinate_overrides))
 
     def parse(self, response: Response):
         xsrf = ""
@@ -181,10 +151,7 @@ class NiedersachsenSpider(SchoolSpider):
             )
             return
 
-        school_id = f"NI-{item.get('schulnr')}"
-        coord = self._coordinate_overrides.get(school_id) or self._coords.get(
-            str(item.get("schulnr"))
-        )
+        coord = self._coords.get(str(item.get("schulnr")))
         if coord is not None:
             item["latitude"], item["longitude"] = coord
 

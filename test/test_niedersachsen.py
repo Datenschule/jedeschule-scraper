@@ -1,13 +1,11 @@
 import json
-import math
 import unittest
 import urllib.parse
-from pathlib import Path
 
 from scrapy import Request
 from scrapy.http import TextResponse
 
-from jedeschule.spiders.niedersachsen import NiedersachsenSpider, load_coordinate_overrides
+from jedeschule.spiders.niedersachsen import NiedersachsenSpider
 
 
 class TestNiedersachsenSpider(unittest.TestCase):
@@ -67,16 +65,6 @@ class TestNiedersachsenSpider(unittest.TestCase):
         self.assertEqual(items[0]["latitude"], 52.37)
         self.assertEqual(items[0]["longitude"], 9.70)
 
-    def test_explicit_override_wins_over_nibis_coordinate(self):
-        spider = NiedersachsenSpider()
-        spider._coords = {"5009": (52.37, 9.70)}
-        spider._coordinate_overrides = {"NI-5009": (52.38, 9.71)}
-
-        items = list(spider.parse_details(self._detail_response(5009)))
-
-        self.assertEqual(items[0]["latitude"], 52.38)
-        self.assertEqual(items[0]["longitude"], 9.71)
-
     def test_parse_details_keeps_item_when_coordinate_is_missing(self):
         spider = NiedersachsenSpider()
         spider._coords = {}
@@ -118,17 +106,6 @@ class TestNiedersachsenSpider(unittest.TestCase):
         self.assertEqual(school["id"], "NI-5102")
         self.assertIsNone(school["address"])
         self.assertIsNone(school["city"])
-
-    def test_coordinate_override_file_is_valid(self):
-        self.assertEqual(load_coordinate_overrides(Path("jedeschule/spiders/niedersachsen_coordinate_overrides.json")), {})
-
-    def test_coordinate_override_validation_rejects_invalid_values(self):
-        path = Path(self.id().replace(".", "_") + ".json")
-        self.addCleanup(path.unlink, missing_ok=True)
-        path.write_text(json.dumps({"overrides": {"NI-1": {"latitude": math.nan, "longitude": 9}}}))
-
-        with self.assertRaises(ValueError):
-            load_coordinate_overrides(path)
 
     def _detail_response(self, schulnr: int) -> TextResponse:
         payload = {

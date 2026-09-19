@@ -54,7 +54,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | HH    | ✅ Yes                | WFS                                          |
 | HE    | ⚠️  Partial (~90%)    | Extracted from OSM on detail pages. The schools without coordinates are schools with placeholder coordinates that are filtered out and schools with no map data at all. |
 | MV    | ✅ Yes                | WFS                                          |
-| NI    | ❌ No                 | -                                            |
+| NI    | ✅ Yes                | NiBiS map service, joined directly by `Schulnummer`. |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
 | RP    | ✅ Yes                | Extracted from map links on the school detail pages                                            |
 | SL    | ✅ Yes                | WFS                                          |
@@ -156,4 +156,3 @@ The deployment uses docker-compose. To update the data there, login as the
 `jedeschule` user and run the commands mentioned int the previous section
 prefixed with `sudo docker-compose run scrapers`. This means that if you
 want to for example get the newest data for Berlin you would run `sudo docker-compose run scrapers scrapy crawl berlin`
-

@@ -52,7 +52,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | BB    | ✅ Yes                | WFS                                          |
 | HB    | ✅ Yes                | INSPIRE shapefile (converted from EPSG:25832)|
 | HH    | ✅ Yes                | WFS                                          |
-| HE    | ⚠️  Partial (90.7%)   | Extracted from OSM on detail pages (1,863/2,054 schools). The 191 schools without coordinates include both schools with placeholder coordinates (-1.0, -1.0) that are filtered to null and schools with no map data at all. |
+| HE    | ⚠️  Partial (~90%)    | Extracted from OSM on detail pages. The schools without coordinates are schools with placeholder coordinates that are filtered out and schools with no map data at all. |
 | MV    | ✅ Yes                | WFS                                          |
 | NI    | ✅ Yes                | NiBiS map service, joined directly by `Schulnummer`. |
 | NW    | ✅ Yes                | Converted from EPSG:25832 in source CSV data |
@@ -62,7 +62,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | ST    | ✅ Yes                | ArcGIS (converted from EPSG:25832)           |
 | TH    | ✅ Yes                | WFS                                          |
 
-For Niedersachsen, the scraper requests coordinates from the NiBiS map service and joins them directly by `Schulnummer`. If the map request fails, school details are still collected without coordinates. NLS/OSM comparisons are offline validation work and are not a scraper dependency.
+For Niedersachsen, the scraper requests coordinates from the NiBiS map service and joins them directly by `Schulnummer`. Schools without map coordinates are retained. If the map request fails, school details are still collected without coordinates. NLS/OSM comparisons are offline validation work and are not a scraper dependency.
 
 ## Additional Data Fields
 

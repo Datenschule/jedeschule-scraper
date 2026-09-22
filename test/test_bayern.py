@@ -1,3 +1,4 @@
+import asyncio
 import unittest
 
 from scrapy.http import TextResponse
@@ -10,6 +11,18 @@ class TestBayernSpider(unittest.TestCase):
         spider = BayernSpider(school_numbers="1216,2448")
 
         requests = list(spider.start_requests())
+
+        self.assertEqual(len(requests), 2)
+        self.assertEqual(requests[0].url, "https://www.km.bayern.de/schule/1216")
+        self.assertEqual(requests[0].callback, spider.parse_school)
+
+    def test_start_uses_km_detail_pages(self):
+        spider = BayernSpider(school_numbers="1216,2448")
+
+        async def collect_requests():
+            return [request async for request in spider.start()]
+
+        requests = asyncio.run(collect_requests())
 
         self.assertEqual(len(requests), 2)
         self.assertEqual(requests[0].url, "https://www.km.bayern.de/schule/1216")

@@ -37,13 +37,20 @@ class BayernSpider(SchoolSpider):
                 for school_number in range(int(start_number), int(end_number) + 1)
             ]
 
-    def start_requests(self):
+    def _iter_school_requests(self):
         for school_number in self.school_numbers:
             yield scrapy.Request(
                 f"{self.school_base_url}{school_number}",
                 callback=self.parse_school,
                 cb_kwargs={"requested_school_number": school_number},
             )
+
+    async def start(self):
+        for request in self._iter_school_requests():
+            yield request
+
+    def start_requests(self):
+        yield from self._iter_school_requests()
 
     def parse_school(self, response, requested_school_number=None):
         if response.status != 200:

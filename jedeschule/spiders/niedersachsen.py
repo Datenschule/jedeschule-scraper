@@ -2,6 +2,7 @@ import json
 import urllib
 
 import scrapy
+from pydantic import BaseModel, TypeAdapter
 from scrapy import Item
 from scrapy.http import Response
 
@@ -9,8 +10,25 @@ from jedeschule.items import School
 from jedeschule.spiders.school_spider import SchoolSpider
 
 
+class SchoolListEntry(BaseModel):
+    schulnr: int
+
+
+class SearchProps(BaseModel):
+    schools: list[SchoolListEntry]
+
+
+class SearchResponse(BaseModel):
+    props: SearchProps
+
+
+# Rows of [Schulnummer, latitude, longitude]; coordinates are null for some schools
+MapCoordinates = TypeAdapter(list[tuple[int, float | None, float | None]])
+
+
 class NiedersachsenSpider(SchoolSpider):
     name = "niedersachsen"
+    allowed_domains = ["schulen.nibis.de", "karten.nibis.de"]
     start_urls = ["https://schulen.nibis.de/search/advanced"]
 
     def parse(self, response: Response):
@@ -33,16 +51,43 @@ class NiedersachsenSpider(SchoolSpider):
         )
 
     def parse_list(self, response: Response):
-        json_response = json.loads(response.body.decode("utf-8"))
-        for school in json_response["props"]["schools"]:
+        search = SearchResponse.model_validate_json(response.text)
+        school_numbers = [school.schulnr for school in search.props.schools]
+        # The NiBiS map service returns already geocoded coordinates by Schulnummer
+        yield scrapy.FormRequest(
+            "https://karten.nibis.de/fetchAddresses.ajax.php",
+            formdata={
+                "input": json.dumps(
+                    {"aSNo": school_numbers, "aLKs": [], "aSGLs": [], "aBes": []}
+                )
+            },
+            headers={"X-Requested-With": "XMLHttpRequest"},
+            callback=self.parse_map_coordinates,
+            cb_kwargs={"school_numbers": school_numbers},
+        )
+
+    def parse_map_coordinates(self, response: Response, school_numbers: list[int]):
+        coordinates = {
+            school_number: (latitude, longitude)
+            for school_number, latitude, longitude in MapCoordinates.validate_json(
+                response.text
+            )
+            if latitude is not None and longitude is not None
+        }
+        for school_number in school_numbers:
             yield scrapy.Request(
-                f"https://schulen.nibis.de/school/getInfo/{school.get('schulnr')}",
+                f"https://schulen.nibis.de/school/getInfo/{school_number}",
                 callback=self.parse_details,
+                cb_kwargs={"coordinates": coordinates.get(school_number)},
             )
 
-    def parse_details(self, response: Response):
-        json_response = json.loads(response.body.decode("utf-8"))
-        yield json_response
+    def parse_details(
+        self, response: Response, coordinates: tuple[float, float] | None
+    ):
+        item = response.json()
+        if coordinates:
+            item["latitude"], item["longitude"] = coordinates
+        yield item
 
     @staticmethod
     def _get(dict_like, key, default):
@@ -57,12 +102,15 @@ class NiedersachsenSpider(SchoolSpider):
     @staticmethod
     def normalize(item: Item) -> School:
         name = " ".join(
-            [item.get("schulname", ""), item.get("namenszuatz", "")]
+            [item.get("schulname", ""), item.get("namensZusatz") or ""]
         ).strip()
-        address = item.get("sdb_adressen", [{}])[0]
-        ort = address.get("sdb_ort", {})
+        address = NiedersachsenSpider._get(item, "sdb_adressen", [{}])[0]
+        ort = NiedersachsenSpider._get(address, "sdb_ort", {})
         school_type = NiedersachsenSpider._get(item, "sdb_art", {}).get("art")
         provider = NiedersachsenSpider._get(item, "sdb_traeger", {}).get("name")
+        legal_status = NiedersachsenSpider._get(item, "sdb_traegerschaft", {}).get(
+            "bezeichnung"
+        )
         return School(
             name=name,
             phone=item.get("telefon"),
@@ -74,6 +122,8 @@ class NiedersachsenSpider(SchoolSpider):
             city=ort.get("ort"),
             school_type=school_type,
             provider=provider,
-            legal_status=item.get("sdb_traegerschaft", {}).get("bezeichnung"),
+            legal_status=legal_status,
+            latitude=item.get("latitude"),
+            longitude=item.get("longitude"),
             id="NI-{}".format(item.get("schulnr")),
         )

@@ -13,34 +13,30 @@ class BayernSpider(SchoolSpider):
     allowed_domains = ["km.bayern.de"]
     school_base_url = "https://www.km.bayern.de/schule/"
     handle_httpstatus_list = [404, 410]
+    school_number_width = 4
 
     def __init__(
         self,
         school_numbers=None,
         start_number=1,
         end_number=9999,
-        school_number_width=4,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         if school_numbers:
             self.school_numbers = [
-                school_number.strip()
+                int(school_number.strip())
                 for school_number in school_numbers.split(",")
                 if school_number.strip()
             ]
         else:
-            number_width = int(school_number_width)
-            self.school_numbers = [
-                str(school_number).zfill(number_width)
-                for school_number in range(int(start_number), int(end_number) + 1)
-            ]
+            self.school_numbers = range(int(start_number), int(end_number) + 1)
 
     def _iter_school_requests(self):
         for school_number in self.school_numbers:
             yield scrapy.Request(
-                f"{self.school_base_url}{school_number}",
+                f"{self.school_base_url}{str(school_number).zfill(self.school_number_width)}",
                 callback=self.parse_school,
                 cb_kwargs={"requested_school_number": school_number},
             )

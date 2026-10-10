@@ -1,4 +1,7 @@
-import xmltodict
+import re
+from urllib.parse import parse_qs, unquote, urlparse
+
+import scrapy
 from scrapy import Item
 
 from jedeschule.items import School
@@ -7,50 +10,221 @@ from jedeschule.spiders.school_spider import SchoolSpider
 
 class BayernSpider(SchoolSpider):
     name = "bayern"
-    start_urls = [
-        "https://gdiserv.bayern.de/srv112940/services/schulstandortebayern-wfs?"
-        "SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&srsname=EPSG:4326&typename="
-            "schul:SchulstandorteGrundschulen,"
-            "schul:SchulstandorteMittelschulen,"
-            "schul:SchulstandorteRealschulen,"
-            "schul:SchulstandorteGymnasien,"
-            "schul:SchulstandorteBeruflicheSchulen,"
-            "schul:SchulstandorteFoerderzentren,"
-            "schul:SchulstandorteWeitererSchulen"
-    ]
+    allowed_domains = ["km.bayern.de"]
+    school_base_url = "https://www.km.bayern.de/schule/"
+    school_number_width = 4
 
-    def parse(self, response, **kwargs):
-        data = xmltodict.parse(response.text)
-        members = data.get("wfs:FeatureCollection", {}).get("wfs:member", [])
+    def __init__(
+        self,
+        school_numbers=None,
+        start_number=1,
+        end_number=9999,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        if school_numbers:
+            self.school_numbers = [
+                int(school_number.strip())
+                for school_number in school_numbers.split(",")
+                if school_number.strip()
+            ]
+        else:
+            self.school_numbers = range(int(start_number), int(end_number) + 1)
 
-        if not isinstance(members, list):
-            members = [members]
+    def _iter_school_requests(self):
+        for school_number in self.school_numbers:
+            yield scrapy.Request(
+                f"{self.school_base_url}{str(school_number).zfill(self.school_number_width)}",
+                callback=self.parse_school,
+                cb_kwargs={"requested_school_number": school_number},
+            )
 
-        for member in members:
-            school = next(iter(member.values()), {})
+    async def start(self):
+        for request in self._iter_school_requests():
+            yield request
 
-            data_elem = {
-                "id": school.get("@gml:id")
-            }
+    def start_requests(self):
+        yield from self._iter_school_requests()
 
-            for key, value in school.items():
-                if key == "schul:geometry":
-                    point = value.get("gml:Point", {})
-                    pos = point.get("gml:pos", "")
-                    if pos:
-                        lon, lat = pos.split()
-                        data_elem["lat"] = float(lat)
-                        data_elem["lon"] = float(lon)
-                elif not key.startswith("@"):
-                    clean_key = key.split(":", 1)[-1]
-                    data_elem[clean_key] = value
+    def parse_school(self, response, requested_school_number=None):
+        if response.status != 200:
+            return
 
-            yield data_elem
+        container = response.css(".schoolSearchResult")
+        sections = self._extract_sections(container)
+        school_number = self._section_value(
+            sections, "Verwaltungsangaben", "Schulnummer"
+        )
+
+        if not school_number:
+            self.logger.warning(
+                "Skipping Bayern KM page without school number: %s",
+                response.url,
+            )
+            return
+
+        latitude, longitude = self._extract_coords(response)
+        school_year, teacher_count, student_count = self._extract_school_year_stats(
+            sections
+        )
+        address, zip_code, city = self._extract_address(sections)
+
+        yield {
+            "source": "by-km",
+            "requested_schulnummer": requested_school_number,
+            "id": school_number,
+            "schulnummer": school_number,
+            # Join all text in the first h1, including after <br> or inside nested
+            # tags, with spaces; keep missing names as None and normalize whitespace.
+            "name": self._clean_text(
+                " ".join(response.xpath("(//h1)[1]//text()").getall()) or None
+            ),
+            "strasse": address,
+            "postleitzahl": zip_code,
+            "ort": city,
+            "telefon": self._section_value(sections, "Kontakt", "Telefon"),
+            "fax": self._section_value(sections, "Kontakt", "Fax"),
+            "website": self._extract_website(response, sections),
+            "schulart": self._section_value(sections, "Verwaltungsangaben", "Schulart"),
+            "rechtlicher_status": self._section_value(
+                sections, "Verwaltungsangaben", "Rechtlicher Status"
+            ),
+            "lat": latitude,
+            "lon": longitude,
+            "schuljahr": school_year,
+            "lehrkraefte": teacher_count,
+            "schueler": student_count,
+            "betreuungsangebote": sections.get("Besondere Betreuungsangebote", []),
+            "ausbildungsrichtungen": sections.get("Ausbildungsrichtungen", []),
+        }
+
+    @classmethod
+    def _extract_sections(cls, container):
+        sections = {}
+        current_heading = None
+
+        for element in container.xpath(".//*[self::h2 or self::p]"):
+            tag_name = element.root.tag.lower()
+            # Only <br> separates fields; inline tags can split a label and its
+            # value into multiple text nodes that still belong to the same line.
+            lines = [""]
+            for node in element.xpath(".//text() | .//br"):
+                if isinstance(node.root, str):
+                    lines[-1] += node.root
+                else:
+                    lines.append("")
+
+            texts = []
+            for line in lines:
+                cleaned_text = cls._clean_text(line)
+                if cleaned_text:
+                    texts.append(cleaned_text)
+
+            if tag_name == "h2":
+                current_heading = " ".join(texts)
+                sections.setdefault(current_heading, [])
+            elif current_heading:
+                sections[current_heading].extend(texts)
+
+        return sections
+
+    @staticmethod
+    def _clean_text(value):
+        if value is None:
+            return None
+        return re.sub(r"\s+", " ", value).strip()
+
+    @classmethod
+    def _section_value(cls, sections, section, label):
+        prefix = f"{label}:"
+        values = sections.get(section, [])
+        for value in values:
+            if value.startswith(prefix):
+                # An empty value is missing, not continued on the next line:
+                # otherwise "Fax: <br>Web:" would return "Web:" as the fax.
+                return cls._clean_text(value[len(prefix):]) or None
+        return None
+
+    @classmethod
+    def _extract_address(cls, sections):
+        contact_lines = sections.get("Kontakt", [])
+        address_lines = [
+            line
+            for line in contact_lines
+            if ":" not in line
+            and not line.startswith("www.")
+            and "Standort anzeigen" not in line
+        ]
+
+        address = address_lines[0] if address_lines else None
+        zip_code = None
+        city = None
+        if len(address_lines) > 1:
+            match = re.match(r"(\d{5})\s+(.+)", address_lines[1])
+            if match:
+                zip_code, city = match.groups()
+
+        return address, zip_code, city
+
+    @staticmethod
+    def _extract_coords(response):
+        atlas_url = response.css('a[href*="geoportal.bayern.de/bayernatlas"]::attr(href)').get()
+        if not atlas_url:
+            return None, None
+
+        query = parse_qs(urlparse(atlas_url).query)
+        try:
+            longitude = float(query["E"][0])
+            latitude = float(query["N"][0])
+            return latitude, longitude
+        except (KeyError, IndexError, ValueError):
+            return None, None
+
+    @classmethod
+    def _extract_school_year_stats(cls, sections):
+        school_year = None
+        stats = []
+        for heading, values in sections.items():
+            match = re.match(r"Eckdaten im Schuljahr (.+)", heading)
+            if match:
+                school_year = match.group(1)
+                stats = values
+                break
+
+        teacher_count = cls._parse_int(
+            cls._section_value({"stats": stats}, "stats", "Vollzeit- und überhälftig teilzeitbeschäftigte Lehrkräfte")
+        )
+        student_count = cls._parse_int(
+            cls._section_value({"stats": stats}, "stats", "Schüler")
+        )
+        return school_year, teacher_count, student_count
+
+    @staticmethod
+    def _parse_int(value):
+        if value is None:
+            return None
+        digits = re.sub(r"\D", "", value)
+        return int(digits) if digits else None
+
+    @classmethod
+    def _extract_website(cls, response, sections):
+        website = response.css("a.website::attr(href)").get() or cls._section_value(
+            sections, "Kontakt", "Web"
+        )
+        if website is None:
+            return None
+        website = website.strip()
+        # KM can render missing websites as href="https://%20". Decode only
+        # for the blank-placeholder check; preserve encoding in real URLs.
+        if re.fullmatch(r"(?:https?://)?\s*", unquote(website), re.IGNORECASE):
+            return None
+        return website
 
     @staticmethod
     def normalize(item: Item) -> School:
         return School(
-            name=item.get("schulname"),
+            name=item.get("name") or item.get("schulname"),
             address=item.get("strasse"),
             city=item.get("ort"),
             school_type=item.get("schulart"),
@@ -58,4 +232,8 @@ class BayernSpider(SchoolSpider):
             id="BY-{}".format(item.get("id")),
             latitude=item.get("lat"),
             longitude=item.get("lon"),
+            phone=item.get("telefon"),
+            fax=item.get("fax"),
+            website=item.get("website"),
+            legal_status=item.get("rechtlicher_status"),
         )

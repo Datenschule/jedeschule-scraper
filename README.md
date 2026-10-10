@@ -23,7 +23,7 @@ In details, the IDs are sourced as follows:
 |State| ID-Source                                                                                                    | example-id                                                                 |stable|
 |-----|--------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|------|
 |BW| DISCH (Dienststellenschlüssel) extracted from email, fallback to address hash when not available (see below) | `BW-04154817` or `BW-FB-e5c29cbf7215726b4f3515cfad6bee63e2a0bb8ded432a34e9e51c4324ec52ea`            |✅ likely (~80% with DISCH, ~20% fallback)|
-|BY| id from the WFS service                                                                                      | `BY-SCHUL_SCHULSTANDORTEGRUNDSCHULEN_2acb7d31-915d-40a9-adcf-27b38251fa48` |❓ unlikely (although we reached out to ask for canonical IDs to be published)|
+|BY| id from the KM website                                                                                       | `BY-0067` |✅ likely|
 |BE| Field `bsn` (Berliner Schulnummer) from the WFS Service                                                      | `BE-02K10`                                                                 |✅ likely|
 |BB| Field `schul_nr` (Schulnummer) from thw WFS Service                                                          | `BB-111430`                                                                |✅ likely|
 |HB| Field `snr_txt` (Schulnummer) from the INSPIRE shapefile - official 3-digit ID used in Bremen materials      | `HB-002`                                                                   |✅ likely|
@@ -47,7 +47,7 @@ When available, we try to use the geolocations provided by the data publishers.
 | State | Geolcation available | Source                                       |
 |-------|----------------------|----------------------------------------------|
 | BW    | ✅ Yes                | WFS                                          |
-| BY    | ✅ Yes                | WFS                                          |
+| BY    | ✅ Yes                | KM website                                   |
 | BE    | ✅ Yes                | WFS                                          |
 | BB    | ✅ Yes                | WFS                                          |
 | HB    | ✅ Yes                | INSPIRE shapefile (converted from EPSG:25832)|

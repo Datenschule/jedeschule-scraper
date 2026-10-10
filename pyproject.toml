@@ -13,6 +13,6 @@ dependencies = [
     "pyshp>=3.0.12",
     "requests==2.34.2",
     "scrapy==2.19.0",
-    "sqlalchemy==2.1.1",
+    "sqlalchemy==2.1.3",
     "xmltodict==1.0.4",
 ]

@@ -1,5 +1,5 @@
 import re
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import scrapy
 from scrapy import Item
@@ -106,9 +106,18 @@ class BayernSpider(SchoolSpider):
 
         for element in container.xpath(".//*[self::h2 or self::p]"):
             tag_name = element.root.tag.lower()
+            # Only <br> separates fields; inline tags can split a label and its
+            # value into multiple text nodes that still belong to the same line.
+            lines = [""]
+            for node in element.xpath(".//text() | .//br"):
+                if isinstance(node.root, str):
+                    lines[-1] += node.root
+                else:
+                    lines.append("")
+
             texts = []
-            for text in element.xpath(".//text()").getall():
-                cleaned_text = cls._clean_text(text)
+            for line in lines:
+                cleaned_text = cls._clean_text(line)
                 if cleaned_text:
                     texts.append(cleaned_text)
 
@@ -130,13 +139,11 @@ class BayernSpider(SchoolSpider):
     def _section_value(cls, sections, section, label):
         prefix = f"{label}:"
         values = sections.get(section, [])
-        for index, value in enumerate(values):
+        for value in values:
             if value.startswith(prefix):
-                text = cls._clean_text(value[len(prefix):])
-                if text:
-                    return text
-                if index + 1 < len(values):
-                    return values[index + 1]
+                # An empty value is missing, not continued on the next line:
+                # otherwise "Fax: <br>Web:" would return "Web:" as the fax.
+                return cls._clean_text(value[len(prefix):]) or None
         return None
 
     @classmethod
@@ -202,10 +209,17 @@ class BayernSpider(SchoolSpider):
 
     @classmethod
     def _extract_website(cls, response, sections):
-        website = response.css("a.website::attr(href)").get()
-        if website:
-            return website
-        return cls._section_value(sections, "Kontakt", "Web")
+        website = response.css("a.website::attr(href)").get() or cls._section_value(
+            sections, "Kontakt", "Web"
+        )
+        if website is None:
+            return None
+        website = website.strip()
+        # KM can render missing websites as href="https://%20". Decode only
+        # for the blank-placeholder check; preserve encoding in real URLs.
+        if re.fullmatch(r"(?:https?://)?\s*", unquote(website), re.IGNORECASE):
+            return None
+        return website
 
     @staticmethod
     def normalize(item: Item) -> School:

@@ -135,6 +135,69 @@ class TestBayernSpider(unittest.TestCase):
 
                 self.assertEqual(school["name"], expected_name)
 
+    def test_parse_school_with_empty_contact_fields(self):
+        spider = BayernSpider()
+        for website in ("https://%20", "https://", "https://%20%20", " "):
+            with self.subTest(website=website):
+                response = TextResponse(
+                    url="https://www.km.bayern.de/schule/2001",
+                    body=f"""
+                        <h1>Private Berufsfachschule für Pflege Dachau</h1>
+                        <div class="schoolSearchResult">
+                            <h2>Kontakt</h2>
+                            <p>Krankenhausstraße 15<br>85221 Dachau</p>
+                            <p>Telefon: 08131/76561<br>Fax: <br>Web:
+                                <a class="website" href="{website}"> </a>
+                            </p>
+                            <h2>Verwaltungsangaben</h2>
+                            <p>Schulnummer: 2001</p>
+                        </div>
+                    """,
+                    encoding="utf-8",
+                )
+
+                school = list(spider.parse_school(response))[0]
+                parsed_school = spider.normalize(school)
+
+                self.assertEqual(parsed_school["id"], "BY-2001")
+                self.assertEqual(parsed_school["phone"], "08131/76561")
+                self.assertIsNone(school["fax"])
+                self.assertIsNone(parsed_school["fax"])
+                self.assertIsNone(school["website"])
+                self.assertIsNone(parsed_school["website"])
+                self.assertEqual(parsed_school["address"], "Krankenhausstraße 15")
+                self.assertEqual(parsed_school["zip"], "85221")
+                self.assertEqual(parsed_school["city"], "Dachau")
+
+    def test_parse_school_keeps_contact_values_on_their_lines(self):
+        spider = BayernSpider()
+        for web in (
+            '<a class="website" href="https://www.example.org">www.example.org</a>',
+            "<span>www.example.org</span>",
+        ):
+            with self.subTest(web=web):
+                response = TextResponse(
+                    url="https://www.km.bayern.de/schule/2001",
+                    body=f"""
+                        <div class="schoolSearchResult">
+                            <h2>Kontakt</h2>
+                            <p>Telefon: <br>Fax: <span>08131/12345</span><br>Web: {web}</p>
+                            <h2>Verwaltungsangaben</h2>
+                            <p>Schulnummer: <span>2001</span></p>
+                        </div>
+                    """,
+                    encoding="utf-8",
+                )
+
+                school = list(spider.parse_school(response))[0]
+
+                self.assertIsNone(school["telefon"])
+                self.assertEqual(school["fax"], "08131/12345")
+                self.assertEqual(
+                    school["website"],
+                    "https://www.example.org" if "<a " in web else "www.example.org",
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

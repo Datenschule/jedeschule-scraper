@@ -76,7 +76,11 @@ class BayernSpider(SchoolSpider):
             "requested_schulnummer": requested_school_number,
             "id": school_number,
             "schulnummer": school_number,
-            "name": self._clean_text(response.css("h1::text").get()),
+            # Join all text in the first h1, including after <br> or inside nested
+            # tags, with spaces; keep missing names as None and normalize whitespace.
+            "name": self._clean_text(
+                " ".join(response.xpath("(//h1)[1]//text()").getall()) or None
+            ),
             "strasse": address,
             "postleitzahl": zip_code,
             "ort": city,

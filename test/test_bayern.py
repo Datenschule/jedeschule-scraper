@@ -109,6 +109,32 @@ class TestBayernSpider(unittest.TestCase):
         self.assertEqual(parsed_school["latitude"], 47.9903501)
         self.assertEqual(parsed_school["longitude"], 12.0048456)
 
+    def test_parse_school_preserves_full_multiline_name(self):
+        spider = BayernSpider()
+        for heading in (
+            "Städt. Wirtschaftswissenschaftl.<br>Gymnasium Bayreuth",
+            " Städt. Wirtschaftswissenschaftl.\n<br>\nGymnasium Bayreuth ",
+            "Städt. Wirtschaftswissenschaftl.<br><span>Gymnasium Bayreuth</span>",
+        ):
+            with self.subTest(heading=heading):
+                response = TextResponse(
+                    url="https://www.km.bayern.de/schule/0043",
+                    body=f"""
+                        <h1>{heading}</h1>
+                        <h1>Weitere Überschrift</h1>
+                        <div class="schoolSearchResult">
+                            <h2>Verwaltungsangaben</h2>
+                            <p>Schulnummer: 0043</p>
+                        </div>
+                    """,
+                    encoding="utf-8",
+                )
+
+                school = list(spider.parse_school(response))[0]
+                expected_name = "Städt. Wirtschaftswissenschaftl. Gymnasium Bayreuth"
+
+                self.assertEqual(school["name"], expected_name)
+
 
 if __name__ == "__main__":
     unittest.main()

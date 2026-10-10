@@ -12,7 +12,6 @@ class BayernSpider(SchoolSpider):
     name = "bayern"
     allowed_domains = ["km.bayern.de"]
     school_base_url = "https://www.km.bayern.de/schule/"
-    handle_httpstatus_list = [404, 410]
     school_number_width = 4
 
     def __init__(
